@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft;
 
 import org.slf4j.Logger;
 
+import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.mojang.logging.LogUtils;
 
@@ -82,6 +83,7 @@ public class ExtractCraft {
         // Note that this is necessary if and only if we want *this* class (ExtractCraft) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new ExtractionZoneHandler());
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

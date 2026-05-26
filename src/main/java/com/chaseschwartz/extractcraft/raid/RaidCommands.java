@@ -4,12 +4,14 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -48,6 +50,7 @@ public class RaidCommands {
             return 0;
         }
 
+        prepareTestRaidPlatform(raidLevel);
         RaidManager.startRaid(player);
         Vec3 returnPosition = player.position();
         ExtractCraft.LOGGER.info("Starting test raid for {} from {} at {}, {}, {}",
@@ -68,37 +71,30 @@ public class RaidCommands {
         return 1;
     }
 
+    private static void prepareTestRaidPlatform(ServerLevel raidLevel) {
+        BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                raidLevel.setBlock(position.set(x, 99, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
+
+                for (int y = 100; y <= 102; y++) {
+                    raidLevel.setBlock(position.set(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -2..2, y 99, z -2..2",
+                raidLevel.dimension().location());
+    }
+
     private static int extractFromRaid(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        RaidState raidState = RaidManager.getRaidState(player).orElse(null);
-
-        if (raidState == null) {
-            player.sendSystemMessage(Component.literal("You are not in a test raid."));
-            ExtractCraft.LOGGER.info("Player {} tried to extract without an active raid", player.getGameProfile().getName());
+        if (!RaidManager.extractPlayer(player, "debug command")) {
             return 0;
         }
-
-        MinecraftServer server = player.server;
-        ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
-        if (returnLevel == null) {
-            player.sendSystemMessage(Component.literal("Unable to extract: return dimension is unavailable."));
-            ExtractCraft.LOGGER.warn("Unable to extract {} because return dimension {} is unavailable",
-                    player.getGameProfile().getName(),
-                    raidState.returnDimension().location());
-            return 0;
-        }
-
-        Vec3 returnPosition = raidState.returnPosition();
-        player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
-        RaidManager.clearRaid(player);
 
         player.sendSystemMessage(Component.literal("Extracted from test raid."));
-        ExtractCraft.LOGGER.info("Extracted {} to {} at {}, {}, {}",
-                player.getGameProfile().getName(),
-                returnLevel.dimension().location(),
-                returnPosition.x,
-                returnPosition.y,
-                returnPosition.z);
         return 1;
     }
 }
