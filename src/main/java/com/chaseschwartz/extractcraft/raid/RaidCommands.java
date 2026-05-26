@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
 public class RaidCommands {
     private static final double RAID_X = 0.5D;
     private static final double RAID_Y = 100.0D;
-    private static final double RAID_Z = 0.5D;
+    private static final double RAID_Z = -6.5D;
 
     private RaidCommands() {
     }
@@ -83,10 +83,10 @@ public class RaidCommands {
 
     private static void prepareTestRaidPlatform(ServerLevel raidLevel) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
-        BlockPos chestPos = new BlockPos(2, 100, 0);
+        BlockPos chestPos = new BlockPos(0, 100, 0);
 
-        for (int x = -5; x <= 5; x++) {
-            for (int z = -5; z <= 5; z++) {
+        for (int x = -8; x <= 8; x++) {
+            for (int z = -8; z <= 8; z++) {
                 raidLevel.setBlock(position.set(x, 99, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
 
                 for (int y = 100; y <= 103; y++) {
@@ -95,7 +95,13 @@ public class RaidCommands {
             }
         }
 
-        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -5..5, y 99, z -5..5",
+        for (int x = -2; x <= 2; x++) {
+            for (int z = 5; z <= 7; z++) {
+                raidLevel.setBlock(position.set(x, 99, z), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -8..8, y 99, z -8..8",
                 raidLevel.dimension().location());
 
         raidLevel.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);

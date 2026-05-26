@@ -24,8 +24,8 @@ public class ExtractionZoneHandler {
     private static final double MAX_X = 2.0D;
     private static final double MIN_Y = 99.0D;
     private static final double MAX_Y = 101.0D;
-    private static final double MIN_Z = -2.0D;
-    private static final double MAX_Z = 2.0D;
+    private static final double MIN_Z = 5.0D;
+    private static final double MAX_Z = 7.0D;
 
     private final Map<UUID, Integer> extractionTicks = new HashMap<>();
 
