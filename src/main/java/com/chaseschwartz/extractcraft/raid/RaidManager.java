@@ -28,6 +28,10 @@ public class RaidManager {
         return ACTIVE_RAIDS.containsKey(playerId);
     }
 
+    public static boolean hasPendingFailedReturn(UUID playerId) {
+        return PENDING_FAILED_RETURNS.containsKey(playerId);
+    }
+
     public static void startRaid(ServerPlayer player) {
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
                 InventorySnapshot.capture(player)));

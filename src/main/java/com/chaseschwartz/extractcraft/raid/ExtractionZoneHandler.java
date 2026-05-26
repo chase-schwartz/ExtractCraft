@@ -13,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -82,7 +83,28 @@ public class ExtractionZoneHandler {
         }
 
         extractionTicks.remove(player.getUUID());
+        player.getInventory().clearContent();
+        player.getInventory().setChanged();
+        player.containerMenu.broadcastChanges();
         ExtractCraft.LOGGER.info("Cleared extraction countdown for {} after raid death failure", player.getGameProfile().getName());
+        ExtractCraft.LOGGER.info("Cleared inventory for {} after raid death failure to prevent raid item drops", player.getGameProfile().getName());
+    }
+
+    @SubscribeEvent
+    public void onLivingDrops(LivingDropsEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        if (!RaidManager.hasPendingFailedReturn(player.getUUID())) {
+            return;
+        }
+
+        int clearedDrops = event.getDrops().size();
+        event.getDrops().clear();
+        if (clearedDrops > 0) {
+            ExtractCraft.LOGGER.info("Removed {} death drops for {} after raid death failure", clearedDrops, player.getGameProfile().getName());
+        }
     }
 
     @SubscribeEvent

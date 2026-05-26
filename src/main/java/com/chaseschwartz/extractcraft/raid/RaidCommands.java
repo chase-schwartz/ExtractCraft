@@ -11,7 +11,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -73,6 +76,7 @@ public class RaidCommands {
 
     private static void prepareTestRaidPlatform(ServerLevel raidLevel) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+        BlockPos chestPos = new BlockPos(2, 100, 0);
 
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) {
@@ -86,6 +90,28 @@ public class RaidCommands {
 
         ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -2..2, y 99, z -2..2",
                 raidLevel.dimension().location());
+
+        raidLevel.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
+        if (raidLevel.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+            chest.clearContent();
+            chest.setItem(0, new ItemStack(Items.BREAD, 4));
+            chest.setItem(1, new ItemStack(Items.IRON_INGOT, 2));
+            chest.setItem(2, new ItemStack(Items.EMERALD, 1));
+            chest.setItem(3, new ItemStack(Items.DIAMOND, 1));
+            chest.setChanged();
+
+            ExtractCraft.LOGGER.info("Placed and filled temporary test raid loot chest at {}, {}, {} in {}",
+                    chestPos.getX(),
+                    chestPos.getY(),
+                    chestPos.getZ(),
+                    raidLevel.dimension().location());
+        } else {
+            ExtractCraft.LOGGER.warn("Unable to fill temporary test raid loot chest at {}, {}, {} in {}",
+                    chestPos.getX(),
+                    chestPos.getY(),
+                    chestPos.getZ(),
+                    raidLevel.dimension().location());
+        }
     }
 
     private static int extractFromRaid(CommandSourceStack source) throws CommandSyntaxException {
