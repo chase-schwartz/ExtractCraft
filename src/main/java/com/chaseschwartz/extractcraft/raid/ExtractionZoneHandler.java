@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -52,7 +53,7 @@ public class ExtractionZoneHandler {
             return;
         }
 
-        boolean clearedRaid = RaidManager.clearRaid(player.getUUID());
+        boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID());
         boolean clearedCountdown = extractionTicks.remove(player.getUUID()) != null;
         if (clearedRaid || clearedCountdown) {
             ExtractCraft.LOGGER.info("Cleared stale test raid state for {} on logout", player.getGameProfile().getName());
@@ -61,13 +62,36 @@ public class ExtractionZoneHandler {
 
     @SubscribeEvent
     public void onServerStopped(ServerStoppedEvent event) {
-        int clearedRaids = RaidManager.clearAllRaids();
+        int clearedRaids = RaidManager.clearAll();
         int clearedCountdowns = extractionTicks.size();
         extractionTicks.clear();
 
         if (clearedRaids > 0 || clearedCountdowns > 0) {
-            ExtractCraft.LOGGER.info("Cleared {} active test raid states and {} extraction countdowns on server stop", clearedRaids, clearedCountdowns);
+            ExtractCraft.LOGGER.info("Cleared {} test raid states and {} extraction countdowns on server stop", clearedRaids, clearedCountdowns);
         }
+    }
+
+    @SubscribeEvent
+    public void onLivingDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        if (!RaidManager.failRaid(player)) {
+            return;
+        }
+
+        extractionTicks.remove(player.getUUID());
+        ExtractCraft.LOGGER.info("Cleared extraction countdown for {} after raid death failure", player.getGameProfile().getName());
+    }
+
+    @SubscribeEvent
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        RaidManager.completeFailedReturn(player);
     }
 
     private void clearInactiveRaidCountdowns() {

@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class RaidManager {
     private static final Map<UUID, RaidState> ACTIVE_RAIDS = new HashMap<>();
+    private static final Map<UUID, RaidState> PENDING_FAILED_RETURNS = new HashMap<>();
 
     private RaidManager() {
     }
@@ -35,18 +36,67 @@ public class RaidManager {
         return Optional.ofNullable(ACTIVE_RAIDS.get(player.getUUID()));
     }
 
-    public static void clearRaid(ServerPlayer player) {
-        ACTIVE_RAIDS.remove(player.getUUID());
+    public static void clearPlayerState(UUID playerId) {
+        ACTIVE_RAIDS.remove(playerId);
+        PENDING_FAILED_RETURNS.remove(playerId);
     }
 
-    public static boolean clearRaid(UUID playerId) {
-        return ACTIVE_RAIDS.remove(playerId) != null;
+    public static boolean clearPlayerStateIfPresent(UUID playerId) {
+        boolean hadActiveRaid = ACTIVE_RAIDS.remove(playerId) != null;
+        boolean hadPendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId) != null;
+        return hadActiveRaid || hadPendingFailedReturn;
     }
 
-    public static int clearAllRaids() {
-        int clearedCount = ACTIVE_RAIDS.size();
+    public static int clearAll() {
+        int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
         ACTIVE_RAIDS.clear();
+        PENDING_FAILED_RETURNS.clear();
         return clearedCount;
+    }
+
+    public static boolean failRaid(ServerPlayer player) {
+        RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
+        if (raidState == null) {
+            return false;
+        }
+
+        PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
+        ExtractCraft.LOGGER.info("Raid failed for {}; queued return to {} at {}, {}, {} after respawn",
+                player.getGameProfile().getName(),
+                raidState.returnDimension().location(),
+                raidState.returnPosition().x,
+                raidState.returnPosition().y,
+                raidState.returnPosition().z);
+        return true;
+    }
+
+    public static boolean completeFailedReturn(ServerPlayer player) {
+        RaidState raidState = PENDING_FAILED_RETURNS.remove(player.getUUID());
+        if (raidState == null) {
+            return false;
+        }
+
+        MinecraftServer server = player.server;
+        ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
+        if (returnLevel == null) {
+            player.sendSystemMessage(Component.literal("Raid failed, but return dimension is unavailable."));
+            ExtractCraft.LOGGER.warn("Unable to return {} after failed raid because return dimension {} is unavailable",
+                    player.getGameProfile().getName(),
+                    raidState.returnDimension().location());
+            return false;
+        }
+
+        Vec3 returnPosition = raidState.returnPosition();
+        player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
+        player.sendSystemMessage(Component.literal("Raid failed."));
+
+        ExtractCraft.LOGGER.info("Returned {} after failed raid to {} at {}, {}, {}",
+                player.getGameProfile().getName(),
+                returnLevel.dimension().location(),
+                returnPosition.x,
+                returnPosition.y,
+                returnPosition.z);
+        return true;
     }
 
     public static boolean extractPlayer(ServerPlayer player, String reason) {
@@ -71,7 +121,7 @@ public class RaidManager {
 
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
-        clearRaid(player);
+        clearPlayerState(player.getUUID());
 
         ExtractCraft.LOGGER.info("Extracted {} via {} to {} at {}, {}, {}",
                 player.getGameProfile().getName(),
