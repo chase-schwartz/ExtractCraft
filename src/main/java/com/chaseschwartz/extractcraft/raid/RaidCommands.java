@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
+import com.chaseschwartz.extractcraft.raid.map.RaidLootChest;
+import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
@@ -22,8 +24,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -88,7 +88,6 @@ public class RaidCommands {
     private static void prepareTestRaidPlatform(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
         RaidPlatform platform = raidMap.platform();
-        BlockPos chestPos = raidMap.chestPos();
 
         for (int x = platform.minX(); x <= platform.maxX(); x++) {
             for (int z = platform.minZ(); z <= platform.maxZ(); z++) {
@@ -116,13 +115,21 @@ public class RaidCommands {
                 platform.minZ(),
                 platform.maxZ());
 
+        for (RaidLootChest lootChest : raidMap.lootChests()) {
+            placeAndFillLootChest(raidLevel, lootChest);
+        }
+    }
+
+    private static void placeAndFillLootChest(ServerLevel raidLevel, RaidLootChest lootChest) {
+        BlockPos chestPos = lootChest.pos();
         raidLevel.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
         if (raidLevel.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
             chest.clearContent();
-            chest.setItem(0, new ItemStack(Items.BREAD, 4));
-            chest.setItem(1, new ItemStack(Items.IRON_INGOT, 2));
-            chest.setItem(2, new ItemStack(Items.EMERALD, 1));
-            chest.setItem(3, new ItemStack(Items.DIAMOND, 1));
+            int slot = 0;
+            for (RaidLootItem lootItem : lootChest.loot()) {
+                chest.setItem(slot, lootItem.createStack());
+                slot++;
+            }
             chest.setChanged();
 
             ExtractCraft.LOGGER.info("Placed and filled temporary test raid loot chest at {}, {}, {} in {}",
