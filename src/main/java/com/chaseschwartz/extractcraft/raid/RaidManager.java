@@ -29,7 +29,8 @@ public class RaidManager {
     }
 
     public static void startRaid(ServerPlayer player) {
-        ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot()));
+        ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
+                InventorySnapshot.capture(player)));
     }
 
     public static Optional<RaidState> getRaidState(ServerPlayer player) {
@@ -88,6 +89,7 @@ public class RaidManager {
 
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
+        raidState.inventorySnapshot().restore(player);
         player.sendSystemMessage(Component.literal("Raid failed."));
 
         ExtractCraft.LOGGER.info("Returned {} after failed raid to {} at {}, {}, {}",
