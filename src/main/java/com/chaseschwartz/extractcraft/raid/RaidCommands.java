@@ -13,6 +13,7 @@ import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 import com.chaseschwartz.extractcraft.raid.map.RaidPlatform;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.minecraft.core.BlockPos;
@@ -35,17 +36,35 @@ public class RaidCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("startraid")
                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                .executes(context -> startRaid(context.getSource())));
+                .executes(context -> startRaid(context.getSource(), RaidMaps.defaultMap()))
+                .then(Commands.argument("map_id", StringArgumentType.word())
+                        .executes(context -> startRaid(context.getSource(), StringArgumentType.getString(context, "map_id")))));
 
         dispatcher.register(Commands.literal("testraidextract")
                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                 .executes(context -> extractFromRaid(context.getSource())));
     }
 
-    private static int startRaid(CommandSourceStack source) throws CommandSyntaxException {
+    private static int startRaid(CommandSourceStack source, String mapId) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        RaidMapDefinition raidMap = RaidMaps.TEST_RAID;
+        if (RaidManager.isInRaid(player)) {
+            player.sendSystemMessage(Component.literal("You are already in a test raid."));
+            ExtractCraft.LOGGER.info("Player {} tried to start a raid while already in one", player.getGameProfile().getName());
+            return 0;
+        }
 
+        RaidMapDefinition raidMap = RaidMaps.byId(mapId).orElse(null);
+        if (raidMap == null) {
+            player.sendSystemMessage(Component.literal("Unknown raid map '" + mapId + "'. Available maps: " + RaidMaps.availableMapIds()));
+            ExtractCraft.LOGGER.info("Player {} tried to start unknown raid map '{}'", player.getGameProfile().getName(), mapId);
+            return 0;
+        }
+
+        return startRaid(source, raidMap);
+    }
+
+    private static int startRaid(CommandSourceStack source, RaidMapDefinition raidMap) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
         if (RaidManager.isInRaid(player)) {
             player.sendSystemMessage(Component.literal("You are already in a test raid."));
             ExtractCraft.LOGGER.info("Player {} tried to start a raid while already in one", player.getGameProfile().getName());
