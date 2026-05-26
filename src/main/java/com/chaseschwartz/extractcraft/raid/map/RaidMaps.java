@@ -12,6 +12,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidMaps {
+    private static final RaidDevBounds DEV_CLEANUP_BOUNDS = new RaidDevBounds(-8, 8, 99, 103, -8, 8);
+
     public static final RaidMapDefinition TEST_RAID = new RaidMapDefinition(
             "test",
             "Test Raid",
@@ -83,5 +85,9 @@ public class RaidMaps {
 
     public static String availableMapIds() {
         return String.join(", ", MAPS_BY_ID.keySet());
+    }
+
+    public static RaidDevBounds devCleanupBounds() {
+        return DEV_CLEANUP_BOUNDS;
     }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
+import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootChest;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
@@ -24,9 +25,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidCommands {
@@ -81,6 +84,7 @@ public class RaidCommands {
             return 0;
         }
 
+        clearDevRaidArea(raidLevel);
         prepareTestRaidPlatform(raidLevel, raidMap);
         List<UUID> raidMobIds = spawnTestRaidMobs(raidLevel, raidMap);
         RaidManager.startRaid(player, raidMobIds, raidMap);
@@ -137,6 +141,49 @@ public class RaidCommands {
 
         for (RaidLootChest lootChest : raidMap.lootChests()) {
             placeAndFillLootChest(raidLevel, lootChest);
+        }
+    }
+
+    private static void clearDevRaidArea(ServerLevel raidLevel) {
+        RaidDevBounds bounds = RaidMaps.devCleanupBounds();
+        BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+
+        for (int x = bounds.minX(); x <= bounds.maxX(); x++) {
+            for (int y = bounds.minY(); y <= bounds.maxY(); y++) {
+                for (int z = bounds.minZ(); z <= bounds.maxZ(); z++) {
+                    raidLevel.setBlock(position.set(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Cleared dev raid area in {} from x {}..{}, y {}..{}, z {}..{}",
+                raidLevel.dimension().location(),
+                bounds.minX(),
+                bounds.maxX(),
+                bounds.minY(),
+                bounds.maxY(),
+                bounds.minZ(),
+                bounds.maxZ());
+
+        clearDroppedItems(raidLevel, bounds);
+    }
+
+    private static void clearDroppedItems(ServerLevel raidLevel, RaidDevBounds bounds) {
+        AABB cleanupBox = new AABB(
+                bounds.minX() - 1.0D,
+                bounds.minY() - 1.0D,
+                bounds.minZ() - 1.0D,
+                bounds.maxX() + 1.0D,
+                bounds.maxY() + 2.0D,
+                bounds.maxZ() + 1.0D);
+
+        List<ItemEntity> droppedItems = raidLevel.getEntitiesOfClass(ItemEntity.class, cleanupBox);
+        for (ItemEntity droppedItem : droppedItems) {
+            droppedItem.discard();
+        }
+
+        if (!droppedItems.isEmpty()) {
+            ExtractCraft.LOGGER.info("Removed {} stale dropped item entities from dev raid area in {}", droppedItems.size(), raidLevel.dimension().location());
         }
     }
 
