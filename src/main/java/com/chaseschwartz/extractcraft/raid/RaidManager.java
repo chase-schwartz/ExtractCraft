@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -16,8 +17,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidManager {
-    public static final int RAID_DURATION_TICKS = 20 * 60;
-    private static final int RAID_DURATION_SECONDS = RAID_DURATION_TICKS / 20;
     private static final int[] TIMER_WARNING_SECONDS = { 45, 30, 15, 10, 5, 4, 3, 2, 1 };
 
     private static final Map<UUID, RaidState> ACTIVE_RAIDS = new HashMap<>();
@@ -38,10 +37,10 @@ public class RaidManager {
         return PENDING_FAILED_RETURNS.containsKey(playerId);
     }
 
-    public static void startRaid(ServerPlayer player, List<UUID> raidMobIds) {
-        long expiresAtGameTime = player.server.overworld().getGameTime() + RAID_DURATION_TICKS;
+    public static void startRaid(ServerPlayer player, List<UUID> raidMobIds, RaidMapDefinition raidMap) {
+        long expiresAtGameTime = player.server.overworld().getGameTime() + raidMap.raidDurationTicks();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
-                InventorySnapshot.capture(player), expiresAtGameTime, RAID_DURATION_SECONDS + 1, raidMobIds));
+                InventorySnapshot.capture(player), expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
 
@@ -178,7 +177,8 @@ public class RaidManager {
                         raidState.inventorySnapshot(),
                         raidState.expiresAtGameTime(),
                         warningSeconds,
-                        raidState.raidMobIds()));
+                        raidState.raidMobIds(),
+                        raidState.raidMap()));
                 player.sendSystemMessage(Component.literal("Raid time remaining: " + warningSeconds + " seconds."));
                 ExtractCraft.LOGGER.info("Sent {} second raid timer warning to {}", warningSeconds, player.getGameProfile().getName());
                 return;

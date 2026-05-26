@@ -9,8 +9,6 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
@@ -20,12 +18,6 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 public class ExtractionZoneHandler {
     private static final int REQUIRED_EXTRACTION_TICKS = 100;
-    private static final double MIN_X = -2.0D;
-    private static final double MAX_X = 2.0D;
-    private static final double MIN_Y = 99.0D;
-    private static final double MAX_Y = 101.0D;
-    private static final double MIN_Z = 5.0D;
-    private static final double MAX_Z = 7.0D;
 
     private final Map<UUID, Integer> extractionTicks = new HashMap<>();
 
@@ -136,14 +128,10 @@ public class ExtractionZoneHandler {
     }
 
     private boolean isInExtractionZone(ServerPlayer player) {
-        if (player.serverLevel().dimension() != Level.OVERWORLD) {
-            return false;
-        }
-
-        Vec3 position = player.position();
-        return position.x >= MIN_X && position.x <= MAX_X
-                && position.y >= MIN_Y && position.y <= MAX_Y
-                && position.z >= MIN_Z && position.z <= MAX_Z;
+        return RaidManager.getRaidState(player)
+                .filter(raidState -> player.serverLevel().dimension() == raidState.raidMap().dimension())
+                .map(raidState -> raidState.raidMap().extractionZone().contains(player))
+                .orElse(false);
     }
 
     private void cancelCountdownIfActive(ServerPlayer player) {

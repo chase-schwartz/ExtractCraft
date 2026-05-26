@@ -5,6 +5,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
+import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
+import com.chaseschwartz.extractcraft.raid.map.RaidPlatform;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
@@ -21,14 +26,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidCommands {
-    private static final double RAID_X = 0.5D;
-    private static final double RAID_Y = 100.0D;
-    private static final double RAID_Z = -6.5D;
-
     private RaidCommands() {
     }
 
@@ -44,6 +44,7 @@ public class RaidCommands {
 
     private static int startRaid(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
+        RaidMapDefinition raidMap = RaidMaps.TEST_RAID;
 
         if (RaidManager.isInRaid(player)) {
             player.sendSystemMessage(Component.literal("You are already in a test raid."));
@@ -52,16 +53,18 @@ public class RaidCommands {
         }
 
         MinecraftServer server = player.server;
-        ServerLevel raidLevel = server.getLevel(Level.OVERWORLD);
+        ServerLevel raidLevel = server.getLevel(raidMap.dimension());
         if (raidLevel == null) {
-            player.sendSystemMessage(Component.literal("Unable to start test raid: Overworld is unavailable."));
-            ExtractCraft.LOGGER.warn("Unable to start test raid for {} because the Overworld is unavailable", player.getGameProfile().getName());
+            player.sendSystemMessage(Component.literal("Unable to start test raid: raid dimension is unavailable."));
+            ExtractCraft.LOGGER.warn("Unable to start test raid for {} because {} is unavailable",
+                    player.getGameProfile().getName(),
+                    raidMap.dimension().location());
             return 0;
         }
 
-        prepareTestRaidPlatform(raidLevel);
-        List<UUID> raidMobIds = spawnTestRaidMobs(raidLevel);
-        RaidManager.startRaid(player, raidMobIds);
+        prepareTestRaidPlatform(raidLevel, raidMap);
+        List<UUID> raidMobIds = spawnTestRaidMobs(raidLevel, raidMap);
+        RaidManager.startRaid(player, raidMobIds, raidMap);
         Vec3 returnPosition = player.position();
         ExtractCraft.LOGGER.info("Starting test raid for {} from {} at {}, {}, {}",
                 player.getGameProfile().getName(),
@@ -70,39 +73,48 @@ public class RaidCommands {
                 returnPosition.y,
                 returnPosition.z);
 
-        player.teleportTo(raidLevel, RAID_X, RAID_Y, RAID_Z, player.getYRot(), player.getXRot());
+        Vec3 raidSpawn = raidMap.playerSpawn();
+        player.teleportTo(raidLevel, raidSpawn.x, raidSpawn.y, raidSpawn.z, player.getYRot(), player.getXRot());
         player.sendSystemMessage(Component.literal("Test raid started. Time limit: 60 seconds. Use /testraidextract to extract."));
         ExtractCraft.LOGGER.info("Teleported {} to test raid at {}, {}, {} in {}",
                 player.getGameProfile().getName(),
-                RAID_X,
-                RAID_Y,
-                RAID_Z,
+                raidSpawn.x,
+                raidSpawn.y,
+                raidSpawn.z,
                 raidLevel.dimension().location());
         return 1;
     }
 
-    private static void prepareTestRaidPlatform(ServerLevel raidLevel) {
+    private static void prepareTestRaidPlatform(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
-        BlockPos chestPos = new BlockPos(0, 100, 0);
+        RaidPlatform platform = raidMap.platform();
+        BlockPos chestPos = raidMap.chestPos();
 
-        for (int x = -8; x <= 8; x++) {
-            for (int z = -8; z <= 8; z++) {
-                raidLevel.setBlock(position.set(x, 99, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
+        for (int x = platform.minX(); x <= platform.maxX(); x++) {
+            for (int z = platform.minZ(); z <= platform.maxZ(); z++) {
+                raidLevel.setBlock(position.set(x, platform.floorY(), z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
 
-                for (int y = 100; y <= 103; y++) {
+                for (int y = platform.airMinY(); y <= platform.airMaxY(); y++) {
                     raidLevel.setBlock(position.set(x, y, z), Blocks.AIR.defaultBlockState(), 3);
                 }
             }
         }
 
-        for (int x = -2; x <= 2; x++) {
-            for (int z = 5; z <= 7; z++) {
-                raidLevel.setBlock(position.set(x, 99, z), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+        RaidExtractionZone extractionZone = raidMap.extractionZone();
+        for (int x = (int) extractionZone.minX(); x <= (int) extractionZone.maxX(); x++) {
+            for (int z = (int) extractionZone.minZ(); z <= (int) extractionZone.maxZ(); z++) {
+                raidLevel.setBlock(position.set(x, platform.floorY(), z), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
             }
         }
 
-        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -8..8, y 99, z -8..8",
-                raidLevel.dimension().location());
+        ExtractCraft.LOGGER.info("Prepared temporary test raid platform for {} in {} from x {}..{}, y {}, z {}..{}",
+                raidMap.id(),
+                raidLevel.dimension().location(),
+                platform.minX(),
+                platform.maxX(),
+                platform.floorY(),
+                platform.minZ(),
+                platform.maxZ());
 
         raidLevel.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
         if (raidLevel.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
@@ -127,10 +139,11 @@ public class RaidCommands {
         }
     }
 
-    private static List<UUID> spawnTestRaidMobs(ServerLevel raidLevel) {
+    private static List<UUID> spawnTestRaidMobs(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         List<UUID> raidMobIds = new ArrayList<>();
-        spawnTestRaidMob(raidLevel, EntityType.ZOMBIE, 4.5D, 100.0D, 0.5D, raidMobIds);
-        spawnTestRaidMob(raidLevel, EntityType.SKELETON, -4.5D, 100.0D, 0.5D, raidMobIds);
+        for (RaidMobSpawn mobSpawn : raidMap.mobSpawns()) {
+            spawnTestRaidMob(raidLevel, mobSpawn.entityType(), mobSpawn.x(), mobSpawn.y(), mobSpawn.z(), raidMobIds);
+        }
         return raidMobIds;
     }
 
