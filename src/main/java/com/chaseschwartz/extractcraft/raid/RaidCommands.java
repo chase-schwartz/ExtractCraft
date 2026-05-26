@@ -1,5 +1,9 @@
 package com.chaseschwartz.extractcraft.raid;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -11,6 +15,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -54,7 +60,8 @@ public class RaidCommands {
         }
 
         prepareTestRaidPlatform(raidLevel);
-        RaidManager.startRaid(player);
+        List<UUID> raidMobIds = spawnTestRaidMobs(raidLevel);
+        RaidManager.startRaid(player, raidMobIds);
         Vec3 returnPosition = player.position();
         ExtractCraft.LOGGER.info("Starting test raid for {} from {} at {}, {}, {}",
                 player.getGameProfile().getName(),
@@ -78,17 +85,17 @@ public class RaidCommands {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
         BlockPos chestPos = new BlockPos(2, 100, 0);
 
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
+        for (int x = -5; x <= 5; x++) {
+            for (int z = -5; z <= 5; z++) {
                 raidLevel.setBlock(position.set(x, 99, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
 
-                for (int y = 100; y <= 102; y++) {
+                for (int y = 100; y <= 103; y++) {
                     raidLevel.setBlock(position.set(x, y, z), Blocks.AIR.defaultBlockState(), 3);
                 }
             }
         }
 
-        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -2..2, y 99, z -2..2",
+        ExtractCraft.LOGGER.info("Prepared temporary test raid platform in {} from x -5..5, y 99, z -5..5",
                 raidLevel.dimension().location());
 
         raidLevel.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
@@ -110,6 +117,45 @@ public class RaidCommands {
                     chestPos.getX(),
                     chestPos.getY(),
                     chestPos.getZ(),
+                    raidLevel.dimension().location());
+        }
+    }
+
+    private static List<UUID> spawnTestRaidMobs(ServerLevel raidLevel) {
+        List<UUID> raidMobIds = new ArrayList<>();
+        spawnTestRaidMob(raidLevel, EntityType.ZOMBIE, 4.5D, 100.0D, 0.5D, raidMobIds);
+        spawnTestRaidMob(raidLevel, EntityType.SKELETON, -4.5D, 100.0D, 0.5D, raidMobIds);
+        return raidMobIds;
+    }
+
+    private static void spawnTestRaidMob(ServerLevel raidLevel, EntityType<? extends Mob> entityType, double x, double y, double z, List<UUID> raidMobIds) {
+        Mob mob = entityType.create(raidLevel);
+        if (mob == null) {
+            ExtractCraft.LOGGER.warn("Unable to create test raid mob {} at {}, {}, {} in {}",
+                    entityType,
+                    x,
+                    y,
+                    z,
+                    raidLevel.dimension().location());
+            return;
+        }
+
+        mob.moveTo(x, y, z, 0.0F, 0.0F);
+        mob.setPersistenceRequired();
+        if (raidLevel.addFreshEntity(mob)) {
+            raidMobIds.add(mob.getUUID());
+            ExtractCraft.LOGGER.info("Spawned test raid mob {} at {}, {}, {} in {}",
+                    entityType,
+                    x,
+                    y,
+                    z,
+                    raidLevel.dimension().location());
+        } else {
+            ExtractCraft.LOGGER.warn("Unable to add test raid mob {} at {}, {}, {} in {}",
+                    entityType,
+                    x,
+                    y,
+                    z,
                     raidLevel.dimension().location());
         }
     }

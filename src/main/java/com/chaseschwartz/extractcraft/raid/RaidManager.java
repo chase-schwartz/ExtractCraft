@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.raid;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidManager {
@@ -36,10 +38,10 @@ public class RaidManager {
         return PENDING_FAILED_RETURNS.containsKey(playerId);
     }
 
-    public static void startRaid(ServerPlayer player) {
+    public static void startRaid(ServerPlayer player, List<UUID> raidMobIds) {
         long expiresAtGameTime = player.server.overworld().getGameTime() + RAID_DURATION_TICKS;
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
-                InventorySnapshot.capture(player), expiresAtGameTime, RAID_DURATION_SECONDS + 1));
+                InventorySnapshot.capture(player), expiresAtGameTime, RAID_DURATION_SECONDS + 1, raidMobIds));
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
 
@@ -47,19 +49,25 @@ public class RaidManager {
         return Optional.ofNullable(ACTIVE_RAIDS.get(player.getUUID()));
     }
 
-    public static void clearPlayerState(UUID playerId) {
-        ACTIVE_RAIDS.remove(playerId);
-        PENDING_FAILED_RETURNS.remove(playerId);
+    public static void clearPlayerState(UUID playerId, MinecraftServer server) {
+        cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
+        cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
     }
 
-    public static boolean clearPlayerStateIfPresent(UUID playerId) {
-        boolean hadActiveRaid = ACTIVE_RAIDS.remove(playerId) != null;
-        boolean hadPendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId) != null;
+    public static boolean clearPlayerStateIfPresent(UUID playerId, MinecraftServer server) {
+        RaidState activeRaid = ACTIVE_RAIDS.remove(playerId);
+        RaidState pendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId);
+        boolean hadActiveRaid = activeRaid != null;
+        boolean hadPendingFailedReturn = pendingFailedReturn != null;
+        cleanupRaidMobs(server, activeRaid, "player state clear");
+        cleanupRaidMobs(server, pendingFailedReturn, "player state clear");
         return hadActiveRaid || hadPendingFailedReturn;
     }
 
-    public static int clearAll() {
+    public static int clearAll(MinecraftServer server) {
         int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
+        ACTIVE_RAIDS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
+        PENDING_FAILED_RETURNS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
         ACTIVE_RAIDS.clear();
         PENDING_FAILED_RETURNS.clear();
         return clearedCount;
@@ -71,6 +79,7 @@ public class RaidManager {
             return false;
         }
 
+        cleanupRaidMobs(player.server, raidState, "raid death failure");
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
         ExtractCraft.LOGGER.info("Raid failed for {}; queued return to {} at {}, {}, {} after respawn",
                 player.getGameProfile().getName(),
@@ -87,6 +96,7 @@ public class RaidManager {
             return false;
         }
 
+        cleanupRaidMobs(player.server, raidState, "failed raid return");
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -117,6 +127,7 @@ public class RaidManager {
             return false;
         }
 
+        cleanupRaidMobs(player.server, raidState, "immediate raid failure");
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -166,7 +177,8 @@ public class RaidManager {
                         raidState.returnPitch(),
                         raidState.inventorySnapshot(),
                         raidState.expiresAtGameTime(),
-                        warningSeconds));
+                        warningSeconds,
+                        raidState.raidMobIds()));
                 player.sendSystemMessage(Component.literal("Raid time remaining: " + warningSeconds + " seconds."));
                 ExtractCraft.LOGGER.info("Sent {} second raid timer warning to {}", warningSeconds, player.getGameProfile().getName());
                 return;
@@ -183,6 +195,7 @@ public class RaidManager {
             return false;
         }
 
+        cleanupRaidMobs(player.server, raidState, "successful extraction");
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -196,7 +209,7 @@ public class RaidManager {
 
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
-        clearPlayerState(player.getUUID());
+        ACTIVE_RAIDS.remove(player.getUUID());
 
         ExtractCraft.LOGGER.info("Extracted {} via {} to {} at {}, {}, {}",
                 player.getGameProfile().getName(),
@@ -206,5 +219,37 @@ public class RaidManager {
                 returnPosition.y,
                 returnPosition.z);
         return true;
+    }
+
+    private static void cleanupRaidMobs(MinecraftServer server, RaidState raidState, String reason) {
+        if (raidState == null || raidState.raidMobIds().isEmpty()) {
+            return;
+        }
+
+        int cleanedCount = 0;
+        for (UUID mobId : raidState.raidMobIds()) {
+            Entity entity = findEntity(server, mobId);
+            if (entity == null) {
+                continue;
+            }
+
+            entity.discard();
+            cleanedCount++;
+        }
+
+        if (cleanedCount > 0) {
+            ExtractCraft.LOGGER.info("Cleaned up {} remaining test raid mobs for {}", cleanedCount, reason);
+        }
+    }
+
+    private static Entity findEntity(MinecraftServer server, UUID entityId) {
+        for (ServerLevel level : server.getAllLevels()) {
+            Entity entity = level.getEntity(entityId);
+            if (entity != null) {
+                return entity;
+            }
+        }
+
+        return null;
     }
 }

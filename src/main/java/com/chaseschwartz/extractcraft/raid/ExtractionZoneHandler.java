@@ -63,7 +63,7 @@ public class ExtractionZoneHandler {
             return;
         }
 
-        boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID());
+        boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID(), player.server);
         boolean clearedCountdown = extractionTicks.remove(player.getUUID()) != null;
         if (clearedRaid || clearedCountdown) {
             ExtractCraft.LOGGER.info("Cleared stale test raid state for {} on logout", player.getGameProfile().getName());
@@ -72,7 +72,7 @@ public class ExtractionZoneHandler {
 
     @SubscribeEvent
     public void onServerStopped(ServerStoppedEvent event) {
-        int clearedRaids = RaidManager.clearAll();
+        int clearedRaids = RaidManager.clearAll(event.getServer());
         int clearedCountdowns = extractionTicks.size();
         extractionTicks.clear();
 
