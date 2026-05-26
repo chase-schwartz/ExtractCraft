@@ -14,6 +14,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidManager {
+    public static final int RAID_DURATION_TICKS = 20 * 60;
+    private static final int RAID_DURATION_SECONDS = RAID_DURATION_TICKS / 20;
+    private static final int[] TIMER_WARNING_SECONDS = { 45, 30, 15, 10, 5, 4, 3, 2, 1 };
+
     private static final Map<UUID, RaidState> ACTIVE_RAIDS = new HashMap<>();
     private static final Map<UUID, RaidState> PENDING_FAILED_RETURNS = new HashMap<>();
 
@@ -33,8 +37,10 @@ public class RaidManager {
     }
 
     public static void startRaid(ServerPlayer player) {
+        long expiresAtGameTime = player.server.overworld().getGameTime() + RAID_DURATION_TICKS;
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
-                InventorySnapshot.capture(player)));
+                InventorySnapshot.capture(player), expiresAtGameTime, RAID_DURATION_SECONDS + 1));
+        ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
 
     public static Optional<RaidState> getRaidState(ServerPlayer player) {
@@ -103,6 +109,69 @@ public class RaidManager {
                 returnPosition.y,
                 returnPosition.z);
         return true;
+    }
+
+    public static boolean failRaidAndReturnNow(ServerPlayer player, String reason) {
+        RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
+        if (raidState == null) {
+            return false;
+        }
+
+        MinecraftServer server = player.server;
+        ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
+        if (returnLevel == null) {
+            player.sendSystemMessage(Component.literal("Raid failed, but return dimension is unavailable."));
+            ExtractCraft.LOGGER.warn("Unable to immediately return {} after failed raid via {} because return dimension {} is unavailable",
+                    player.getGameProfile().getName(),
+                    reason,
+                    raidState.returnDimension().location());
+            return false;
+        }
+
+        Vec3 returnPosition = raidState.returnPosition();
+        player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
+        raidState.inventorySnapshot().restore(player);
+        player.sendSystemMessage(Component.literal("Raid failed: " + reason + "."));
+
+        ExtractCraft.LOGGER.info("Failed raid for {} via {}; returned to {} at {}, {}, {} and restored starting inventory",
+                player.getGameProfile().getName(),
+                reason,
+                returnLevel.dimension().location(),
+                returnPosition.x,
+                returnPosition.y,
+                returnPosition.z);
+        return true;
+    }
+
+    public static boolean hasExpired(ServerPlayer player, long currentGameTime) {
+        RaidState raidState = ACTIVE_RAIDS.get(player.getUUID());
+        return raidState != null && currentGameTime >= raidState.expiresAtGameTime();
+    }
+
+    public static void sendTimerWarningIfNeeded(ServerPlayer player, long currentGameTime) {
+        RaidState raidState = ACTIVE_RAIDS.get(player.getUUID());
+        if (raidState == null) {
+            return;
+        }
+
+        long ticksRemaining = Math.max(0, raidState.expiresAtGameTime() - currentGameTime);
+        int secondsRemaining = (int) Math.ceil(ticksRemaining / 20.0D);
+
+        for (int warningSeconds : TIMER_WARNING_SECONDS) {
+            if (secondsRemaining <= warningSeconds && raidState.lastTimerWarningSeconds() > warningSeconds) {
+                ACTIVE_RAIDS.put(player.getUUID(), new RaidState(
+                        raidState.returnDimension(),
+                        raidState.returnPosition(),
+                        raidState.returnYaw(),
+                        raidState.returnPitch(),
+                        raidState.inventorySnapshot(),
+                        raidState.expiresAtGameTime(),
+                        warningSeconds));
+                player.sendSystemMessage(Component.literal("Raid time remaining: " + warningSeconds + " seconds."));
+                ExtractCraft.LOGGER.info("Sent {} second raid timer warning to {}", warningSeconds, player.getGameProfile().getName());
+                return;
+            }
+        }
     }
 
     public static boolean extractPlayer(ServerPlayer player, String reason) {

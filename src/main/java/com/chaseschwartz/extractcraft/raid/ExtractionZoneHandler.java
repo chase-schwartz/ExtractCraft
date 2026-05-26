@@ -32,12 +32,21 @@ public class ExtractionZoneHandler {
     @SubscribeEvent
     public void onServerPostTick(ServerTickEvent.Post event) {
         clearInactiveRaidCountdowns();
+        long currentGameTime = event.getServer().overworld().getGameTime();
 
         for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
             if (!RaidManager.isInRaid(player)) {
                 extractionTicks.remove(player.getUUID());
                 continue;
             }
+
+            if (RaidManager.hasExpired(player, currentGameTime)) {
+                extractionTicks.remove(player.getUUID());
+                RaidManager.failRaidAndReturnNow(player, "time expired");
+                continue;
+            }
+
+            RaidManager.sendTimerWarningIfNeeded(player, currentGameTime);
 
             if (!isInExtractionZone(player)) {
                 cancelCountdownIfActive(player);

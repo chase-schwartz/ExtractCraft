@@ -64,7 +64,7 @@ public class RaidCommands {
                 returnPosition.z);
 
         player.teleportTo(raidLevel, RAID_X, RAID_Y, RAID_Z, player.getYRot(), player.getXRot());
-        player.sendSystemMessage(Component.literal("Test raid started. Use /testraidextract to extract."));
+        player.sendSystemMessage(Component.literal("Test raid started. Time limit: 60 seconds. Use /testraidextract to extract."));
         ExtractCraft.LOGGER.info("Teleported {} to test raid at {}, {}, {} in {}",
                 player.getGameProfile().getName(),
                 RAID_X,
