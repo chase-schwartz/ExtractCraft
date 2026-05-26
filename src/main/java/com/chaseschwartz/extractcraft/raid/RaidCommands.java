@@ -1,8 +1,5 @@
 package com.chaseschwartz.extractcraft.raid;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
@@ -70,8 +67,17 @@ public class RaidCommands {
             return 0;
         }
 
-        List<UUID> raidMobIds = RaidMapSetupService.prepare(raidLevel, raidMap);
-        RaidManager.startRaid(player, raidMobIds, raidMap);
+        RaidMapSetupService.SetupResult setupResult = RaidMapSetupService.prepare(raidLevel, raidMap);
+        if (!setupResult.success()) {
+            player.sendSystemMessage(Component.literal("Unable to start raid map '" + raidMap.id() + "': " + setupResult.errorMessage()));
+            ExtractCraft.LOGGER.warn("Unable to start raid map {} for {}: {}",
+                    raidMap.id(),
+                    player.getGameProfile().getName(),
+                    setupResult.errorMessage());
+            return 0;
+        }
+
+        RaidManager.startRaid(player, setupResult.raidMobIds(), raidMap);
         Vec3 returnPosition = player.position();
         ExtractCraft.LOGGER.info("Starting test raid for {} from {} at {}, {}, {}",
                 player.getGameProfile().getName(),

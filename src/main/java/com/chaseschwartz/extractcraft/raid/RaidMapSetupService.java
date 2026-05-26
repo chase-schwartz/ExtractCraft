@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft.raid;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
@@ -10,9 +11,9 @@ import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootChest;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
-import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 import com.chaseschwartz.extractcraft.raid.map.RaidPlatform;
+import com.chaseschwartz.extractcraft.raid.map.RaidStructurePlacement;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -21,16 +22,30 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.AABB;
 
 public class RaidMapSetupService {
     private RaidMapSetupService() {
     }
 
-    public static List<UUID> prepare(ServerLevel raidLevel, RaidMapDefinition raidMap) {
-        clearDevRaidArea(raidLevel);
-        prepareTestRaidPlatform(raidLevel, raidMap);
-        return spawnTestRaidMobs(raidLevel, raidMap);
+    public static SetupResult prepare(ServerLevel raidLevel, RaidMapDefinition raidMap) {
+        Optional<StructureTemplate> structureTemplate = loadStructureTemplate(raidLevel, raidMap);
+        if (raidMap.structurePlacement().isPresent() && structureTemplate.isEmpty()) {
+            String errorMessage = "Missing raid structure template: " + raidMap.structurePlacement().get().templateId();
+            ExtractCraft.LOGGER.warn("Unable to prepare raid map {}: {}", raidMap.id(), errorMessage);
+            return SetupResult.failure(errorMessage);
+        }
+
+        clearDevRaidArea(raidLevel, raidMap.cleanupBounds());
+        if (raidMap.generatePlatform()) {
+            prepareTestRaidPlatform(raidLevel, raidMap);
+        }
+        structureTemplate.ifPresent(template -> placeStructureTemplate(raidLevel, raidMap, template));
+        renderExtractionMarkers(raidLevel, raidMap);
+        placeLootChests(raidLevel, raidMap);
+        return SetupResult.success(spawnTestRaidMobs(raidLevel, raidMap));
     }
 
     private static void prepareTestRaidPlatform(ServerLevel raidLevel, RaidMapDefinition raidMap) {
@@ -46,7 +61,11 @@ public class RaidMapSetupService {
                 }
             }
         }
+    }
 
+    private static void renderExtractionMarkers(ServerLevel raidLevel, RaidMapDefinition raidMap) {
+        BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+        RaidPlatform platform = raidMap.platform();
         for (RaidExtractionZone extractionZone : raidMap.extractionZones()) {
             for (int x = (int) extractionZone.minX(); x <= (int) extractionZone.maxX(); x++) {
                 for (int z = (int) extractionZone.minZ(); z <= (int) extractionZone.maxZ(); z++) {
@@ -63,14 +82,15 @@ public class RaidMapSetupService {
                 platform.floorY(),
                 platform.minZ(),
                 platform.maxZ());
+    }
 
+    private static void placeLootChests(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         for (RaidLootChest lootChest : raidMap.lootChests()) {
             placeAndFillLootChest(raidLevel, lootChest);
         }
     }
 
-    private static void clearDevRaidArea(ServerLevel raidLevel) {
-        RaidDevBounds bounds = RaidMaps.devCleanupBounds();
+    private static void clearDevRaidArea(ServerLevel raidLevel, RaidDevBounds bounds) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
 
         for (int x = bounds.minX(); x <= bounds.maxX(); x++) {
@@ -91,6 +111,38 @@ public class RaidMapSetupService {
                 bounds.maxZ());
 
         clearDroppedItems(raidLevel, bounds);
+    }
+
+    private static Optional<StructureTemplate> loadStructureTemplate(ServerLevel raidLevel, RaidMapDefinition raidMap) {
+        if (raidMap.structurePlacement().isEmpty()) {
+            return Optional.empty();
+        }
+
+        return raidLevel.getServer().getStructureManager().get(raidMap.structurePlacement().get().templateId());
+    }
+
+    private static void placeStructureTemplate(ServerLevel raidLevel, RaidMapDefinition raidMap, StructureTemplate template) {
+        RaidStructurePlacement structurePlacement = raidMap.structurePlacement().orElseThrow();
+        StructurePlaceSettings settings = new StructurePlaceSettings()
+                .setRotation(structurePlacement.rotation())
+                .setMirror(structurePlacement.mirror())
+                .setIgnoreEntities(!structurePlacement.includeEntities());
+
+        template.placeInWorld(
+                raidLevel,
+                structurePlacement.origin(),
+                structurePlacement.origin(),
+                settings,
+                raidLevel.getRandom(),
+                3);
+
+        ExtractCraft.LOGGER.info("Placed raid structure template {} for map {} at {}, {}, {} in {}",
+                structurePlacement.templateId(),
+                raidMap.id(),
+                structurePlacement.origin().getX(),
+                structurePlacement.origin().getY(),
+                structurePlacement.origin().getZ(),
+                raidLevel.dimension().location());
     }
 
     private static void clearDroppedItems(ServerLevel raidLevel, RaidDevBounds bounds) {
@@ -175,6 +227,20 @@ public class RaidMapSetupService {
                     y,
                     z,
                     raidLevel.dimension().location());
+        }
+    }
+
+    public record SetupResult(boolean success, List<UUID> raidMobIds, String errorMessage) {
+        public SetupResult {
+            raidMobIds = List.copyOf(raidMobIds);
+        }
+
+        public static SetupResult success(List<UUID> raidMobIds) {
+            return new SetupResult(true, raidMobIds, "");
+        }
+
+        public static SetupResult failure(String errorMessage) {
+            return new SetupResult(false, List.of(), errorMessage);
         }
     }
 }
