@@ -33,7 +33,9 @@ public class RaidMaps {
             List.of(
                     new RaidMobSpawn(EntityType.ZOMBIE, 4.5D, 100.0D, 0.5D),
                     new RaidMobSpawn(EntityType.SKELETON, -4.5D, 100.0D, 0.5D)),
-            new RaidExtractionZone(-2.0D, 2.0D, 99.0D, 101.0D, 5.0D, 7.0D),
+            List.of(
+                    new RaidExtractionZone(-2.0D, 2.0D, 99.0D, 101.0D, 5.0D, 7.0D),
+                    new RaidExtractionZone(-7.0D, -5.0D, 99.0D, 101.0D, -2.0D, 2.0D)),
             20 * 60);
 
     private RaidMaps() {

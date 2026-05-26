@@ -130,7 +130,7 @@ public class ExtractionZoneHandler {
     private boolean isInExtractionZone(ServerPlayer player) {
         return RaidManager.getRaidState(player)
                 .filter(raidState -> player.serverLevel().dimension() == raidState.raidMap().dimension())
-                .map(raidState -> raidState.raidMap().extractionZone().contains(player))
+                .map(raidState -> raidState.raidMap().extractionZones().stream().anyMatch(extractionZone -> extractionZone.contains(player)))
                 .orElse(false);
     }
 

@@ -99,10 +99,11 @@ public class RaidCommands {
             }
         }
 
-        RaidExtractionZone extractionZone = raidMap.extractionZone();
-        for (int x = (int) extractionZone.minX(); x <= (int) extractionZone.maxX(); x++) {
-            for (int z = (int) extractionZone.minZ(); z <= (int) extractionZone.maxZ(); z++) {
-                raidLevel.setBlock(position.set(x, platform.floorY(), z), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+        for (RaidExtractionZone extractionZone : raidMap.extractionZones()) {
+            for (int x = (int) extractionZone.minX(); x <= (int) extractionZone.maxX(); x++) {
+                for (int z = (int) extractionZone.minZ(); z <= (int) extractionZone.maxZ(); z++) {
+                    raidLevel.setBlock(position.set(x, platform.floorY(), z), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+                }
             }
         }
 
