@@ -13,6 +13,7 @@ import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 import com.chaseschwartz.extractcraft.raid.map.RaidPlatform;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapSource;
 import com.chaseschwartz.extractcraft.raid.map.RaidStructurePlacement;
 
 import net.minecraft.core.BlockPos;
@@ -31,19 +32,22 @@ public class RaidMapSetupService {
     }
 
     public static SetupResult prepare(ServerLevel raidLevel, RaidMapDefinition raidMap) {
+        RaidMapSource source = raidMap.source();
         Optional<StructureTemplate> structureTemplate = loadStructureTemplate(raidLevel, raidMap);
-        if (raidMap.structurePlacement().isPresent() && structureTemplate.isEmpty()) {
-            String errorMessage = "Missing raid structure template: " + raidMap.structurePlacement().get().templateId();
+        if (source.structurePlacement().isPresent() && structureTemplate.isEmpty()) {
+            String errorMessage = "Missing raid structure template: " + source.structurePlacement().get().templateId();
             ExtractCraft.LOGGER.warn("Unable to prepare raid map {}: {}", raidMap.id(), errorMessage);
             return SetupResult.failure(errorMessage);
         }
 
-        clearDevRaidArea(raidLevel, raidMap.cleanupBounds());
-        if (raidMap.generatePlatform()) {
+        source.cleanupBounds().ifPresent(bounds -> prepareCleanup(raidLevel, raidMap, bounds));
+        if (source.shouldGeneratePlatform()) {
             prepareTestRaidPlatform(raidLevel, raidMap);
         }
         structureTemplate.ifPresent(template -> placeStructureTemplate(raidLevel, raidMap, template));
-        renderExtractionMarkers(raidLevel, raidMap);
+        if (raidMap.renderExtractionMarkers()) {
+            renderExtractionMarkers(raidLevel, raidMap);
+        }
         placeLootChests(raidLevel, raidMap);
         return SetupResult.success(spawnTestRaidMobs(raidLevel, raidMap));
     }
@@ -90,6 +94,16 @@ public class RaidMapSetupService {
         }
     }
 
+    private static void prepareCleanup(ServerLevel raidLevel, RaidMapDefinition raidMap, RaidDevBounds bounds) {
+        if (raidMap.source().shouldClearTerrainBlocks()) {
+            clearDevRaidArea(raidLevel, bounds);
+        } else {
+            ExtractCraft.LOGGER.info("Skipped terrain cleanup for existing-world raid map {} in {}", raidMap.id(), raidLevel.dimension().location());
+        }
+
+        clearDroppedItems(raidLevel, bounds);
+    }
+
     private static void clearDevRaidArea(ServerLevel raidLevel, RaidDevBounds bounds) {
         BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
 
@@ -109,20 +123,18 @@ public class RaidMapSetupService {
                 bounds.maxY(),
                 bounds.minZ(),
                 bounds.maxZ());
-
-        clearDroppedItems(raidLevel, bounds);
     }
 
     private static Optional<StructureTemplate> loadStructureTemplate(ServerLevel raidLevel, RaidMapDefinition raidMap) {
-        if (raidMap.structurePlacement().isEmpty()) {
+        if (raidMap.source().structurePlacement().isEmpty()) {
             return Optional.empty();
         }
 
-        return raidLevel.getServer().getStructureManager().get(raidMap.structurePlacement().get().templateId());
+        return raidLevel.getServer().getStructureManager().get(raidMap.source().structurePlacement().get().templateId());
     }
 
     private static void placeStructureTemplate(ServerLevel raidLevel, RaidMapDefinition raidMap, StructureTemplate template) {
-        RaidStructurePlacement structurePlacement = raidMap.structurePlacement().orElseThrow();
+        RaidStructurePlacement structurePlacement = raidMap.source().structurePlacement().orElseThrow();
         StructurePlaceSettings settings = new StructurePlaceSettings()
                 .setRotation(structurePlacement.rotation())
                 .setMirror(structurePlacement.mirror())

@@ -87,7 +87,7 @@ public class RaidCommands {
                 returnPosition.z);
 
         Vec3 raidSpawn = raidMap.playerSpawn();
-        player.teleportTo(raidLevel, raidSpawn.x, raidSpawn.y, raidSpawn.z, player.getYRot(), player.getXRot());
+        player.teleportTo(raidLevel, raidSpawn.x, raidSpawn.y, raidSpawn.z, raidMap.playerSpawnYaw(), raidMap.playerSpawnPitch());
         player.sendSystemMessage(Component.literal("Test raid started. Time limit: 60 seconds. Use /testraidextract to extract."));
         ExtractCraft.LOGGER.info("Teleported {} to test raid at {}, {}, {} in {}",
                 player.getGameProfile().getName(),
