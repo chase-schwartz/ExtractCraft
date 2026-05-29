@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "extractcraft:block/extraction_marker"
+    }
+  }
+}

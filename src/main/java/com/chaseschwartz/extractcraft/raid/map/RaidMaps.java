@@ -17,6 +17,7 @@ import net.minecraft.world.phys.Vec3;
 public class RaidMaps {
     private static final RaidDevBounds DEV_CLEANUP_BOUNDS = new RaidDevBounds(-8, 8, 99, 103, -8, 8);
     private static final RaidDevBounds ROCKET_PLATFORM_DROPS_BOUNDS = new RaidDevBounds(1019, 1063, 101, 116, -305, -283);
+    private static final RaidDevBounds ROCKET_PLATFORM_AUTHORING_BOUNDS = new RaidDevBounds(820, 1233, 40, 116, -349, 75);
 
     public static final RaidMapDefinition TEST_RAID = new RaidMapDefinition(
             "test",
@@ -131,7 +132,7 @@ public class RaidMaps {
             List.of(
                     new RaidExtractionZone(1231.0D, 1233.0D, 103.0D, 106.0D, -63.0D, -61.0D)),
             20 * 60,
-            RaidMapSource.existingWorldArea(new BlockPos(820, 40, 75), Optional.of(ROCKET_PLATFORM_DROPS_BOUNDS)),
+            RaidMapSource.existingWorldArea(new BlockPos(820, 40, 75), Optional.of(ROCKET_PLATFORM_DROPS_BOUNDS), Optional.of(ROCKET_PLATFORM_AUTHORING_BOUNDS)),
             false);
 
     private static final Map<String, RaidMapDefinition> MAPS_BY_ID = List.of(TEST_RAID, COMPACT_RAID, CITY_BLOCK, ROCKET_PLATFORM).stream()

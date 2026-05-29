@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "extractcraft:block/mob_spawn_marker"
+  }
+}

@@ -1,6 +1,11 @@
 {
   "itemGroup.extractcraft": "Example Mod Tab",
   "block.extractcraft.example_block": "Example Block",
+  "block.extractcraft.player_spawn_marker": "Player Spawn Marker",
+  "block.extractcraft.extraction_marker": "Extraction Marker",
+  "block.extractcraft.loot_marker": "Loot Marker",
+  "block.extractcraft.rare_loot_marker": "Rare Loot Marker",
+  "block.extractcraft.mob_spawn_marker": "Mob Spawn Marker",
   "item.extractcraft.example_item": "Example Item",
 
   "extractcraft.configuration.title": "ExtractCraft Configs",

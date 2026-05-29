@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
+import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -52,6 +53,16 @@ public class ExtractCraft {
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
     // Creates a new BlockItem with the id "extractcraft:example_block", combining the namespace and path
     public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
+    public static final DeferredBlock<Block> PLAYER_SPAWN_MARKER = registerMarkerBlock("player_spawn_marker", MapColor.COLOR_LIGHT_BLUE);
+    public static final DeferredItem<BlockItem> PLAYER_SPAWN_MARKER_ITEM = ITEMS.registerSimpleBlockItem("player_spawn_marker", PLAYER_SPAWN_MARKER);
+    public static final DeferredBlock<Block> EXTRACTION_MARKER = registerMarkerBlock("extraction_marker", MapColor.COLOR_GREEN);
+    public static final DeferredItem<BlockItem> EXTRACTION_MARKER_ITEM = ITEMS.registerSimpleBlockItem("extraction_marker", EXTRACTION_MARKER);
+    public static final DeferredBlock<Block> LOOT_MARKER = registerMarkerBlock("loot_marker", MapColor.GOLD);
+    public static final DeferredItem<BlockItem> LOOT_MARKER_ITEM = ITEMS.registerSimpleBlockItem("loot_marker", LOOT_MARKER);
+    public static final DeferredBlock<Block> RARE_LOOT_MARKER = registerMarkerBlock("rare_loot_marker", MapColor.COLOR_PURPLE);
+    public static final DeferredItem<BlockItem> RARE_LOOT_MARKER_ITEM = ITEMS.registerSimpleBlockItem("rare_loot_marker", RARE_LOOT_MARKER);
+    public static final DeferredBlock<Block> MOB_SPAWN_MARKER = registerMarkerBlock("mob_spawn_marker", MapColor.COLOR_RED);
+    public static final DeferredItem<BlockItem> MOB_SPAWN_MARKER_ITEM = ITEMS.registerSimpleBlockItem("mob_spawn_marker", MOB_SPAWN_MARKER);
 
     // Creates a new food item with the id "extractcraft:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
@@ -64,6 +75,11 @@ public class ExtractCraft {
             .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
                 output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
+                output.accept(PLAYER_SPAWN_MARKER_ITEM.get());
+                output.accept(EXTRACTION_MARKER_ITEM.get());
+                output.accept(LOOT_MARKER_ITEM.get());
+                output.accept(RARE_LOOT_MARKER_ITEM.get());
+                output.accept(MOB_SPAWN_MARKER_ITEM.get());
             }).build());
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
@@ -105,6 +121,10 @@ public class ExtractCraft {
         Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
     }
 
+    private static DeferredBlock<Block> registerMarkerBlock(String id, MapColor mapColor) {
+        return BLOCKS.registerSimpleBlock(id, BlockBehaviour.Properties.of().mapColor(mapColor).strength(0.2F).noCollission());
+    }
+
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
@@ -122,5 +142,6 @@ public class ExtractCraft {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         RaidCommands.register(event.getDispatcher());
+        RaidMarkerCommands.register(event.getDispatcher());
     }
 }

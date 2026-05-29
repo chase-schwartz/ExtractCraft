@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "extractcraft:block/mob_spawn_marker"
+    }
+  }
+}

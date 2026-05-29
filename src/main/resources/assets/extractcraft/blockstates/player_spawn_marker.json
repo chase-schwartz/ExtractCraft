@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "extractcraft:block/player_spawn_marker"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "extractcraft:block/player_spawn_marker"
+  }
+}
