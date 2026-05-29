@@ -19,8 +19,11 @@ import com.chaseschwartz.extractcraft.raid.map.RaidStructurePlacement;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
@@ -224,10 +227,12 @@ public class RaidMapSetupService {
 
         mob.moveTo(x, y, z, 0.0F, 0.0F);
         mob.setPersistenceRequired();
+        equipDaylightProtection(mob);
         if (raidLevel.addFreshEntity(mob)) {
             raidMobIds.add(mob.getUUID());
-            ExtractCraft.LOGGER.info("Spawned test raid mob {} at {}, {}, {} in {}",
+            ExtractCraft.LOGGER.info("Spawned test raid mob {} with UUID {} at {}, {}, {} in {}",
                     entityType,
+                    mob.getUUID(),
                     x,
                     y,
                     z,
@@ -240,6 +245,12 @@ public class RaidMapSetupService {
                     z,
                     raidLevel.dimension().location());
         }
+    }
+
+    private static void equipDaylightProtection(Mob mob) {
+        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.CHAINMAIL_HELMET));
+        mob.setDropChance(EquipmentSlot.HEAD, 0.0F);
+        ExtractCraft.LOGGER.info("Equipped no-drop chainmail helmet on raid mob {} for daylight protection", mob.getUUID());
     }
 
     public record SetupResult(boolean success, List<UUID> raidMobIds, String errorMessage) {

@@ -5,8 +5,10 @@ import java.util.List;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidMarkerRuntimeResolver {
@@ -28,6 +30,7 @@ public class RaidMarkerRuntimeResolver {
     private static RaidMapDefinition applyRocketPlatformOverrides(RaidMapDefinition raidMap, RaidMarkerLayout layout) {
         List<RaidMarker> spawnMarkers = markersOfType(layout, RaidMarkerType.PLAYER_SPAWN);
         List<RaidMarker> extractionMarkers = markersOfType(layout, RaidMarkerType.EXTRACTION);
+        List<RaidMarker> mobSpawnMarkers = markersOfType(layout, RaidMarkerType.MOB_SPAWN);
 
         Vec3 playerSpawn = raidMap.playerSpawn();
         if (!spawnMarkers.isEmpty()) {
@@ -51,8 +54,19 @@ public class RaidMarkerRuntimeResolver {
             ExtractCraft.LOGGER.info("Applied {} EXTRACTION marker overrides for {}", extractionZones.size(), raidMap.id());
         }
 
-        if (spawnMarkers.isEmpty() && extractionMarkers.isEmpty()) {
-            ExtractCraft.LOGGER.info("Saved marker layout for {} did not contain PLAYER_SPAWN or EXTRACTION markers; using hardcoded values", raidMap.id());
+        List<RaidMobSpawn> mobSpawns = raidMap.mobSpawns();
+        if (!mobSpawnMarkers.isEmpty()) {
+            mobSpawns = mobSpawnMarkers.stream()
+                    .map(RaidMarkerRuntimeResolver::mobSpawnFromMarker)
+                    .toList();
+            ExtractCraft.LOGGER.info("Found {} MOB_SPAWN markers for {}; applied marker-derived zombie spawns", mobSpawns.size(), raidMap.id());
+            for (RaidMobSpawn mobSpawn : mobSpawns) {
+                ExtractCraft.LOGGER.info("Resolved MOB_SPAWN marker to zombie spawn at {}, {}, {}", mobSpawn.x(), mobSpawn.y(), mobSpawn.z());
+            }
+        }
+
+        if (spawnMarkers.isEmpty() && extractionMarkers.isEmpty() && mobSpawnMarkers.isEmpty()) {
+            ExtractCraft.LOGGER.info("Saved marker layout for {} did not contain PLAYER_SPAWN, EXTRACTION, or MOB_SPAWN markers; using hardcoded values", raidMap.id());
             return raidMap;
         }
 
@@ -65,7 +79,7 @@ public class RaidMarkerRuntimeResolver {
                 raidMap.playerSpawnYaw(),
                 raidMap.playerSpawnPitch(),
                 raidMap.lootChests(),
-                raidMap.mobSpawns(),
+                mobSpawns,
                 extractionZones,
                 raidMap.raidDurationTicks(),
                 raidMap.source(),
@@ -86,5 +100,10 @@ public class RaidMarkerRuntimeResolver {
                 markerPos.getY() + 1.0D,
                 markerPos.getZ() - 1.0D,
                 markerPos.getZ() + 1.0D);
+    }
+
+    private static RaidMobSpawn mobSpawnFromMarker(RaidMarker marker) {
+        BlockPos markerPos = marker.absolutePos();
+        return new RaidMobSpawn(EntityType.ZOMBIE, markerPos.getX() + 0.5D, markerPos.getY() + 1.0D, markerPos.getZ() + 0.5D);
     }
 }
