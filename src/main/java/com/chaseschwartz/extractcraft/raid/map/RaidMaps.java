@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 public class RaidMaps {
     private static final RaidDevBounds DEV_CLEANUP_BOUNDS = new RaidDevBounds(-8, 8, 99, 103, -8, 8);
     private static final RaidDevBounds ROCKET_PLATFORM_DROPS_BOUNDS = new RaidDevBounds(1019, 1063, 101, 116, -305, -283);
-    private static final RaidDevBounds ROCKET_PLATFORM_AUTHORING_BOUNDS = new RaidDevBounds(820, 1233, 40, 116, -349, 75);
+    private static final RaidDevBounds ROCKET_PLATFORM_AUTHORING_BOUNDS = new RaidDevBounds(800, 1281, 40, 225, -484, 33);
 
     public static final RaidMapDefinition TEST_RAID = new RaidMapDefinition(
             "test",

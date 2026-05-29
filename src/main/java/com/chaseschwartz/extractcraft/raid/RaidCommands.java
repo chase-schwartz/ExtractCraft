@@ -3,6 +3,7 @@ package com.chaseschwartz.extractcraft.raid;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
+import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerRuntimeResolver;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -57,27 +58,28 @@ public class RaidCommands {
             return 0;
         }
 
+        RaidMapDefinition resolvedRaidMap = RaidMarkerRuntimeResolver.resolve(raidMap);
         MinecraftServer server = player.server;
-        ServerLevel raidLevel = server.getLevel(raidMap.dimension());
+        ServerLevel raidLevel = server.getLevel(resolvedRaidMap.dimension());
         if (raidLevel == null) {
             player.sendSystemMessage(Component.literal("Unable to start test raid: raid dimension is unavailable."));
             ExtractCraft.LOGGER.warn("Unable to start test raid for {} because {} is unavailable",
                     player.getGameProfile().getName(),
-                    raidMap.dimension().location());
+                    resolvedRaidMap.dimension().location());
             return 0;
         }
 
-        RaidMapSetupService.SetupResult setupResult = RaidMapSetupService.prepare(raidLevel, raidMap);
+        RaidMapSetupService.SetupResult setupResult = RaidMapSetupService.prepare(raidLevel, resolvedRaidMap);
         if (!setupResult.success()) {
-            player.sendSystemMessage(Component.literal("Unable to start raid map '" + raidMap.id() + "': " + setupResult.errorMessage()));
+            player.sendSystemMessage(Component.literal("Unable to start raid map '" + resolvedRaidMap.id() + "': " + setupResult.errorMessage()));
             ExtractCraft.LOGGER.warn("Unable to start raid map {} for {}: {}",
-                    raidMap.id(),
+                    resolvedRaidMap.id(),
                     player.getGameProfile().getName(),
                     setupResult.errorMessage());
             return 0;
         }
 
-        RaidManager.startRaid(player, setupResult.raidMobIds(), raidMap);
+        RaidManager.startRaid(player, setupResult.raidMobIds(), resolvedRaidMap);
         Vec3 returnPosition = player.position();
         ExtractCraft.LOGGER.info("Starting test raid for {} from {} at {}, {}, {}",
                 player.getGameProfile().getName(),
@@ -86,8 +88,8 @@ public class RaidCommands {
                 returnPosition.y,
                 returnPosition.z);
 
-        Vec3 raidSpawn = raidMap.playerSpawn();
-        player.teleportTo(raidLevel, raidSpawn.x, raidSpawn.y, raidSpawn.z, raidMap.playerSpawnYaw(), raidMap.playerSpawnPitch());
+        Vec3 raidSpawn = resolvedRaidMap.playerSpawn();
+        player.teleportTo(raidLevel, raidSpawn.x, raidSpawn.y, raidSpawn.z, resolvedRaidMap.playerSpawnYaw(), resolvedRaidMap.playerSpawnPitch());
         player.sendSystemMessage(Component.literal("Test raid started. Time limit: 60 seconds. Use /testraidextract to extract."));
         ExtractCraft.LOGGER.info("Teleported {} to test raid at {}, {}, {} in {}",
                 player.getGameProfile().getName(),

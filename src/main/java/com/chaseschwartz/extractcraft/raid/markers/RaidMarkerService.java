@@ -8,10 +8,15 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -48,11 +53,53 @@ public class RaidMarkerService {
     }
 
     public static Path save(RaidMarkerLayout layout) throws IOException {
-        Path directory = FMLPaths.GAMEDIR.get().resolve("extractcraft").resolve("raid_markers");
+        Path directory = markerDirectory();
         Files.createDirectories(directory);
         Path file = directory.resolve(layout.mapId() + "_markers.json");
         Files.writeString(file, layout.toJson(), StandardCharsets.UTF_8);
         return file;
+    }
+
+    public static Optional<RaidMarkerLayout> loadSaved(String mapId) {
+        Path file = markerFile(mapId);
+        if (!Files.exists(file)) {
+            return Optional.empty();
+        }
+
+        try {
+            JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            String layoutMapId = getString(root, "mapId", mapId);
+            BlockPos layoutOrigin = readBlockPos(root.getAsJsonObject("layoutOrigin"));
+            JsonArray markerElements = root.getAsJsonArray("markers");
+            List<RaidMarker> markers = new ArrayList<>();
+            if (markerElements != null) {
+                for (JsonElement markerElement : markerElements) {
+                    if (!markerElement.isJsonObject()) {
+                        continue;
+                    }
+
+                    JsonObject markerObject = markerElement.getAsJsonObject();
+                    RaidMarkerType type = RaidMarkerType.bySerializedName(getString(markerObject, "type", "")).orElse(null);
+                    JsonObject relativeObject = markerObject.getAsJsonObject("relative");
+                    if (type == null || relativeObject == null) {
+                        continue;
+                    }
+
+                    BlockPos relativePos = readBlockPos(relativeObject);
+                    markers.add(new RaidMarker(type, layoutOrigin.offset(relativePos), relativePos));
+                }
+            }
+
+            ExtractCraft.LOGGER.info("Loaded {} saved raid markers for map {} from {}", markers.size(), layoutMapId, file);
+            return Optional.of(new RaidMarkerLayout(layoutMapId, layoutOrigin, markers));
+        } catch (RuntimeException | IOException exception) {
+            ExtractCraft.LOGGER.warn("Unable to load saved raid marker layout for map {} from {}; falling back to hardcoded map values", mapId, file, exception);
+            return Optional.empty();
+        }
+    }
+
+    public static Path markerFile(String mapId) {
+        return markerDirectory().resolve(mapId + "_markers.json");
     }
 
     public static Map<RaidMarkerType, Long> countsByType(RaidMarkerLayout layout) {
@@ -87,5 +134,18 @@ public class RaidMarkerService {
                     marker.relativePos().getY(),
                     marker.relativePos().getZ());
         }
+    }
+
+    private static Path markerDirectory() {
+        return FMLPaths.GAMEDIR.get().resolve("extractcraft").resolve("raid_markers");
+    }
+
+    private static BlockPos readBlockPos(JsonObject jsonObject) {
+        return new BlockPos(jsonObject.get("x").getAsInt(), jsonObject.get("y").getAsInt(), jsonObject.get("z").getAsInt());
+    }
+
+    private static String getString(JsonObject jsonObject, String key, String fallback) {
+        JsonElement element = jsonObject.get(key);
+        return element == null ? fallback : element.getAsString();
     }
 }

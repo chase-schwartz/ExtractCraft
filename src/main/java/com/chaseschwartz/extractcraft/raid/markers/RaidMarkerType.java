@@ -36,4 +36,10 @@ public enum RaidMarkerType {
                 .filter(type -> type.block() == block)
                 .findFirst();
     }
+
+    public static Optional<RaidMarkerType> bySerializedName(String serializedName) {
+        return Arrays.stream(values())
+                .filter(type -> type.serializedName.equals(serializedName))
+                .findFirst();
+    }
 }
