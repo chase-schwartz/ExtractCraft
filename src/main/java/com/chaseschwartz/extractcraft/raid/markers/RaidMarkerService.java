@@ -21,6 +21,7 @@ import com.google.gson.JsonParser;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.fml.loading.FMLPaths;
 
 public class RaidMarkerService {
@@ -102,6 +103,39 @@ public class RaidMarkerService {
         return markerDirectory().resolve(mapId + "_markers.json");
     }
 
+    public static RenderResult renderSaved(ServerLevel level, RaidMarkerLayout layout) {
+        List<RaidMarker> renderedMarkers = new ArrayList<>();
+        List<RaidMarker> skippedMarkers = new ArrayList<>();
+
+        for (RaidMarker marker : layout.markers()) {
+            Block currentBlock = level.getBlockState(marker.absolutePos()).getBlock();
+            if (!isSafeRenderReplaceBlock(currentBlock)) {
+                skippedMarkers.add(marker);
+                ExtractCraft.LOGGER.warn("Skipped rendering raid marker {} at {}, {}, {} because current block {} is not safe to overwrite",
+                        marker.type().serializedName(),
+                        marker.absolutePos().getX(),
+                        marker.absolutePos().getY(),
+                        marker.absolutePos().getZ(),
+                        currentBlock);
+                continue;
+            }
+
+            level.setBlock(marker.absolutePos(), marker.type().block().defaultBlockState(), 3);
+            renderedMarkers.add(marker);
+            ExtractCraft.LOGGER.info("Rendered raid marker {} at {}, {}, {}",
+                    marker.type().serializedName(),
+                    marker.absolutePos().getX(),
+                    marker.absolutePos().getY(),
+                    marker.absolutePos().getZ());
+        }
+
+        ExtractCraft.LOGGER.info("Rendered {} raid markers and skipped {} markers for map {}",
+                renderedMarkers.size(),
+                skippedMarkers.size(),
+                layout.mapId());
+        return new RenderResult(new RaidMarkerLayout(layout.mapId(), layout.layoutOrigin(), renderedMarkers), skippedMarkers);
+    }
+
     public static Map<RaidMarkerType, Long> countsByType(RaidMarkerLayout layout) {
         Map<RaidMarkerType, Long> counts = new EnumMap<>(RaidMarkerType.class);
         for (RaidMarkerType type : RaidMarkerType.values()) {
@@ -136,6 +170,13 @@ public class RaidMarkerService {
         }
     }
 
+    private static boolean isSafeRenderReplaceBlock(Block block) {
+        return block == Blocks.AIR
+                || block == Blocks.BARREL
+                || block == Blocks.CHEST
+                || RaidMarkerType.byBlock(block).isPresent();
+    }
+
     private static Path markerDirectory() {
         return FMLPaths.GAMEDIR.get().resolve("extractcraft").resolve("raid_markers");
     }
@@ -147,5 +188,11 @@ public class RaidMarkerService {
     private static String getString(JsonObject jsonObject, String key, String fallback) {
         JsonElement element = jsonObject.get(key);
         return element == null ? fallback : element.getAsString();
+    }
+
+    public record RenderResult(RaidMarkerLayout renderedLayout, List<RaidMarker> skippedMarkers) {
+        public RenderResult {
+            skippedMarkers = List.copyOf(skippedMarkers);
+        }
     }
 }
