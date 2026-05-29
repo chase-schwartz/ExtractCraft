@@ -42,6 +42,7 @@ public class RaidMaps {
                                     new RaidLootItem(Items.BOW, 1),
                                     new RaidLootItem(Items.APPLE, 2),
                                     new RaidLootItem(Items.GOLD_INGOT, 1)))),
+            List.of(),
             List.of(
                     new RaidMobSpawn(EntityType.ZOMBIE, 4.5D, 100.0D, 0.5D),
                     new RaidMobSpawn(EntityType.SKELETON, -4.5D, 100.0D, 0.5D)),
@@ -72,6 +73,7 @@ public class RaidMaps {
                             List.of(
                                     new RaidLootItem(Items.ARROW, 8),
                                     new RaidLootItem(Items.APPLE, 2)))),
+            List.of(),
             List.of(
                     new RaidMobSpawn(EntityType.ZOMBIE, 3.5D, 100.0D, 0.5D),
                     new RaidMobSpawn(EntityType.SKELETON, -3.5D, 100.0D, 0.5D)),
@@ -103,6 +105,7 @@ public class RaidMaps {
                                     new RaidLootItem(Items.ARROW, 12),
                                     new RaidLootItem(Items.BOW, 1),
                                     new RaidLootItem(Items.APPLE, 2)))),
+            List.of(),
             List.of(
                     new RaidMobSpawn(EntityType.ZOMBIE, 6.5D, 100.0D, 0.5D),
                     new RaidMobSpawn(EntityType.SKELETON, -6.5D, 100.0D, 2.5D)),
@@ -127,6 +130,7 @@ public class RaidMaps {
             new Vec3(1060.0D, 104.0D, -349.0D),
             0.0F,
             0.0F,
+            List.of(),
             List.of(),
             List.of(),
             List.of(

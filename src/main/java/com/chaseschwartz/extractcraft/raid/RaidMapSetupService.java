@@ -9,6 +9,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootChest;
+import com.chaseschwartz.extractcraft.raid.map.RaidLootContainer;
 import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
@@ -24,6 +25,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
@@ -52,6 +54,7 @@ public class RaidMapSetupService {
             renderExtractionMarkers(raidLevel, raidMap);
         }
         placeLootChests(raidLevel, raidMap);
+        placeLootContainers(raidLevel, raidMap);
         return SetupResult.success(spawnTestRaidMobs(raidLevel, raidMap));
     }
 
@@ -94,6 +97,12 @@ public class RaidMapSetupService {
     private static void placeLootChests(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         for (RaidLootChest lootChest : raidMap.lootChests()) {
             placeAndFillLootChest(raidLevel, lootChest);
+        }
+    }
+
+    private static void placeLootContainers(ServerLevel raidLevel, RaidMapDefinition raidMap) {
+        for (RaidLootContainer lootContainer : raidMap.lootContainers()) {
+            placeAndFillLootContainer(raidLevel, lootContainer);
         }
     }
 
@@ -201,6 +210,34 @@ public class RaidMapSetupService {
                     chestPos.getX(),
                     chestPos.getY(),
                     chestPos.getZ(),
+                    raidLevel.dimension().location());
+        }
+    }
+
+    private static void placeAndFillLootContainer(ServerLevel raidLevel, RaidLootContainer lootContainer) {
+        BlockPos containerPos = lootContainer.pos();
+        raidLevel.setBlock(containerPos, lootContainer.containerBlock().defaultBlockState(), 3);
+        if (raidLevel.getBlockEntity(containerPos) instanceof Container container) {
+            container.clearContent();
+            int slot = 0;
+            for (RaidLootItem lootItem : lootContainer.loot()) {
+                container.setItem(slot, lootItem.createStack());
+                slot++;
+            }
+            container.setChanged();
+
+            ExtractCraft.LOGGER.info("Placed and filled raid loot container {} at {}, {}, {} in {}",
+                    lootContainer.containerBlock(),
+                    containerPos.getX(),
+                    containerPos.getY(),
+                    containerPos.getZ(),
+                    raidLevel.dimension().location());
+        } else {
+            ExtractCraft.LOGGER.warn("Unable to fill raid loot container {} at {}, {}, {} in {}",
+                    lootContainer.containerBlock(),
+                    containerPos.getX(),
+                    containerPos.getY(),
+                    containerPos.getZ(),
                     raidLevel.dimension().location());
         }
     }

@@ -4,11 +4,15 @@ import java.util.List;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
+import com.chaseschwartz.extractcraft.raid.map.RaidLootContainer;
+import com.chaseschwartz.extractcraft.raid.map.RaidLootItem;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidMarkerRuntimeResolver {
@@ -31,6 +35,8 @@ public class RaidMarkerRuntimeResolver {
         List<RaidMarker> spawnMarkers = markersOfType(layout, RaidMarkerType.PLAYER_SPAWN);
         List<RaidMarker> extractionMarkers = markersOfType(layout, RaidMarkerType.EXTRACTION);
         List<RaidMarker> mobSpawnMarkers = markersOfType(layout, RaidMarkerType.MOB_SPAWN);
+        List<RaidMarker> lootMarkers = markersOfType(layout, RaidMarkerType.LOOT);
+        List<RaidMarker> rareLootMarkers = markersOfType(layout, RaidMarkerType.RARE_LOOT);
 
         Vec3 playerSpawn = raidMap.playerSpawn();
         if (!spawnMarkers.isEmpty()) {
@@ -65,8 +71,25 @@ public class RaidMarkerRuntimeResolver {
             }
         }
 
-        if (spawnMarkers.isEmpty() && extractionMarkers.isEmpty() && mobSpawnMarkers.isEmpty()) {
-            ExtractCraft.LOGGER.info("Saved marker layout for {} did not contain PLAYER_SPAWN, EXTRACTION, or MOB_SPAWN markers; using hardcoded values", raidMap.id());
+        List<RaidLootContainer> lootContainers = raidMap.lootContainers();
+        if (!lootMarkers.isEmpty() || !rareLootMarkers.isEmpty()) {
+            lootContainers = new java.util.ArrayList<>(raidMap.lootContainers());
+            lootMarkers.stream()
+                    .map(marker -> lootContainerFromMarker(marker, commonLoot()))
+                    .forEach(lootContainers::add);
+            rareLootMarkers.stream()
+                    .map(marker -> lootContainerFromMarker(marker, rareLoot()))
+                    .forEach(lootContainers::add);
+            ExtractCraft.LOGGER.info("Applied {} LOOT marker containers and {} RARE_LOOT marker containers for {}",
+                    lootMarkers.size(),
+                    rareLootMarkers.size(),
+                    raidMap.id());
+        }
+
+        if (spawnMarkers.isEmpty() && extractionMarkers.isEmpty() && mobSpawnMarkers.isEmpty() && lootMarkers.isEmpty() && rareLootMarkers.isEmpty()) {
+            ExtractCraft.LOGGER.info(
+                    "Saved marker layout for {} did not contain PLAYER_SPAWN, EXTRACTION, MOB_SPAWN, LOOT, or RARE_LOOT markers; using hardcoded values",
+                    raidMap.id());
             return raidMap;
         }
 
@@ -79,6 +102,7 @@ public class RaidMarkerRuntimeResolver {
                 raidMap.playerSpawnYaw(),
                 raidMap.playerSpawnPitch(),
                 raidMap.lootChests(),
+                lootContainers,
                 mobSpawns,
                 extractionZones,
                 raidMap.raidDurationTicks(),
@@ -105,5 +129,25 @@ public class RaidMarkerRuntimeResolver {
     private static RaidMobSpawn mobSpawnFromMarker(RaidMarker marker) {
         BlockPos markerPos = marker.absolutePos();
         return new RaidMobSpawn(EntityType.ZOMBIE, markerPos.getX() + 0.5D, markerPos.getY() + 1.0D, markerPos.getZ() + 0.5D);
+    }
+
+    private static RaidLootContainer lootContainerFromMarker(RaidMarker marker, List<RaidLootItem> loot) {
+        return new RaidLootContainer(marker.absolutePos(), Blocks.BARREL, loot);
+    }
+
+    private static List<RaidLootItem> commonLoot() {
+        return List.of(
+                new RaidLootItem(Items.BREAD, 4),
+                new RaidLootItem(Items.ARROW, 8),
+                new RaidLootItem(Items.IRON_INGOT, 2),
+                new RaidLootItem(Items.APPLE, 2));
+    }
+
+    private static List<RaidLootItem> rareLoot() {
+        return List.of(
+                new RaidLootItem(Items.DIAMOND, 1),
+                new RaidLootItem(Items.EMERALD, 2),
+                new RaidLootItem(Items.GOLDEN_APPLE, 1),
+                new RaidLootItem(Items.IRON_INGOT, 6));
     }
 }
