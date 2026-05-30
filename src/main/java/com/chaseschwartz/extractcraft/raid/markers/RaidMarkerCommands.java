@@ -30,7 +30,10 @@ public class RaidMarkerCommands {
                                 .executes(context -> saveMarkers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
                 .then(Commands.literal("render")
                         .then(Commands.argument("map_id", StringArgumentType.word())
-                                .executes(context -> renderMarkers(context.getSource(), StringArgumentType.getString(context, "map_id"))))));
+                                .executes(context -> renderMarkers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("clear")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .executes(context -> clearMarkers(context.getSource(), StringArgumentType.getString(context, "map_id"))))));
     }
 
     private static int scanMarkers(CommandSourceStack source, String mapId) {
@@ -88,6 +91,24 @@ public class RaidMarkerCommands {
         }
         sendTypeCounts(source, RaidMarkerService.countsByType(renderedLayout));
         return renderedLayout.markers().size();
+    }
+
+    private static int clearMarkers(CommandSourceStack source, String mapId) {
+        RaidMapDefinition raidMap = resolveRaidMap(source, mapId);
+        if (raidMap == null) {
+            return 0;
+        }
+
+        ServerLevel level = source.getServer().getLevel(raidMap.dimension());
+        if (level == null) {
+            source.sendFailure(Component.literal("Unable to clear raid markers: raid dimension is unavailable."));
+            return 0;
+        }
+
+        RaidMarkerLayout clearedLayout = RaidMarkerService.clear(level, raidMap);
+        source.sendSuccess(() -> Component.literal("Cleared " + clearedLayout.markers().size() + " raid markers for '" + mapId + "'."), false);
+        sendTypeCounts(source, RaidMarkerService.countsByType(clearedLayout));
+        return clearedLayout.markers().size();
     }
 
     private static RaidMarkerLayout scan(CommandSourceStack source, String mapId) {

@@ -136,6 +136,45 @@ public class RaidMarkerService {
         return new RenderResult(new RaidMarkerLayout(layout.mapId(), layout.layoutOrigin(), renderedMarkers), skippedMarkers);
     }
 
+    public static RaidMarkerLayout clear(ServerLevel level, RaidMapDefinition raidMap) {
+        RaidDevBounds bounds = raidMap.source().authoringBounds()
+                .orElseThrow(() -> new IllegalStateException("Raid map has no marker authoring bounds: " + raidMap.id()));
+        BlockPos layoutOrigin = raidMap.source().layoutOrigin();
+        List<RaidMarker> clearedMarkers = new ArrayList<>();
+        BlockPos.MutableBlockPos position = new BlockPos.MutableBlockPos();
+
+        for (int x = bounds.minX(); x <= bounds.maxX(); x++) {
+            for (int y = bounds.minY(); y <= bounds.maxY(); y++) {
+                for (int z = bounds.minZ(); z <= bounds.maxZ(); z++) {
+                    position.set(x, y, z);
+                    Block block = level.getBlockState(position).getBlock();
+                    RaidMarkerType.byBlock(block).ifPresent(type -> {
+                        BlockPos absolutePos = position.immutable();
+                        clearedMarkers.add(new RaidMarker(type, absolutePos, absolutePos.subtract(layoutOrigin)));
+                        level.setBlock(absolutePos, Blocks.AIR.defaultBlockState(), 3);
+                        ExtractCraft.LOGGER.info("Cleared raid marker {} at {}, {}, {}",
+                                type.serializedName(),
+                                absolutePos.getX(),
+                                absolutePos.getY(),
+                                absolutePos.getZ());
+                    });
+                }
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Cleared {} raid markers for map {} in {} from x {}..{}, y {}..{}, z {}..{}",
+                clearedMarkers.size(),
+                raidMap.id(),
+                level.dimension().location(),
+                bounds.minX(),
+                bounds.maxX(),
+                bounds.minY(),
+                bounds.maxY(),
+                bounds.minZ(),
+                bounds.maxZ());
+        return new RaidMarkerLayout(raidMap.id(), layoutOrigin, clearedMarkers);
+    }
+
     public static Map<RaidMarkerType, Long> countsByType(RaidMarkerLayout layout) {
         Map<RaidMarkerType, Long> counts = new EnumMap<>(RaidMarkerType.class);
         for (RaidMarkerType type : RaidMarkerType.values()) {

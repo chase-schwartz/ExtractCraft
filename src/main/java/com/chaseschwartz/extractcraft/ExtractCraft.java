@@ -122,7 +122,11 @@ public class ExtractCraft {
     }
 
     private static DeferredBlock<Block> registerMarkerBlock(String id, MapColor mapColor) {
-        return BLOCKS.registerSimpleBlock(id, BlockBehaviour.Properties.of().mapColor(mapColor).strength(0.2F).noCollission());
+        return BLOCKS.registerSimpleBlock(id, BlockBehaviour.Properties.of()
+                .mapColor(mapColor)
+                .strength(0.0F)
+                .noCollission()
+                .lightLevel(state -> 12));
     }
 
     // Add the example block item to the building blocks tab
