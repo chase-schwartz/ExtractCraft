@@ -40,6 +40,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 public class RaidContainerService {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int CLUSTER_RADIUS = 7;
+    private static final int CLUSTER_CELL_SIZE = 24;
+    private static final int MAX_CLUSTER_SPAN_XZ = 16;
+    private static final int MAX_CLUSTER_SPAN_Y = 8;
     private static final int MAX_CONTAINER_SLOTS_TO_FILL = 6;
     private static final List<ResourceLocation> DENYLIST = List.of(
             ResourceLocation.withDefaultNamespace("hopper"),
@@ -54,7 +57,10 @@ public class RaidContainerService {
             ResourceLocation.withDefaultNamespace("decorated_pot"),
             ResourceLocation.withDefaultNamespace("lectern"),
             ResourceLocation.withDefaultNamespace("jukebox"),
-            ResourceLocation.withDefaultNamespace("shulker_box"));
+            ResourceLocation.withDefaultNamespace("shulker_box"),
+            ResourceLocation.fromNamespaceAndPath("horror_element_mod", "sound_block"),
+            ResourceLocation.fromNamespaceAndPath("horror_element_mod", "atmosphere_block"),
+            ResourceLocation.fromNamespaceAndPath("refurbished_furniture", "frying_pan"));
 
     private RaidContainerService() {
     }
@@ -94,7 +100,7 @@ public class RaidContainerService {
         deniedCounts.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey(Comparator.comparing(ResourceLocation::toString)))
                 .forEach(entry -> ExtractCraft.LOGGER.info("Denied raid container candidate {} x{}", entry.getKey(), entry.getValue()));
-        return new RaidContainerLayout(raidMap.id(), raidMap.source().layoutOrigin(), sortContainers(containers));
+        return new RaidContainerLayout(raidMap.id(), raidMap.source().layoutOrigin(), assignClusterIds(containers));
     }
 
     public static RaidContainerLayout selectActiveLootContainers(RaidContainerLayout layout) {
@@ -212,11 +218,23 @@ public class RaidContainerService {
     }
 
     private static boolean isDenied(ResourceLocation blockId) {
-        return DENYLIST.contains(blockId) || isShulkerBox(blockId);
+        return DENYLIST.contains(blockId) || isShulkerBox(blockId) || isDeniedRefurbishedFurniture(blockId);
     }
 
     private static boolean isShulkerBox(ResourceLocation blockId) {
         return "minecraft".equals(blockId.getNamespace()) && blockId.getPath().endsWith("_shulker_box");
+    }
+
+    private static boolean isDeniedRefurbishedFurniture(ResourceLocation blockId) {
+        if (!"refurbished_furniture".equals(blockId.getNamespace())) {
+            return false;
+        }
+
+        String path = blockId.getPath();
+        return path.endsWith("_cutting_board")
+                || path.endsWith("_toaster")
+                || path.endsWith("_stove")
+                || path.endsWith("_electricity_generator");
     }
 
     private static boolean isInside(RaidDevBounds bounds, BlockPos pos) {
@@ -234,24 +252,71 @@ public class RaidContainerService {
     }
 
     private static List<List<RaidContainerEntry>> cluster(List<RaidContainerEntry> containers) {
-        List<RaidContainerEntry> sorted = sortContainers(containers);
-        List<List<RaidContainerEntry>> clusters = new ArrayList<>();
-        for (RaidContainerEntry entry : sorted) {
-            List<RaidContainerEntry> matchingCluster = null;
-            for (List<RaidContainerEntry> cluster : clusters) {
-                if (cluster.stream().anyMatch(existing -> manhattan(existing.pos(), entry.pos()) <= CLUSTER_RADIUS)) {
-                    matchingCluster = cluster;
-                    break;
-                }
-            }
+        Map<CellKey, List<RaidContainerEntry>> byCell = sortContainers(containers).stream()
+                .collect(Collectors.groupingBy(
+                        entry -> CellKey.from(entry.pos()),
+                        LinkedHashMap::new,
+                        Collectors.toCollection(ArrayList::new)));
 
-            if (matchingCluster == null) {
-                matchingCluster = new ArrayList<>();
-                clusters.add(matchingCluster);
+        List<List<RaidContainerEntry>> clusters = new ArrayList<>();
+        for (List<RaidContainerEntry> cellEntries : byCell.values()) {
+            List<List<RaidContainerEntry>> cellClusters = new ArrayList<>();
+            for (RaidContainerEntry entry : cellEntries) {
+                List<RaidContainerEntry> matchingCluster = null;
+                for (List<RaidContainerEntry> cluster : cellClusters) {
+                    if (canJoinCluster(cluster, entry)) {
+                        matchingCluster = cluster;
+                        break;
+                    }
+                }
+
+                if (matchingCluster == null) {
+                    matchingCluster = new ArrayList<>();
+                    cellClusters.add(matchingCluster);
+                }
+                matchingCluster.add(entry);
             }
-            matchingCluster.add(entry);
+            clusters.addAll(cellClusters);
         }
         return clusters;
+    }
+
+    private static List<RaidContainerEntry> assignClusterIds(List<RaidContainerEntry> containers) {
+        List<List<RaidContainerEntry>> clusters = cluster(containers);
+        List<RaidContainerEntry> clustered = new ArrayList<>();
+        int clusterNumber = 1;
+        for (List<RaidContainerEntry> cluster : clusters) {
+            String clusterId = "cluster_" + clusterNumber++;
+            for (RaidContainerEntry entry : cluster) {
+                clustered.add(entry.withSelection(clusterId, false, "", 0));
+            }
+        }
+        return sortContainers(clustered);
+    }
+
+    private static boolean canJoinCluster(List<RaidContainerEntry> cluster, RaidContainerEntry entry) {
+        if (cluster.stream().noneMatch(existing -> manhattan(existing.pos(), entry.pos()) <= CLUSTER_RADIUS)) {
+            return false;
+        }
+
+        int minX = entry.pos().getX();
+        int maxX = entry.pos().getX();
+        int minY = entry.pos().getY();
+        int maxY = entry.pos().getY();
+        int minZ = entry.pos().getZ();
+        int maxZ = entry.pos().getZ();
+        for (RaidContainerEntry existing : cluster) {
+            minX = Math.min(minX, existing.pos().getX());
+            maxX = Math.max(maxX, existing.pos().getX());
+            minY = Math.min(minY, existing.pos().getY());
+            maxY = Math.max(maxY, existing.pos().getY());
+            minZ = Math.min(minZ, existing.pos().getZ());
+            maxZ = Math.max(maxZ, existing.pos().getZ());
+        }
+
+        return maxX - minX <= MAX_CLUSTER_SPAN_XZ
+                && maxZ - minZ <= MAX_CLUSTER_SPAN_XZ
+                && maxY - minY <= MAX_CLUSTER_SPAN_Y;
     }
 
     private static int manhattan(BlockPos first, BlockPos second) {
@@ -429,5 +494,11 @@ public class RaidContainerService {
     }
 
     public record PopulateResult(int populatedCount, int skippedCount, String warning) {
+    }
+
+    private record CellKey(int x, int z) {
+        private static CellKey from(BlockPos pos) {
+            return new CellKey(Math.floorDiv(pos.getX(), CLUSTER_CELL_SIZE), Math.floorDiv(pos.getZ(), CLUSTER_CELL_SIZE));
+        }
     }
 }
