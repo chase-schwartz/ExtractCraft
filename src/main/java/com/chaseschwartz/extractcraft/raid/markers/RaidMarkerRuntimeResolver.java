@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.raid.markers;
 
 import java.util.List;
+import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.map.RaidExtractionZone;
@@ -16,22 +17,22 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidMarkerRuntimeResolver {
-    private static final String ROCKET_PLATFORM_MAP_ID = "rocket_platform";
+    private static final Set<String> MARKER_RUNTIME_MAP_IDS = Set.of("rocket_platform", "chaos_city");
 
     private RaidMarkerRuntimeResolver() {
     }
 
     public static RaidMapDefinition resolve(RaidMapDefinition raidMap) {
-        if (!ROCKET_PLATFORM_MAP_ID.equals(raidMap.id())) {
+        if (!MARKER_RUNTIME_MAP_IDS.contains(raidMap.id())) {
             return raidMap;
         }
 
         return RaidMarkerService.loadSaved(raidMap.id())
-                .map(layout -> applyRocketPlatformOverrides(raidMap, layout))
+                .map(layout -> applyMarkerOverrides(raidMap, layout))
                 .orElse(raidMap);
     }
 
-    private static RaidMapDefinition applyRocketPlatformOverrides(RaidMapDefinition raidMap, RaidMarkerLayout layout) {
+    private static RaidMapDefinition applyMarkerOverrides(RaidMapDefinition raidMap, RaidMarkerLayout layout) {
         List<RaidMarker> spawnMarkers = markersOfType(layout, RaidMarkerType.PLAYER_SPAWN);
         List<RaidMarker> extractionMarkers = markersOfType(layout, RaidMarkerType.EXTRACTION);
         List<RaidMarker> mobSpawnMarkers = markersOfType(layout, RaidMarkerType.MOB_SPAWN);

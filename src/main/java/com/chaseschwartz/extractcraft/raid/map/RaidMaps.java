@@ -6,7 +6,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -18,6 +20,9 @@ public class RaidMaps {
     private static final RaidDevBounds DEV_CLEANUP_BOUNDS = new RaidDevBounds(-8, 8, 99, 103, -8, 8);
     private static final RaidDevBounds ROCKET_PLATFORM_DROPS_BOUNDS = new RaidDevBounds(1019, 1063, 101, 116, -305, -283);
     private static final RaidDevBounds ROCKET_PLATFORM_AUTHORING_BOUNDS = new RaidDevBounds(800, 1281, 40, 225, -484, 33);
+    public static final ResourceKey<Level> CHAOS_CITY_DIMENSION = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath("extractcraft", "chaos_city"));
+    public static final RaidDevBounds CHAOS_CITY_SOURCE_BOUNDS = new RaidDevBounds(-1341, -176, 60, 300, -500, 320);
+    public static final RaidDevBounds CHAOS_CITY_BOUNDS = new RaidDevBounds(0, 1165, 60, 300, 0, 820);
 
     public static final RaidMapDefinition TEST_RAID = new RaidMapDefinition(
             "test",
@@ -139,7 +144,24 @@ public class RaidMaps {
             RaidMapSource.existingWorldArea(new BlockPos(820, 40, 75), Optional.of(ROCKET_PLATFORM_DROPS_BOUNDS), Optional.of(ROCKET_PLATFORM_AUTHORING_BOUNDS)),
             false);
 
-    private static final Map<String, RaidMapDefinition> MAPS_BY_ID = List.of(TEST_RAID, COMPACT_RAID, CITY_BLOCK, ROCKET_PLATFORM).stream()
+    public static final RaidMapDefinition CHAOS_CITY = new RaidMapDefinition(
+            "chaos_city",
+            "Chaos City",
+            CHAOS_CITY_DIMENSION,
+            new RaidPlatform(CHAOS_CITY_BOUNDS.minX(), CHAOS_CITY_BOUNDS.maxX(), CHAOS_CITY_BOUNDS.minY(), CHAOS_CITY_BOUNDS.minZ(), CHAOS_CITY_BOUNDS.maxZ(), CHAOS_CITY_BOUNDS.minY() + 1, CHAOS_CITY_BOUNDS.maxY()),
+            new Vec3(583.5D, 90.0D, 410.5D),
+            0.0F,
+            0.0F,
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(
+                    new RaidExtractionZone(20.0D, 30.0D, 60.0D, 90.0D, 20.0D, 30.0D)),
+            20 * 3600,
+            RaidMapSource.bakedWorldArea(new BlockPos(CHAOS_CITY_BOUNDS.minX(), CHAOS_CITY_BOUNDS.minY(), CHAOS_CITY_BOUNDS.minZ()), CHAOS_CITY_BOUNDS),
+            false);
+
+    private static final Map<String, RaidMapDefinition> MAPS_BY_ID = List.of(TEST_RAID, COMPACT_RAID, CITY_BLOCK, ROCKET_PLATFORM, CHAOS_CITY).stream()
             .collect(Collectors.toUnmodifiableMap(RaidMapDefinition::id, raidMap -> raidMap));
 
     private RaidMaps() {

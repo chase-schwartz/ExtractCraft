@@ -29,6 +29,10 @@ public record RaidMapSource(RaidMapSourceType type, Optional<RaidStructurePlacem
         return new RaidMapSource(RaidMapSourceType.EXISTING_WORLD_AREA, Optional.empty(), cleanupBounds, authoringBounds, layoutOrigin);
     }
 
+    public static RaidMapSource bakedWorldArea(BlockPos layoutOrigin, RaidDevBounds authoringBounds) {
+        return new RaidMapSource(RaidMapSourceType.BAKED_WORLD_AREA, Optional.empty(), Optional.of(authoringBounds), Optional.of(authoringBounds), layoutOrigin);
+    }
+
     public boolean shouldClearTerrainBlocks() {
         return type == RaidMapSourceType.GENERATED_PLATFORM || type == RaidMapSourceType.STRUCTURE_TEMPLATE;
     }

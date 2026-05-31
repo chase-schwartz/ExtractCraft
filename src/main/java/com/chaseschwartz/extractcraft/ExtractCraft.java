@@ -7,6 +7,8 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
 import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
 import com.mojang.logging.LogUtils;
 
@@ -104,6 +106,8 @@ public class ExtractCraft {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(new ExtractionZoneHandler());
+        NeoForge.EVENT_BUS.register(new RaidMapBakeService());
+        NeoForge.EVENT_BUS.register(new RaidMapBoundaryService());
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

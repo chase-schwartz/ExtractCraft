@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
 import com.mojang.brigadier.CommandDispatcher;
@@ -44,7 +46,19 @@ public class RaidMapCommands {
                                 .executes(context -> populateContainers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
                 .then(Commands.literal("renderlootcontainers")
                         .then(Commands.argument("map_id", StringArgumentType.word())
-                                .executes(context -> renderLootContainers(context.getSource(), StringArgumentType.getString(context, "map_id"))))));
+                                .executes(context -> renderLootContainers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("bake")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .executes(context -> bake(context.getSource(), StringArgumentType.getString(context, "map_id"), false))
+                                .then(Commands.literal("force")
+                                        .executes(context -> bake(context.getSource(), StringArgumentType.getString(context, "map_id"), true)))))
+                .then(Commands.literal("bakestatus")
+                        .executes(context -> bakeStatus(context.getSource())))
+                .then(Commands.literal("buildboundary")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .executes(context -> buildBoundary(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("boundarystatus")
+                        .executes(context -> boundaryStatus(context.getSource()))));
     }
 
     private static int scanContainers(CommandSourceStack source, String mapId) {
@@ -173,6 +187,50 @@ public class RaidMapCommands {
 
         int renderedCount = rendered;
         source.sendSuccess(() -> Component.literal("Rendered particles for " + renderedCount + " active loot containers."), false);
+        return 1;
+    }
+
+    private static int bake(CommandSourceStack source, String mapId, boolean force) {
+        RaidMapDefinition raidMap = RaidMaps.byId(mapId).orElse(null);
+        if (raidMap == null) {
+            source.sendFailure(Component.literal("Unknown raid map '" + mapId + "'. Available maps: " + RaidMaps.availableMapIds()));
+            return 0;
+        }
+
+        RaidMapBakeService.StartResult result = RaidMapBakeService.startBake(source.getServer(), raidMap, force);
+        if (!result.started()) {
+            source.sendFailure(Component.literal(result.message()));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal(result.message()), false);
+        return 1;
+    }
+
+    private static int bakeStatus(CommandSourceStack source) {
+        source.sendSuccess(() -> Component.literal(RaidMapBakeService.statusMessage()), false);
+        return 1;
+    }
+
+    private static int buildBoundary(CommandSourceStack source, String mapId) {
+        RaidMapDefinition raidMap = RaidMaps.byId(mapId).orElse(null);
+        if (raidMap == null) {
+            source.sendFailure(Component.literal("Unknown raid map '" + mapId + "'. Available maps: " + RaidMaps.availableMapIds()));
+            return 0;
+        }
+
+        RaidMapBoundaryService.StartResult result = RaidMapBoundaryService.startBoundaryBuild(source.getServer(), raidMap);
+        if (!result.started()) {
+            source.sendFailure(Component.literal(result.message()));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal(result.message()), false);
+        return 1;
+    }
+
+    private static int boundaryStatus(CommandSourceStack source) {
+        source.sendSuccess(() -> Component.literal(RaidMapBoundaryService.statusMessage()), false);
         return 1;
     }
 

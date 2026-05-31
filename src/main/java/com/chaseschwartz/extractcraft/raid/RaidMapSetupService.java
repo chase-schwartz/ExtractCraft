@@ -15,7 +15,9 @@ import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMobSpawn;
 import com.chaseschwartz.extractcraft.raid.map.RaidPlatform;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapSource;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapSourceType;
 import com.chaseschwartz.extractcraft.raid.map.RaidStructurePlacement;
+import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -38,6 +40,12 @@ public class RaidMapSetupService {
 
     public static SetupResult prepare(ServerLevel raidLevel, RaidMapDefinition raidMap) {
         RaidMapSource source = raidMap.source();
+        if (source.type() == RaidMapSourceType.BAKED_WORLD_AREA && !RaidMapBakeService.isBaked(raidMap.id())) {
+            String errorMessage = "raid map is not baked yet. Run /raidmap bake " + raidMap.id() + " while the source world is loaded.";
+            ExtractCraft.LOGGER.warn("Unable to prepare raid map {}: {}", raidMap.id(), errorMessage);
+            return SetupResult.failure(errorMessage);
+        }
+
         Optional<StructureTemplate> structureTemplate = loadStructureTemplate(raidLevel, raidMap);
         if (source.structurePlacement().isPresent() && structureTemplate.isEmpty()) {
             String errorMessage = "Missing raid structure template: " + source.structurePlacement().get().templateId();
