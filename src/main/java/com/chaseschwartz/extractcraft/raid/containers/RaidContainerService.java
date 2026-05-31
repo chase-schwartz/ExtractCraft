@@ -263,6 +263,25 @@ public class RaidContainerService {
         return Path.of("run", "extractcraft", "raid_maps", mapId + "_containers.json");
     }
 
+    public static List<String> savedMapIds() {
+        Path directory = Path.of("run", "extractcraft", "raid_maps");
+        if (!Files.isDirectory(directory)) {
+            return List.of();
+        }
+
+        try (var paths = Files.list(directory)) {
+            return paths
+                    .map(path -> path.getFileName().toString())
+                    .filter(name -> name.endsWith("_containers.json"))
+                    .map(name -> name.substring(0, name.length() - "_containers.json".length()))
+                    .sorted()
+                    .toList();
+        } catch (IOException exception) {
+            ExtractCraft.LOGGER.warn("Failed to list saved raid container layouts in {}", directory, exception);
+            return List.of();
+        }
+    }
+
     public static Map<ResourceLocation, Long> countByBlock(RaidContainerLayout layout) {
         return layout.containers().stream()
                 .collect(Collectors.groupingBy(RaidContainerEntry::blockId, LinkedHashMap::new, Collectors.counting()));

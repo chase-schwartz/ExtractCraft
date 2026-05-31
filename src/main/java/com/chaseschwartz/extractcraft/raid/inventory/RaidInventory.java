@@ -31,6 +31,15 @@ public class RaidInventory {
         return new AddResult(false, RaidEquipmentSlot.BACKPACK, "No raid inventory container has enough compatible capacity.");
     }
 
+    public AddResult addToBackpack(RaidInventoryItem item) {
+        if (backpack.canAdd(item)) {
+            backpack.add(item);
+            return new AddResult(true, RaidEquipmentSlot.BACKPACK, "Added to backpack.");
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack does not have enough capacity or weight allowance.");
+    }
+
     public void clear() {
         backpack.clear();
         vest.clear();

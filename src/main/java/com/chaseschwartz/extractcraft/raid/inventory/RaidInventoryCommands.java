@@ -1,17 +1,27 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
+import com.chaseschwartz.extractcraft.raid.containers.RaidContainerLayout;
+import com.chaseschwartz.extractcraft.raid.containers.RaidContainerService;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 public class RaidInventoryCommands {
     private RaidInventoryCommands() {
@@ -34,6 +44,9 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("addheld")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> addHeld(context.getSource())))
+                        .then(Commands.literal("lootcontainer")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> lootContainer(context.getSource())))
                         .then(Commands.literal("clear")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> clear(context.getSource())))
@@ -100,6 +113,41 @@ public class RaidInventoryCommands {
         return 0;
     }
 
+    private static int lootContainer(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        BlockPos targetPos = targetedBlock(player);
+        if (targetPos == null) {
+            player.sendSystemMessage(Component.literal("Look at an active loot container first."));
+            return 0;
+        }
+
+        RaidContainerEntry activeEntry = findActiveContainer(player, targetPos);
+        if (activeEntry == null) {
+            player.sendSystemMessage(Component.literal("That block is not a saved active loot container."));
+            return 0;
+        }
+
+        BlockEntity blockEntity = player.serverLevel().getBlockEntity(targetPos);
+        if (!(blockEntity instanceof Container container)) {
+            player.sendSystemMessage(Component.literal("Target active loot container has no readable inventory."));
+            return 0;
+        }
+
+        LootResult result = moveContainerLootToBackpack(player, container);
+        container.setChanged();
+        player.sendSystemMessage(Component.literal(String.format("Looted %d stacks (%d items), %d credits, %.2f weight. Could not fit: %d stacks.",
+                result.movedStacks,
+                result.movedItems,
+                result.movedValue,
+                result.movedWeight,
+                result.failedStacks)));
+        if (!result.failureReason.isBlank()) {
+            player.sendSystemMessage(Component.literal("Last blocked item: " + result.failureReason));
+        }
+        sendStatus(player);
+        return result.movedStacks > 0 ? 1 : 0;
+    }
+
     private static int clear(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         RaidInventoryManager.clear(player);
@@ -146,5 +194,70 @@ public class RaidInventoryCommands {
                 container.maxWeight(),
                 container.itemCount(),
                 container.totalValue());
+    }
+
+    private static BlockPos targetedBlock(ServerPlayer player) {
+        Vec3 start = player.getEyePosition();
+        Vec3 end = start.add(player.getViewVector(1.0F).scale(6.0D));
+        BlockHitResult hit = player.serverLevel().clip(new ClipContext(start, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+        if (hit.getType() != HitResult.Type.BLOCK) {
+            return null;
+        }
+        return hit.getBlockPos();
+    }
+
+    private static RaidContainerEntry findActiveContainer(ServerPlayer player, BlockPos targetPos) {
+        for (String mapId : RaidContainerService.savedMapIds()) {
+            RaidContainerLayout layout = RaidContainerService.load(mapId).orElse(null);
+            if (layout == null) {
+                continue;
+            }
+
+            for (RaidContainerEntry entry : layout.containers()) {
+                if (entry.activeLootContainer()
+                        && entry.dimensionId().equals(player.serverLevel().dimension().location())
+                        && entry.pos().equals(targetPos)) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static LootResult moveContainerLootToBackpack(ServerPlayer player, Container container) {
+        LootResult result = new LootResult();
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack stack = container.getItem(slot);
+            if (stack.isEmpty()) {
+                continue;
+            }
+
+            ItemStack copy = stack.copy();
+            RaidInventory.AddResult addResult = RaidInventoryManager.addStackToBackpack(player, copy);
+            if (!addResult.success()) {
+                result.failedStacks++;
+                result.failureReason = BuiltInRegistries.ITEM.getKey(copy.getItem()) + ": " + addResult.message();
+                continue;
+            }
+
+            ItemCarryProfile profile = RaidInventoryManager.profileFor(copy).orElse(null);
+            result.movedStacks++;
+            result.movedItems += copy.getCount();
+            result.movedValue += RaidInventoryManager.valueFor(copy);
+            if (profile != null) {
+                result.movedWeight += profile.weight() * copy.getCount();
+            }
+            container.setItem(slot, ItemStack.EMPTY);
+        }
+        return result;
+    }
+
+    private static class LootResult {
+        private int movedStacks;
+        private int movedItems;
+        private int movedValue;
+        private double movedWeight;
+        private int failedStacks;
+        private String failureReason = "";
     }
 }
