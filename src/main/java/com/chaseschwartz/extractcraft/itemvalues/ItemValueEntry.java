@@ -6,6 +6,7 @@ import java.util.Optional;
 import net.minecraft.resources.ResourceLocation;
 
 public record ItemValueEntry(
+        String lookupKey,
         ResourceLocation itemId,
         ItemCategory category,
         ItemRarity rarity,

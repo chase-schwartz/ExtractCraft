@@ -1,6 +1,8 @@
 package com.chaseschwartz.extractcraft.raid.containers;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
@@ -9,6 +11,7 @@ import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.chaseschwartz.extractcraft.raid.map.RaidMaps;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
@@ -19,8 +22,12 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 public class RaidMapCommands {
+    private static final int MAX_FIND_LOOT_RESULTS = 25;
+    private static final Map<String, List<RaidContainerService.FindLootResult>> LAST_FIND_RESULTS = new HashMap<>();
+
     private RaidMapCommands() {
     }
 
@@ -44,6 +51,14 @@ public class RaidMapCommands {
                 .then(Commands.literal("populatecontainers")
                         .then(Commands.argument("map_id", StringArgumentType.word())
                                 .executes(context -> populateContainers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("findloot")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .then(Commands.argument("query", StringArgumentType.greedyString())
+                                        .executes(context -> findLoot(context.getSource(), StringArgumentType.getString(context, "map_id"), StringArgumentType.getString(context, "query"))))))
+                .then(Commands.literal("tpcontainer")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .then(Commands.argument("result_index", IntegerArgumentType.integer(1))
+                                        .executes(context -> teleportToContainer(context.getSource(), StringArgumentType.getString(context, "map_id"), IntegerArgumentType.getInteger(context, "result_index"))))))
                 .then(Commands.literal("lightpass")
                         .then(Commands.argument("map_id", StringArgumentType.word())
                                 .executes(context -> lightPass(context.getSource(), StringArgumentType.getString(context, "map_id")))))
@@ -166,6 +181,67 @@ public class RaidMapCommands {
             source.sendFailure(Component.literal(result.warning()));
         }
         return result.populatedCount() > 0 ? 1 : 0;
+    }
+
+    private static int findLoot(CommandSourceStack source, String mapId, String query) {
+        RaidMapContext context = resolve(source, mapId);
+        if (context == null) {
+            return 0;
+        }
+
+        RaidContainerLayout layout = RaidContainerService.load(mapId).orElse(null);
+        if (layout == null) {
+            source.sendFailure(Component.literal("No saved container data for " + mapId + ". Run scan/select/populate first."));
+            return 0;
+        }
+
+        List<RaidContainerService.FindLootResult> results = RaidContainerService.findLoot(context.level(), context.raidMap(), layout, query, MAX_FIND_LOOT_RESULTS);
+        LAST_FIND_RESULTS.put(mapId, results);
+        if (results.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("No active loot containers in " + mapId + " currently contain '" + query + "'."), false);
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.literal("Found " + results.size() + " loot result(s) for '" + query + "' in " + mapId + ". Use /raidmap tpcontainer " + mapId + " <index>."), false);
+        for (int i = 0; i < results.size(); i++) {
+            int index = i + 1;
+            RaidContainerService.FindLootResult result = results.get(i);
+            BlockPos pos = result.pos();
+            String variant = result.variantId().map(ResourceLocation::toString).orElse("none");
+            source.sendSuccess(() -> Component.literal(index + ". "
+                    + pos.getX() + " " + pos.getY() + " " + pos.getZ()
+                    + " [" + result.blockId() + "] "
+                    + result.displayName()
+                    + " x" + result.count()
+                    + " item=" + result.itemId()
+                    + " variant=" + variant
+                    + " key=" + result.normalizedKey()), false);
+        }
+        return 1;
+    }
+
+    private static int teleportToContainer(CommandSourceStack source, String mapId, int resultIndex) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        RaidMapContext context = resolve(source, mapId);
+        if (context == null) {
+            return 0;
+        }
+
+        List<RaidContainerService.FindLootResult> results = LAST_FIND_RESULTS.get(mapId);
+        if (results == null || results.isEmpty()) {
+            source.sendFailure(Component.literal("No cached findloot results for " + mapId + ". Run /raidmap findloot " + mapId + " <query> first."));
+            return 0;
+        }
+        if (resultIndex > results.size()) {
+            source.sendFailure(Component.literal("Result index " + resultIndex + " is out of range. Last findloot returned " + results.size() + " result(s)."));
+            return 0;
+        }
+
+        RaidContainerService.FindLootResult result = results.get(resultIndex - 1);
+        BlockPos pos = result.pos();
+        player.teleportTo(context.level(), pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, player.getYRot(), player.getXRot());
+        source.sendSuccess(() -> Component.literal("Teleported to loot result " + resultIndex + " at " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + "."), false);
+        return 1;
     }
 
     private static int renderLootContainers(CommandSourceStack source, String mapId) throws CommandSyntaxException {

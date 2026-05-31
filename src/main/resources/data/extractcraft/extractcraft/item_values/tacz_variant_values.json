@@ -1,0 +1,85 @@
+{
+  "values": [
+    {
+      "item": "tacz:ammo#tacz:9mm",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 22,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:ammo#tacz:57x28",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 30,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1800,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ak47",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 12500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 15000,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m249",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 11000,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq6",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1400,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": "Prototype TaCZ variant value"
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_2",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 900,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": "Prototype TaCZ variant value"
+    }
+  ]
+}

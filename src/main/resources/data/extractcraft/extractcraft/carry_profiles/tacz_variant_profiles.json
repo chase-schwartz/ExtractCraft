@@ -1,0 +1,95 @@
+{
+  "profiles": [
+    {
+      "item": "tacz:ammo#tacz:9mm",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:ammo#tacz:57x28",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "category": "guns",
+      "weight": 0.9,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ak47",
+      "category": "guns",
+      "weight": 3.8,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "category": "guns",
+      "weight": 11.0,
+      "slotCost": 12,
+      "gridWidth": 2,
+      "gridHeight": 6,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "category": "guns",
+      "weight": 7.5,
+      "slotCost": 12,
+      "gridWidth": 2,
+      "gridHeight": 6,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m249",
+      "category": "guns",
+      "weight": 7.8,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq6",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": "Prototype TaCZ variant carry profile"
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_2",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": "Prototype TaCZ variant carry profile"
+    }
+  ]
+}

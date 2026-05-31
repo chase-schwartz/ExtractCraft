@@ -72,7 +72,7 @@ public class ItemValueCommands {
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        ItemValueEntry value = ItemValueRegistry.get(itemId).orElse(null);
+        ItemValueEntry value = ItemValueRegistry.get(stack).orElse(null);
         if (value == null) {
             player.sendSystemMessage(Component.literal(itemId + " has no ExtractCraft value entry."));
             return 0;
@@ -89,7 +89,7 @@ public class ItemValueCommands {
     }
 
     private static void sendValue(CommandSourceStack source, ItemStack stack, ResourceLocation itemId) {
-        ItemValueEntry value = ItemValueRegistry.get(itemId).orElse(null);
+        ItemValueEntry value = ItemValueRegistry.get(stack).orElse(null);
         if (value == null) {
             source.sendSuccess(() -> Component.literal(itemId + " has no ExtractCraft value entry. Loaded entries: " + ItemValueRegistry.loadedCount()), false);
             return;

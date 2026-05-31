@@ -11,6 +11,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -28,18 +30,34 @@ import net.minecraft.world.item.ItemStack;
 public class ItemValueRegistry implements PreparableReloadListener {
     private static final Gson GSON = new Gson();
     private static final String DATA_FOLDER = "extractcraft/item_values";
-    private static final Map<ResourceLocation, ItemValueEntry> VALUES = new HashMap<>();
+    private static final Map<String, ItemValueEntry> VALUES = new HashMap<>();
 
     public static Optional<ItemValueEntry> get(ItemStack stack) {
         if (stack.isEmpty()) {
             return Optional.empty();
         }
 
-        return get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        ItemIdentity identity = ItemIdentityResolver.resolve(stack);
+        return get(identity.normalizedKey()).or(() -> get(identity.baseItemId()));
     }
 
     public static Optional<ItemValueEntry> get(ResourceLocation itemId) {
-        return Optional.ofNullable(VALUES.get(itemId));
+        return get(itemId.toString());
+    }
+
+    public static Optional<ItemValueEntry> get(String lookupKey) {
+        return Optional.ofNullable(VALUES.get(lookupKey));
+    }
+
+    public static String lookupKeyUsed(ItemStack stack) {
+        ItemIdentity identity = ItemIdentityResolver.resolve(stack);
+        if (VALUES.containsKey(identity.normalizedKey())) {
+            return identity.normalizedKey();
+        }
+        if (VALUES.containsKey(identity.baseItemId().toString())) {
+            return identity.baseItemId().toString();
+        }
+        return "none";
     }
 
     public static int loadedCount() {
@@ -62,8 +80,8 @@ public class ItemValueRegistry implements PreparableReloadListener {
                 }, gameExecutor);
     }
 
-    private static Map<ResourceLocation, ItemValueEntry> loadValues(ResourceManager resourceManager) {
-        Map<ResourceLocation, ItemValueEntry> loaded = new HashMap<>();
+    private static Map<String, ItemValueEntry> loadValues(ResourceManager resourceManager) {
+        Map<String, ItemValueEntry> loaded = new HashMap<>();
         Map<ResourceLocation, Resource> resources = resourceManager.listResources(DATA_FOLDER, path -> path.getPath().endsWith(".json"));
         resources.entrySet().stream()
                 .sorted(Comparator.comparing(entry -> entry.getKey().toString()))
@@ -71,7 +89,7 @@ public class ItemValueRegistry implements PreparableReloadListener {
         return loaded;
     }
 
-    private static void loadFile(ResourceLocation fileId, Resource resource, Map<ResourceLocation, ItemValueEntry> loaded) {
+    private static void loadFile(ResourceLocation fileId, Resource resource, Map<String, ItemValueEntry> loaded) {
         try (Reader reader = resource.openAsReader()) {
             JsonObject root = GSON.fromJson(reader, JsonObject.class);
             if (root == null || !root.has("values") || !root.get("values").isJsonArray()) {
@@ -80,14 +98,14 @@ public class ItemValueRegistry implements PreparableReloadListener {
             }
 
             for (JsonElement element : root.getAsJsonArray("values")) {
-                parseEntry(fileId, element).ifPresent(value -> loaded.put(value.itemId(), value));
+                parseEntry(fileId, element).ifPresent(parsed -> loaded.put(parsed.lookupKey(), parsed.value()));
             }
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Failed to load item value file {}", fileId, exception);
         }
     }
 
-    private static Optional<ItemValueEntry> parseEntry(ResourceLocation fileId, JsonElement element) {
+    private static Optional<ParsedValue> parseEntry(ResourceLocation fileId, JsonElement element) {
         if (!element.isJsonObject()) {
             ExtractCraft.LOGGER.warn("Skipping non-object item value entry in {}", fileId);
             return Optional.empty();
@@ -95,7 +113,8 @@ public class ItemValueRegistry implements PreparableReloadListener {
 
         JsonObject object = element.getAsJsonObject();
         try {
-            ResourceLocation itemId = ResourceLocation.parse(requiredString(object, "item"));
+            String lookupKey = requiredString(object, "item");
+            ResourceLocation itemId = baseItemId(lookupKey);
             if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
                 ExtractCraft.LOGGER.info("Skipping item value for missing optional item {}", itemId);
                 return Optional.empty();
@@ -110,11 +129,16 @@ public class ItemValueRegistry implements PreparableReloadListener {
             Optional<String> traderType = optionalString(object, "traderType");
             Optional<Integer> lootTier = optionalInt(object, "lootTier");
 
-            return Optional.of(new ItemValueEntry(itemId, category, rarity, value, sellable, questItem, notes, traderType, lootTier));
+            return Optional.of(new ParsedValue(lookupKey, new ItemValueEntry(lookupKey, itemId, category, rarity, value, sellable, questItem, notes, traderType, lootTier)));
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Skipping invalid item value entry in {}: {}", fileId, exception.getMessage());
             return Optional.empty();
         }
+    }
+
+    private static ResourceLocation baseItemId(String lookupKey) {
+        int separator = lookupKey.indexOf('#');
+        return ResourceLocation.parse(separator >= 0 ? lookupKey.substring(0, separator) : lookupKey);
     }
 
     private static String requiredString(JsonObject object, String name) {
@@ -161,5 +185,8 @@ public class ItemValueRegistry implements PreparableReloadListener {
             values.add(element.getAsString());
         }
         return values;
+    }
+
+    private record ParsedValue(String lookupKey, ItemValueEntry value) {
     }
 }

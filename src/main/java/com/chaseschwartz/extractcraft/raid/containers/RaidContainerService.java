@@ -10,12 +10,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
+import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
@@ -32,7 +36,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
@@ -138,6 +141,7 @@ public class RaidContainerService {
         List<ItemValueEntry> pool = ItemValueRegistry.entries().stream()
                 .filter(ItemValueEntry::sellable)
                 .filter(entry -> BuiltInRegistries.ITEM.containsKey(entry.itemId()))
+                .filter(entry -> !ItemStackVariantFactory.isUnsafeBareVariantBase(entry.itemId()) || entry.lookupKey().contains("#"))
                 .toList();
         if (pool.isEmpty()) {
             return new PopulateResult(0, 0, "No sellable item values are loaded.");
@@ -169,6 +173,44 @@ public class RaidContainerService {
 
         ExtractCraft.LOGGER.info("Populated {} active raid containers for {} ({} skipped)", populated, raidMap.id(), skipped);
         return new PopulateResult(populated, skipped, "");
+    }
+
+    public static List<FindLootResult> findLoot(ServerLevel level, RaidMapDefinition raidMap, RaidContainerLayout layout, String query, int limit) {
+        String normalizedQuery = query.toLowerCase(Locale.ROOT);
+        List<FindLootResult> results = new ArrayList<>();
+        RaidDevBounds bounds = scanBounds(raidMap);
+
+        for (RaidContainerEntry entry : layout.containers()) {
+            if (!entry.activeLootContainer() || !isInside(bounds, entry.pos())) {
+                continue;
+            }
+
+            BlockEntity blockEntity = level.getBlockEntity(entry.pos());
+            if (!(blockEntity instanceof Container container)) {
+                continue;
+            }
+
+            for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                ItemStack stack = container.getItem(slot);
+                if (stack.isEmpty()) {
+                    continue;
+                }
+
+                ItemIdentity identity = ItemIdentityResolver.resolve(stack);
+                if (!matches(identity, normalizedQuery)) {
+                    continue;
+                }
+
+                results.add(new FindLootResult(entry.pos(), entry.blockId(), stack.getHoverName().getString(), identity.baseItemId(), identity.variantId(), identity.normalizedKey(), stack.getCount()));
+                if (results.size() >= limit) {
+                    ExtractCraft.LOGGER.info("Loot finder for {} query '{}' hit result limit {}", raidMap.id(), query, limit);
+                    return results;
+                }
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Loot finder for {} query '{}' found {} matches", raidMap.id(), query, results.size());
+        return results;
     }
 
     public static LightPassResult lightPass(ServerLevel level, RaidMapDefinition raidMap, RaidContainerLayout layout) {
@@ -460,9 +502,10 @@ public class RaidContainerService {
             int slotIndex = random.nextInt(slots.size());
             int slot = slots.remove(slotIndex);
             ItemValueEntry entry = choose(pool, lootTier, random);
-            Item item = BuiltInRegistries.ITEM.get(entry.itemId());
             int count = countFor(entry, random);
-            container.setItem(slot, new ItemStack(item, count));
+            ItemStack stack = ItemStackVariantFactory.create(entry.lookupKey(), count)
+                    .orElseGet(() -> new ItemStack(BuiltInRegistries.ITEM.get(entry.itemId()), count));
+            container.setItem(slot, stack);
         }
     }
 
@@ -503,6 +546,13 @@ public class RaidContainerService {
             case FOOD, JUNK, SCRAP_METAL -> 1 + random.nextInt(4);
             default -> 1;
         };
+    }
+
+    private static boolean matches(ItemIdentity identity, String normalizedQuery) {
+        return identity.baseItemId().toString().toLowerCase(Locale.ROOT).contains(normalizedQuery)
+                || identity.normalizedKey().toLowerCase(Locale.ROOT).contains(normalizedQuery)
+                || identity.variantId().map(variant -> variant.toString().toLowerCase(Locale.ROOT).contains(normalizedQuery)).orElse(false)
+                || identity.displayName().toLowerCase(Locale.ROOT).contains(normalizedQuery);
     }
 
     private static JsonObject toJson(RaidContainerLayout layout) {
@@ -588,6 +638,9 @@ public class RaidContainerService {
     }
 
     public record PopulateResult(int populatedCount, int skippedCount, String warning) {
+    }
+
+    public record FindLootResult(BlockPos pos, ResourceLocation blockId, String displayName, ResourceLocation itemId, Optional<ResourceLocation> variantId, String normalizedKey, int count) {
     }
 
     public record LightPassResult(int placedCount, int removedCount, int skippedCount) {

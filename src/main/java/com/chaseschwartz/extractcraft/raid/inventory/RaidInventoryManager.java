@@ -33,7 +33,7 @@ public class RaidInventoryManager {
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        ItemCarryProfile profile = ItemCarryProfileRegistry.get(itemId).orElse(null);
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(stack).orElse(null);
         if (profile == null) {
             return new RaidInventory.AddResult(false, RaidEquipmentSlot.BACKPACK, itemId + " has no carry profile.");
         }
@@ -41,7 +41,7 @@ public class RaidInventoryManager {
         int stackUnits = Math.max(1, (int) Math.ceil(stack.getCount() / (double) Math.max(1, stack.getMaxStackSize())));
         int slotCost = profile.slotCost() * stackUnits;
         double weight = profile.weight() * stack.getCount();
-        int value = ItemValueRegistry.get(itemId).map(entry -> entry.value() * stack.getCount()).orElse(0);
+        int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
         RaidInventoryItem item = new RaidInventoryItem(itemId, stack.getCount(), slotCost, weight, value);
         return get(player).add(item, profile);
     }
@@ -52,7 +52,7 @@ public class RaidInventoryManager {
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        ItemCarryProfile profile = ItemCarryProfileRegistry.get(itemId).orElse(null);
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(stack).orElse(null);
         if (profile == null) {
             return new RaidInventory.AddResult(false, RaidEquipmentSlot.BACKPACK, itemId + " has no carry profile.");
         }
@@ -60,7 +60,7 @@ public class RaidInventoryManager {
         int stackUnits = Math.max(1, (int) Math.ceil(stack.getCount() / (double) Math.max(1, stack.getMaxStackSize())));
         int slotCost = profile.slotCost() * stackUnits;
         double weight = profile.weight() * stack.getCount();
-        int value = ItemValueRegistry.get(itemId).map(entry -> entry.value() * stack.getCount()).orElse(0);
+        int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
         RaidInventoryItem item = new RaidInventoryItem(itemId, stack.getCount(), slotCost, weight, value);
         return get(player).addToBackpack(item);
     }
@@ -69,14 +69,13 @@ public class RaidInventoryManager {
         if (stack.isEmpty()) {
             return Optional.empty();
         }
-        return ItemCarryProfileRegistry.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        return ItemCarryProfileRegistry.get(stack);
     }
 
     public static int valueFor(ItemStack stack) {
         if (stack.isEmpty()) {
             return 0;
         }
-        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return ItemValueRegistry.get(itemId).map(entry -> entry.value() * stack.getCount()).orElse(0);
+        return ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
     }
 }
