@@ -1,0 +1,353 @@
+{
+  "values": [
+    {
+      "item": "minecraft:paper",
+      "category": "junk",
+      "rarity": "common",
+      "value": 4,
+      "sellable": true,
+      "questItem": false,
+      "notes": ["Paper scrap"]
+    },
+    {
+      "item": "minecraft:string",
+      "category": "junk",
+      "rarity": "common",
+      "value": 3,
+      "sellable": true,
+      "questItem": false
+    },
+    {
+      "item": "minecraft:bone",
+      "category": "junk",
+      "rarity": "common",
+      "value": 5,
+      "sellable": true,
+      "questItem": false
+    },
+    {
+      "item": "minecraft:glass_bottle",
+      "category": "medical",
+      "rarity": "common",
+      "value": 8,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "medical",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:iron_nugget",
+      "category": "scrap_metal",
+      "rarity": "common",
+      "value": 3,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:copper_ingot",
+      "category": "scrap_metal",
+      "rarity": "common",
+      "value": 18,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:redstone",
+      "category": "electronics",
+      "rarity": "uncommon",
+      "value": 22,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:gunpowder",
+      "category": "weapon_parts",
+      "rarity": "uncommon",
+      "value": 28,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:clock",
+      "category": "electronics",
+      "rarity": "rare",
+      "value": 125,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 3
+    },
+    {
+      "item": "minecraft:compass",
+      "category": "tools",
+      "rarity": "uncommon",
+      "value": 90,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:gold_nugget",
+      "category": "valuables",
+      "rarity": "common",
+      "value": 8,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:gold_ingot",
+      "category": "valuables",
+      "rarity": "rare",
+      "value": 90,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 3
+    },
+    {
+      "item": "minecraft:emerald",
+      "category": "valuables",
+      "rarity": "rare",
+      "value": 140,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 3
+    },
+    {
+      "item": "minecraft:diamond",
+      "category": "valuables",
+      "rarity": "epic",
+      "value": 300,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 4
+    },
+    {
+      "item": "minecraft:apple",
+      "category": "food",
+      "rarity": "common",
+      "value": 10,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "medic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:bread",
+      "category": "food",
+      "rarity": "common",
+      "value": 14,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "medic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:honey_bottle",
+      "category": "medical",
+      "rarity": "uncommon",
+      "value": 35,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "medical",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:golden_apple",
+      "category": "medical",
+      "rarity": "rare",
+      "value": 260,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "medical",
+      "lootTier": 4
+    },
+    {
+      "item": "minecraft:chain",
+      "category": "scrap_metal",
+      "rarity": "common",
+      "value": 20,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:iron_bars",
+      "category": "scrap_metal",
+      "rarity": "common",
+      "value": 24,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "category": "scrap_metal",
+      "rarity": "uncommon",
+      "value": 42,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:lapis_lazuli",
+      "category": "electronics",
+      "rarity": "common",
+      "value": 16,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:ender_pearl",
+      "category": "valuables",
+      "rarity": "rare",
+      "value": 110,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 3
+    },
+    {
+      "item": "minecraft:spyglass",
+      "category": "tools",
+      "rarity": "rare",
+      "value": 180,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 3
+    },
+    {
+      "item": "minecraft:brush",
+      "category": "tools",
+      "rarity": "common",
+      "value": 32,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1
+    },
+    {
+      "item": "minecraft:shears",
+      "category": "tools",
+      "rarity": "uncommon",
+      "value": 48,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:iron_helmet",
+      "category": "armor",
+      "rarity": "uncommon",
+      "value": 115,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:iron_chestplate",
+      "category": "armor",
+      "rarity": "uncommon",
+      "value": 210,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 2
+    },
+    {
+      "item": "minecraft:diamond_chestplate",
+      "category": "armor",
+      "rarity": "epic",
+      "value": 650,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 4
+    },
+    {
+      "item": "minecraft:name_tag",
+      "category": "quest",
+      "rarity": "rare",
+      "value": 200,
+      "sellable": false,
+      "questItem": true,
+      "traderType": "collector",
+      "lootTier": 3,
+      "notes": ["Example quest turn-in item"]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 1200,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 4,
+      "notes": ["TaCZ generic gun item; exact weapon identity is stored in item data"]
+    },
+    {
+      "item": "tacz:ammo",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 18,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 2,
+      "notes": ["TaCZ generic ammo item; caliber is stored in item data"]
+    },
+    {
+      "item": "tacz:attachment",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 300,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 3,
+      "notes": ["TaCZ generic attachment item; attachment type is stored in item data"]
+    },
+    {
+      "item": "tacz:ammo_box",
+      "category": "magazines",
+      "rarity": "rare",
+      "value": 250,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 3
+    },
+    {
+      "item": "tacz:m67",
+      "category": "weapon_parts",
+      "rarity": "rare",
+      "value": 420,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 4
+    }
+  ]
+}

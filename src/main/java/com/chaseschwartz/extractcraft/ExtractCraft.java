@@ -2,8 +2,11 @@ package com.chaseschwartz.extractcraft;
 
 import org.slf4j.Logger;
 
+import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
+import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
+import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
 import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
 import com.mojang.logging.LogUtils;
 
@@ -28,6 +31,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -147,5 +151,12 @@ public class ExtractCraft {
     public void onRegisterCommands(RegisterCommandsEvent event) {
         RaidCommands.register(event.getDispatcher());
         RaidMarkerCommands.register(event.getDispatcher());
+        RaidMapCommands.register(event.getDispatcher());
+        ItemValueCommands.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
+    public void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(new ItemValueRegistry());
     }
 }
