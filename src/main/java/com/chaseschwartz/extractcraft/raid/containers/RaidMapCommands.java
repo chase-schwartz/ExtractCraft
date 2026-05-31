@@ -44,6 +44,12 @@ public class RaidMapCommands {
                 .then(Commands.literal("populatecontainers")
                         .then(Commands.argument("map_id", StringArgumentType.word())
                                 .executes(context -> populateContainers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("lightpass")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .executes(context -> lightPass(context.getSource(), StringArgumentType.getString(context, "map_id")))))
+                .then(Commands.literal("clearlightpass")
+                        .then(Commands.argument("map_id", StringArgumentType.word())
+                                .executes(context -> clearLightPass(context.getSource(), StringArgumentType.getString(context, "map_id")))))
                 .then(Commands.literal("renderlootcontainers")
                         .then(Commands.argument("map_id", StringArgumentType.word())
                                 .executes(context -> renderLootContainers(context.getSource(), StringArgumentType.getString(context, "map_id")))))
@@ -187,6 +193,40 @@ public class RaidMapCommands {
 
         int renderedCount = rendered;
         source.sendSuccess(() -> Component.literal("Rendered particles for " + renderedCount + " active loot containers."), false);
+        return 1;
+    }
+
+    private static int lightPass(CommandSourceStack source, String mapId) {
+        RaidMapContext context = resolve(source, mapId);
+        if (context == null) {
+            return 0;
+        }
+
+        RaidContainerLayout layout = RaidContainerService.load(mapId).orElse(null);
+        if (layout == null) {
+            source.sendFailure(Component.literal("No saved container data for " + mapId + ". Run scan/select first."));
+            return 0;
+        }
+
+        RaidContainerService.LightPassResult result = RaidContainerService.lightPass(context.level(), context.raidMap(), layout);
+        source.sendSuccess(() -> Component.literal("Placed " + result.placedCount() + " loot/ambient light blocks near detected containers for " + mapId + " (" + result.skippedCount() + " active containers skipped)."), false);
+        return 1;
+    }
+
+    private static int clearLightPass(CommandSourceStack source, String mapId) {
+        RaidMapContext context = resolve(source, mapId);
+        if (context == null) {
+            return 0;
+        }
+
+        RaidContainerLayout layout = RaidContainerService.load(mapId).orElse(null);
+        if (layout == null) {
+            source.sendFailure(Component.literal("No saved container data for " + mapId + "."));
+            return 0;
+        }
+
+        RaidContainerService.LightPassResult result = RaidContainerService.clearLightPass(context.level(), context.raidMap(), layout);
+        source.sendSuccess(() -> Component.literal("Removed " + result.removedCount() + " loot light blocks near active containers for " + mapId + "."), false);
         return 1;
     }
 

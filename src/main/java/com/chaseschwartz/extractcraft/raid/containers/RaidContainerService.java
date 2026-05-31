@@ -35,7 +35,9 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class RaidContainerService {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -44,6 +46,10 @@ public class RaidContainerService {
     private static final int MAX_CLUSTER_SPAN_XZ = 16;
     private static final int MAX_CLUSTER_SPAN_Y = 8;
     private static final int MAX_CONTAINER_SLOTS_TO_FILL = 6;
+    private static final int LOOT_LIGHT_LEVEL = 8;
+    private static final int AMBIENT_LIGHT_LEVEL = 5;
+    private static final int AMBIENT_GRID_XZ = 10;
+    private static final int AMBIENT_GRID_Y = 5;
     private static final List<ResourceLocation> DENYLIST = List.of(
             ResourceLocation.withDefaultNamespace("hopper"),
             ResourceLocation.withDefaultNamespace("furnace"),
@@ -163,6 +169,68 @@ public class RaidContainerService {
 
         ExtractCraft.LOGGER.info("Populated {} active raid containers for {} ({} skipped)", populated, raidMap.id(), skipped);
         return new PopulateResult(populated, skipped, "");
+    }
+
+    public static LightPassResult lightPass(ServerLevel level, RaidMapDefinition raidMap, RaidContainerLayout layout) {
+        RaidDevBounds bounds = scanBounds(raidMap);
+        int placed = 0;
+        int ambientPlaced = 0;
+        int skipped = 0;
+        for (RaidContainerEntry entry : layout.containers()) {
+            if (!isInside(bounds, entry.pos())) {
+                continue;
+            }
+
+            Optional<BlockPos> lightPos = lightPositionFor(level, bounds, entry.pos(), entry.activeLootContainer());
+            if (lightPos.isEmpty()) {
+                if (entry.activeLootContainer()) {
+                    skipped++;
+                }
+                continue;
+            }
+
+            int lightLevel = entry.activeLootContainer() ? LOOT_LIGHT_LEVEL : AMBIENT_LIGHT_LEVEL;
+            BlockState currentState = level.getBlockState(lightPos.get());
+            if (currentState.is(Blocks.LIGHT) && currentState.getValue(LightBlock.LEVEL) >= lightLevel) {
+                continue;
+            }
+
+            level.setBlock(lightPos.get(), Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, lightLevel), 3);
+            placed++;
+        }
+
+        ambientPlaced = placeAmbientInteriorLights(level, bounds);
+        placed += ambientPlaced;
+
+        ExtractCraft.LOGGER.info("Placed {} loot/container light blocks and {} ambient navigation light blocks for {} ({} active containers skipped)",
+                placed - ambientPlaced, ambientPlaced, raidMap.id(), skipped);
+        return new LightPassResult(placed, 0, skipped);
+    }
+
+    public static LightPassResult clearLightPass(ServerLevel level, RaidMapDefinition raidMap, RaidContainerLayout layout) {
+        RaidDevBounds bounds = scanBounds(raidMap);
+        int removed = 0;
+        for (RaidContainerEntry entry : layout.containers()) {
+            if (!entry.activeLootContainer() || !isInside(bounds, entry.pos())) {
+                continue;
+            }
+
+            BlockPos pos = entry.pos();
+            for (int x = pos.getX() - 2; x <= pos.getX() + 2; x++) {
+                for (int y = pos.getY(); y <= pos.getY() + 3; y++) {
+                    for (int z = pos.getZ() - 2; z <= pos.getZ() + 2; z++) {
+                        BlockPos lightPos = new BlockPos(x, y, z);
+                        if (isInside(bounds, lightPos) && level.getBlockState(lightPos).is(Blocks.LIGHT)) {
+                            level.setBlock(lightPos, Blocks.AIR.defaultBlockState(), 3);
+                            removed++;
+                        }
+                    }
+                }
+            }
+        }
+
+        ExtractCraft.LOGGER.info("Removed {} loot light blocks for {}", removed, raidMap.id());
+        return new LightPassResult(0, removed, 0);
     }
 
     public static Optional<RaidContainerLayout> load(String mapId) {
@@ -329,13 +397,20 @@ public class RaidContainerService {
         if (clusterSize <= 1) {
             return 1;
         }
-        if (clusterSize <= 4) {
-            return 2;
+        if (clusterSize <= 3) {
+            return 1;
         }
-        if (clusterSize <= 10) {
-            return Math.min(4, clusterSize);
+        if (clusterSize <= 6) {
+            return 1 + deterministicExtra(clusterSize, 2);
         }
-        return Math.min(6, clusterSize);
+        if (clusterSize <= 12) {
+            return 2 + deterministicExtra(clusterSize, 3);
+        }
+        return Math.min(5, 3 + deterministicExtra(clusterSize, 3));
+    }
+
+    private static int deterministicExtra(int clusterSize, int modulo) {
+        return Math.floorMod(clusterSize * 31 + 7, modulo) == 0 ? 1 : 0;
     }
 
     private static int lootTierForCluster(int clusterSize) {
@@ -496,9 +571,101 @@ public class RaidContainerService {
     public record PopulateResult(int populatedCount, int skippedCount, String warning) {
     }
 
+    public record LightPassResult(int placedCount, int removedCount, int skippedCount) {
+    }
+
     private record CellKey(int x, int z) {
         private static CellKey from(BlockPos pos) {
             return new CellKey(Math.floorDiv(pos.getX(), CLUSTER_CELL_SIZE), Math.floorDiv(pos.getZ(), CLUSTER_CELL_SIZE));
         }
+    }
+
+    private static Optional<BlockPos> lightPositionFor(ServerLevel level, RaidDevBounds bounds, BlockPos containerPos, boolean activeContainer) {
+        BlockPos[] candidates = {
+                containerPos.above(),
+                containerPos.above(2),
+                containerPos.north().above(),
+                containerPos.south().above(),
+                containerPos.east().above(),
+                containerPos.west().above(),
+                containerPos.north().above(2),
+                containerPos.south().above(2),
+                containerPos.east().above(2),
+                containerPos.west().above(2)
+        };
+
+        for (BlockPos candidate : candidates) {
+            if (!isInside(bounds, candidate)) {
+                continue;
+            }
+            if (!activeContainer && level.canSeeSky(candidate)) {
+                continue;
+            }
+
+            BlockState state = level.getBlockState(candidate);
+            if (state.isAir() || state.is(Blocks.LIGHT)) {
+                return Optional.of(candidate);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static int placeAmbientInteriorLights(ServerLevel level, RaidDevBounds bounds) {
+        int placed = 0;
+        for (int x = bounds.minX() + AMBIENT_GRID_XZ / 2; x <= bounds.maxX(); x += AMBIENT_GRID_XZ) {
+            for (int z = bounds.minZ() + AMBIENT_GRID_XZ / 2; z <= bounds.maxZ(); z += AMBIENT_GRID_XZ) {
+                for (int y = bounds.minY() + 2; y <= bounds.maxY() - 2; y += AMBIENT_GRID_Y) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    if (!isAmbientLightCandidate(level, bounds, pos)) {
+                        continue;
+                    }
+
+                    BlockState currentState = level.getBlockState(pos);
+                    if (currentState.is(Blocks.LIGHT) && currentState.getValue(LightBlock.LEVEL) >= AMBIENT_LIGHT_LEVEL) {
+                        continue;
+                    }
+
+                    level.setBlock(pos, Blocks.LIGHT.defaultBlockState().setValue(LightBlock.LEVEL, AMBIENT_LIGHT_LEVEL), 3);
+                    placed++;
+                }
+            }
+        }
+        return placed;
+    }
+
+    private static boolean isAmbientLightCandidate(ServerLevel level, RaidDevBounds bounds, BlockPos pos) {
+        if (!isInside(bounds, pos) || level.canSeeSky(pos)) {
+            return false;
+        }
+
+        BlockState state = level.getBlockState(pos);
+        if (!state.isAir() && !state.is(Blocks.LIGHT)) {
+            return false;
+        }
+        if (level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, pos) >= AMBIENT_LIGHT_LEVEL) {
+            return false;
+        }
+
+        return hasNearbyFloor(level, bounds, pos) && hasHeadroom(level, bounds, pos);
+    }
+
+    private static boolean hasNearbyFloor(ServerLevel level, RaidDevBounds bounds, BlockPos pos) {
+        for (int dy = 1; dy <= 4; dy++) {
+            BlockPos below = pos.below(dy);
+            if (isInside(bounds, below) && level.getBlockState(below).isSolidRender(level, below)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasHeadroom(ServerLevel level, RaidDevBounds bounds, BlockPos pos) {
+        BlockPos above = pos.above();
+        if (!isInside(bounds, above)) {
+            return false;
+        }
+
+        BlockState aboveState = level.getBlockState(above);
+        return aboveState.isAir() || aboveState.is(Blocks.LIGHT);
     }
 }
