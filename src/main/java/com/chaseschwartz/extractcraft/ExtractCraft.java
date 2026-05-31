@@ -7,6 +7,8 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
+import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryCommands;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
 import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
@@ -157,10 +159,12 @@ public class ExtractCraft {
         RaidMarkerCommands.register(event.getDispatcher());
         RaidMapCommands.register(event.getDispatcher());
         ItemValueCommands.register(event.getDispatcher());
+        RaidInventoryCommands.register(event.getDispatcher());
     }
 
     @SubscribeEvent
     public void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(new ItemValueRegistry());
+        event.addListener(new ItemCarryProfileRegistry());
     }
 }
