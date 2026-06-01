@@ -123,7 +123,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private void logConstruction() {
-        ExtractCraft.LOGGER.info("ActiveLootContainerMenu constructed: mode={}, hasContainer={}, backingContainerSlots={}, weaponSlots={}, backpackVisualSlots={}, vestVisualSlots={}, safeBoxVisualSlots={}, raidDisplaySlots={}, totalMenuSlots={}",
+        ExtractCraft.LOGGER.info("ActiveLootContainerMenu constructed: mode={}, hasContainer={}, backingContainerSlots={}, weaponSlots={}, backpackVisualSlots={}, vestVisualSlots={}, safeBoxVisualSlots={}, raidDisplaySlots={}, raidDisplayBackingSize={}, totalMenuSlots={}, primary={}, secondary={}, backpackFirstLast={}, vestFirstLast={}, safeBoxFirstLast={}, containerFirstLast={}",
                 hasWorldContainer ? "container" : "inventory_only",
                 hasWorldContainer,
                 containerSlotCount,
@@ -132,7 +132,27 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 VEST_DISPLAY_SLOTS,
                 SAFE_BOX_DISPLAY_SLOTS,
                 RAID_DISPLAY_SLOTS,
-                this.slots.size());
+                raidDisplay.getContainerSize(),
+                this.slots.size(),
+                slotCoordinate(PRIMARY_WEAPON_START),
+                slotCoordinate(SECONDARY_WEAPON_START),
+                firstLastSlot(BACKPACK_START, BACKPACK_DISPLAY_SLOTS),
+                firstLastSlot(VEST_START, VEST_DISPLAY_SLOTS),
+                firstLastSlot(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS),
+                firstLastSlot(containerMenuSlotStart(), containerSlotCount));
+    }
+
+    private String firstLastSlot(int start, int count) {
+        if (count <= 0 || start < 0 || start >= this.slots.size()) {
+            return "none";
+        }
+        int last = Math.min(this.slots.size() - 1, start + count - 1);
+        return slotCoordinate(start) + " -> " + slotCoordinate(last);
+    }
+
+    private String slotCoordinate(int slotIndex) {
+        net.minecraft.world.inventory.Slot slot = this.slots.get(slotIndex);
+        return slotIndex + "@(" + slot.x + "," + slot.y + ")";
     }
 
     @Override
