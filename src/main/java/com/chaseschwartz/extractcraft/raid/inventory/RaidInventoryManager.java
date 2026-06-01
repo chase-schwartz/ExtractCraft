@@ -70,10 +70,26 @@ public class RaidInventoryManager {
         RaidInventoryItem item = inventoryItem(stack, itemId, profile, slotCost, weight, value);
         RaidInventory inventory = get(player);
         return switch (slot) {
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> inventory.addToWeaponSlot(item, slot);
             case BACKPACK -> inventory.addToBackpack(item);
             case VEST -> inventory.addToVest(item, profile);
             case SAFE_BOX -> inventory.addToSafeBox(item, profile);
         };
+    }
+
+    public static RaidInventory.AddResult moveBetween(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
+        RaidInventory inventory = get(player);
+        RaidInventoryItem item = inventory.itemAt(source, sourceIndex);
+        if (item == null) {
+            return new RaidInventory.AddResult(false, target, "Source item is no longer available.");
+        }
+
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+        if (profile == null) {
+            return new RaidInventory.AddResult(false, target, item.lookupKey() + " has no carry profile.");
+        }
+
+        return inventory.move(source, sourceIndex, target, profile);
     }
 
     private static RaidInventoryItem inventoryItem(ItemStack stack, ResourceLocation itemId, ItemCarryProfile profile, int slotCost, double weight, int value) {

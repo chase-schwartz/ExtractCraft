@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 
 import net.minecraft.network.chat.Component;
@@ -41,6 +42,7 @@ public class RaidManager {
         long expiresAtGameTime = player.server.overworld().getGameTime() + raidMap.raidDurationTicks();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
                 InventorySnapshot.capture(player), expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
+        ExtractCraftNetwork.syncRaidState(player, true);
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
 
@@ -51,6 +53,7 @@ public class RaidManager {
     public static void clearPlayerState(UUID playerId, MinecraftServer server) {
         cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
         cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
+        syncRaidStateIfOnline(server, playerId, false);
     }
 
     public static boolean clearPlayerStateIfPresent(UUID playerId, MinecraftServer server) {
@@ -60,11 +63,16 @@ public class RaidManager {
         boolean hadPendingFailedReturn = pendingFailedReturn != null;
         cleanupRaidMobs(server, activeRaid, "player state clear");
         cleanupRaidMobs(server, pendingFailedReturn, "player state clear");
+        if (hadActiveRaid || hadPendingFailedReturn) {
+            syncRaidStateIfOnline(server, playerId, false);
+        }
         return hadActiveRaid || hadPendingFailedReturn;
     }
 
     public static int clearAll(MinecraftServer server) {
         int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
+        ACTIVE_RAIDS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
+        PENDING_FAILED_RETURNS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
         ACTIVE_RAIDS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
         PENDING_FAILED_RETURNS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
         ACTIVE_RAIDS.clear();
@@ -79,6 +87,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
+        ExtractCraftNetwork.syncRaidState(player, false);
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
         ExtractCraft.LOGGER.info("Raid failed for {}; queued return to {} at {}, {}, {} after respawn",
                 player.getGameProfile().getName(),
@@ -127,6 +136,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
+        ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -196,6 +206,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "successful extraction");
+        ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -251,5 +262,12 @@ public class RaidManager {
         }
 
         return null;
+    }
+
+    private static void syncRaidStateIfOnline(MinecraftServer server, UUID playerId, boolean inRaid) {
+        ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+        if (player != null) {
+            ExtractCraftNetwork.syncRaidState(player, inRaid);
+        }
     }
 }

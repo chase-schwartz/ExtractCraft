@@ -8,6 +8,8 @@ import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
+import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerLayout;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerService;
@@ -26,7 +28,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -35,6 +36,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class RaidInventoryCommands {
     private RaidInventoryCommands() {
@@ -60,6 +62,12 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("open")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> openScreen(context.getSource())))
+                        .then(Commands.literal("summary")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> openSummaryScreen(context.getSource())))
+                        .then(Commands.literal("vanilla")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> openVanillaInventory(context.getSource())))
                         .then(Commands.literal("setbackpack")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("type", StringArgumentType.word())
@@ -78,7 +86,11 @@ public class RaidInventoryCommands {
                                 .executes(context -> weight(context.getSource())))
                         .then(Commands.literal("value")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> value(context.getSource())))));
+                                .executes(context -> value(context.getSource()))))
+                .then(Commands.literal("debug")
+                        .then(Commands.literal("vanilla_inventory")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> openVanillaInventory(context.getSource())))));
     }
 
     private static int carryProfileHeld(CommandSourceStack source) throws CommandSyntaxException {
@@ -168,13 +180,21 @@ public class RaidInventoryCommands {
     }
 
     private static int openScreen(CommandSourceStack source) throws CommandSyntaxException {
+        RaidInventoryScreenOpener.openGrid(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int openSummaryScreen(CommandSourceStack source) throws CommandSyntaxException {
+        RaidInventoryScreenOpener.open(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int openVanillaInventory(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        RaidInventory inventory = RaidInventoryManager.get(player);
-        RaidInventoryMenu.RaidInventorySnapshot snapshot = RaidInventoryMenu.RaidInventorySnapshot.from(inventory);
-        player.openMenu(new SimpleMenuProvider(
-                (containerId, playerInventory, menuPlayer) -> new RaidInventoryMenu(containerId, playerInventory, inventory),
-                Component.literal("Raid Inventory")),
-                snapshot::write);
+        if (RaidManager.isInRaid(player)) {
+            player.sendSystemMessage(Component.literal("Debug: opening vanilla inventory during an active raid. This bypass is for testing only."));
+        }
+        PacketDistributor.sendToPlayer(player, OpenVanillaInventoryPayload.INSTANCE);
         return 1;
     }
 

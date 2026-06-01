@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerInteractionHandler;
@@ -106,6 +107,7 @@ public class ExtractCraft {
     public ExtractCraft(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(ExtractCraftNetwork::register);
 
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);

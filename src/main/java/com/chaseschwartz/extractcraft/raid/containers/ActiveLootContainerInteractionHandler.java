@@ -41,6 +41,7 @@ public class ActiveLootContainerInteractionHandler {
 
         MenuConstructor constructor = (containerId, inventory, menuPlayer) -> new ActiveLootContainerMenu(containerId, inventory, container, event.getPos(), player);
         player.openMenu(new SimpleMenuProvider(constructor, Component.literal("Search Container")), buffer -> {
+            buffer.writeBoolean(true);
             buffer.writeVarInt(container.getContainerSize());
             buffer.writeBlockPos(event.getPos());
         });

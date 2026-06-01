@@ -49,16 +49,17 @@ public class RaidInventoryScreen extends AbstractContainerScreen<RaidInventoryMe
         guiGraphics.drawString(this.font, "Raid Inventory", 8, 7, TEXT, false);
         guiGraphics.drawString(this.font, String.format("Total %.1f weight | %d credits", snapshot.totalWeight(), snapshot.totalValue()), 176, 7, MUTED_TEXT, false);
 
-        renderStorage(guiGraphics, "Backpack", snapshot.backpack(), 14, 28, 308, 6);
-        renderStorage(guiGraphics, "Vest", snapshot.vest(), 14, 138, 143, 3);
-        renderStorage(guiGraphics, "Safe Box", snapshot.safeBox(), 179, 138, 143, 3);
+        renderStorage(guiGraphics, "Backpack", snapshot.backpack(), 14, 28, 308, 6, true);
+        renderStorage(guiGraphics, "Vest", snapshot.vest(), 14, 138, 143, 3, false);
+        renderStorage(guiGraphics, "Safe Box", snapshot.safeBox(), 179, 138, 143, 3, false);
     }
 
-    private void renderStorage(GuiGraphics guiGraphics, String label, StorageSnapshot storage, int x, int y, int width, int maxRows) {
+    private void renderStorage(GuiGraphics guiGraphics, String label, StorageSnapshot storage, int x, int y, int width, int maxRows, boolean detailedStats) {
         guiGraphics.drawString(this.font, label + " - " + storage.name(), x, y, TEXT, false);
-        guiGraphics.drawString(this.font,
-                String.format("%d/%d slots | %.1f/%.1f weight | %d credits", storage.usedCapacity(), storage.capacity(), storage.usedWeight(), storage.maxWeight(), storage.totalValue()),
-                x, y + 11, MUTED_TEXT, false);
+        String stats = detailedStats
+                ? String.format("%d/%d slots | %.1f/%.1f weight | %d credits", storage.usedCapacity(), storage.capacity(), storage.usedWeight(), storage.maxWeight(), storage.totalValue())
+                : String.format("%d/%d slots", storage.usedCapacity(), storage.capacity());
+        guiGraphics.drawString(this.font, stats, x, y + 11, MUTED_TEXT, false);
 
         List<ItemSnapshot> items = storage.items();
         if (items.isEmpty()) {

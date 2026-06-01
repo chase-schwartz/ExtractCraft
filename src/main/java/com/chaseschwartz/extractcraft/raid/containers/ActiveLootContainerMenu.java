@@ -25,20 +25,28 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class ActiveLootContainerMenu extends AbstractContainerMenu {
     public static final int CONTAINER_COLUMNS = 6;
-    public static final int BACKPACK_START = 0;
+    public static final int PRIMARY_WEAPON_START = 0;
+    public static final int SECONDARY_WEAPON_START = 1;
+    public static final int BACKPACK_START = 2;
     public static final int BACKPACK_DISPLAY_SLOTS = 36;
     public static final int VEST_START = BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
     public static final int VEST_DISPLAY_SLOTS = 12;
     public static final int SAFE_BOX_START = VEST_START + VEST_DISPLAY_SLOTS;
     public static final int SAFE_BOX_DISPLAY_SLOTS = 9;
-    private static final int RAID_DISPLAY_SLOTS = BACKPACK_DISPLAY_SLOTS + VEST_DISPLAY_SLOTS + SAFE_BOX_DISPLAY_SLOTS;
+    private static final int WEAPON_DISPLAY_SLOTS = 2;
+    private static final int RAID_DISPLAY_SLOTS = SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS;
     private static final int BUTTON_FACTOR = 1000;
+    private static final int MOVE_BUTTON_OFFSET = 100_000;
+    private static final int RETURN_BUTTON_OFFSET = 200_000;
+    private static final int MOVE_SOURCE_FACTOR = 10_000;
+    private static final int MOVE_INDEX_FACTOR = 10;
 
     private final Container container;
     private final SimpleContainer raidDisplay;
     private final BlockPos containerPos;
     private final int containerRows;
     private final int containerSlotCount;
+    private final boolean hasWorldContainer;
     private final ServerPlayer serverPlayer;
     private final DataSlot backpackUsedCapacity;
     private final DataSlot backpackMaxCapacity;
@@ -58,20 +66,34 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     private final DataSlot totalValue;
 
     public ActiveLootContainerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf data) {
-        this(containerId, playerInventory, new SimpleContainer(data.readVarInt()), data.readBlockPos(), null);
+        this(containerId, playerInventory, readClientData(data));
+    }
+
+    private ActiveLootContainerMenu(int containerId, Inventory playerInventory, ClientData data) {
+        this(containerId, playerInventory, new SimpleContainer(data.containerSlotCount()), data.containerPos(), null, data.hasWorldContainer());
     }
 
     public ActiveLootContainerMenu(int containerId, Inventory playerInventory, Container container, BlockPos containerPos, ServerPlayer serverPlayer) {
+        this(containerId, playerInventory, container, containerPos, serverPlayer, true);
+    }
+
+    public ActiveLootContainerMenu(int containerId, Inventory playerInventory, ServerPlayer serverPlayer) {
+        this(containerId, playerInventory, new SimpleContainer(0), serverPlayer.blockPosition(), serverPlayer, false);
+    }
+
+    private ActiveLootContainerMenu(int containerId, Inventory playerInventory, Container container, BlockPos containerPos, ServerPlayer serverPlayer, boolean hasWorldContainer) {
         super(ExtractCraft.ACTIVE_LOOT_CONTAINER_MENU.get(), containerId);
         this.container = container;
         this.containerPos = containerPos;
         this.serverPlayer = serverPlayer;
+        this.hasWorldContainer = hasWorldContainer;
         this.containerSlotCount = container.getContainerSize();
-        this.containerRows = Math.max(1, (int) Math.ceil(containerSlotCount / (double) CONTAINER_COLUMNS));
+        this.containerRows = hasWorldContainer ? Math.max(1, (int) Math.ceil(containerSlotCount / (double) CONTAINER_COLUMNS)) : 0;
         this.raidDisplay = new SimpleContainer(RAID_DISPLAY_SLOTS);
 
         addRaidDisplaySlots();
         addContainerSlots();
+        logConstruction();
 
         this.backpackUsedCapacity = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_USED_CAPACITY));
         this.backpackMaxCapacity = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_MAX_CAPACITY));
@@ -91,6 +113,26 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         this.totalValue = addDataSlot(statSlot(serverPlayer, Stat.TOTAL_VALUE));
 
         rebuildRaidDisplay();
+    }
+
+    private static ClientData readClientData(RegistryFriendlyByteBuf buffer) {
+        boolean hasWorldContainer = buffer.readBoolean();
+        int containerSlotCount = hasWorldContainer ? buffer.readVarInt() : 0;
+        BlockPos containerPos = buffer.readBlockPos();
+        return new ClientData(hasWorldContainer, containerSlotCount, containerPos);
+    }
+
+    private void logConstruction() {
+        ExtractCraft.LOGGER.info("ActiveLootContainerMenu constructed: mode={}, hasContainer={}, backingContainerSlots={}, weaponSlots={}, backpackVisualSlots={}, vestVisualSlots={}, safeBoxVisualSlots={}, raidDisplaySlots={}, totalMenuSlots={}",
+                hasWorldContainer ? "container" : "inventory_only",
+                hasWorldContainer,
+                containerSlotCount,
+                WEAPON_DISPLAY_SLOTS,
+                BACKPACK_DISPLAY_SLOTS,
+                VEST_DISPLAY_SLOTS,
+                SAFE_BOX_DISPLAY_SLOTS,
+                RAID_DISPLAY_SLOTS,
+                this.slots.size());
     }
 
     @Override
@@ -116,14 +158,23 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return true;
         }
 
-        int targetId = Math.floorDiv(id, BUTTON_FACTOR);
-        int containerSlot = Math.floorMod(id, BUTTON_FACTOR);
-        RaidEquipmentSlot target = switch (targetId) {
-            case 1 -> RaidEquipmentSlot.VEST;
-            case 2 -> RaidEquipmentSlot.SAFE_BOX;
-            default -> RaidEquipmentSlot.BACKPACK;
-        };
-        transferContainerSlot(serverPlayer, containerSlot, target);
+        if (id >= RETURN_BUTTON_OFFSET) {
+            int payload = id - RETURN_BUTTON_OFFSET;
+            int sourceId = Math.floorDiv(payload, MOVE_SOURCE_FACTOR);
+            int sourceIndex = Math.floorMod(payload, MOVE_SOURCE_FACTOR);
+            returnStoredItemToContainer(serverPlayer, slotFromId(sourceId), sourceIndex);
+        } else if (id >= MOVE_BUTTON_OFFSET) {
+            int payload = id - MOVE_BUTTON_OFFSET;
+            int sourceId = Math.floorDiv(payload, MOVE_SOURCE_FACTOR);
+            int remainder = Math.floorMod(payload, MOVE_SOURCE_FACTOR);
+            int sourceIndex = Math.floorDiv(remainder, MOVE_INDEX_FACTOR);
+            int targetId = Math.floorMod(remainder, MOVE_INDEX_FACTOR);
+            moveStoredItem(serverPlayer, slotFromId(sourceId), sourceIndex, slotFromId(targetId));
+        } else {
+            int targetId = Math.floorDiv(id, BUTTON_FACTOR);
+            int containerSlot = Math.floorMod(id, BUTTON_FACTOR);
+            transferContainerSlot(serverPlayer, containerSlot, slotFromId(targetId));
+        }
         setCarried(ItemStack.EMPTY);
         broadcastChanges();
         return true;
@@ -139,6 +190,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
+        if (!hasWorldContainer) {
+            return true;
+        }
         if (!player.canInteractWithBlock(containerPos, 8.0D)) {
             return false;
         }
@@ -148,12 +202,15 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     public static int buttonId(RaidEquipmentSlot target, int containerSlot) {
-        int targetId = switch (target) {
-            case BACKPACK -> 0;
-            case VEST -> 1;
-            case SAFE_BOX -> 2;
-        };
-        return targetId * BUTTON_FACTOR + containerSlot;
+        return slotId(target) * BUTTON_FACTOR + containerSlot;
+    }
+
+    public static int moveButtonId(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
+        return MOVE_BUTTON_OFFSET + slotId(source) * MOVE_SOURCE_FACTOR + sourceIndex * MOVE_INDEX_FACTOR + slotId(target);
+    }
+
+    public static int returnButtonId(RaidEquipmentSlot source, int sourceIndex) {
+        return RETURN_BUTTON_OFFSET + slotId(source) * MOVE_SOURCE_FACTOR + sourceIndex;
     }
 
     public int containerRows() {
@@ -164,8 +221,48 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return containerSlotCount;
     }
 
+    public boolean hasWorldContainer() {
+        return hasWorldContainer;
+    }
+
     public int containerMenuSlotStart() {
         return RAID_DISPLAY_SLOTS;
+    }
+
+    public RaidEquipmentSlot raidSlotForMenuSlot(int menuSlot) {
+        if (menuSlot == PRIMARY_WEAPON_START) {
+            return RaidEquipmentSlot.PRIMARY_WEAPON;
+        }
+        if (menuSlot == SECONDARY_WEAPON_START) {
+            return RaidEquipmentSlot.SECONDARY_WEAPON;
+        }
+        if (menuSlot >= BACKPACK_START && menuSlot < BACKPACK_START + BACKPACK_DISPLAY_SLOTS) {
+            return RaidEquipmentSlot.BACKPACK;
+        }
+        if (menuSlot >= VEST_START && menuSlot < VEST_START + VEST_DISPLAY_SLOTS) {
+            return RaidEquipmentSlot.VEST;
+        }
+        if (menuSlot >= SAFE_BOX_START && menuSlot < SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS) {
+            return RaidEquipmentSlot.SAFE_BOX;
+        }
+        return null;
+    }
+
+    public int raidItemIndexForMenuSlot(int menuSlot) {
+        RaidEquipmentSlot slot = raidSlotForMenuSlot(menuSlot);
+        if (slot == RaidEquipmentSlot.PRIMARY_WEAPON || slot == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return 0;
+        }
+        if (slot == RaidEquipmentSlot.BACKPACK) {
+            return menuSlot - BACKPACK_START;
+        }
+        if (slot == RaidEquipmentSlot.VEST) {
+            return menuSlot - VEST_START;
+        }
+        if (slot == RaidEquipmentSlot.SAFE_BOX) {
+            return menuSlot - SAFE_BOX_START;
+        }
+        return -1;
     }
 
     public int backpackUsedCapacity() {
@@ -264,10 +361,65 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return copy;
     }
 
+    private void moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
+        if (source == null || target == null || source == target) {
+            return;
+        }
+
+        RaidInventory.AddResult result = RaidInventoryManager.moveBetween(player, source, sourceIndex, target);
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+            return;
+        }
+
+        rebuildRaidDisplay();
+        player.sendSystemMessage(Component.literal(result.message()));
+    }
+
+    private void returnStoredItemToContainer(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        if (!hasWorldContainer) {
+            player.sendSystemMessage(Component.literal("No container is open."));
+            return;
+        }
+        if (source == null) {
+            return;
+        }
+
+        RaidInventory inventory = RaidInventoryManager.get(player);
+        RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return;
+        }
+
+        ItemStack stack = displayStack(item);
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Unable to rebuild item stack for " + item.lookupKey() + "."));
+            return;
+        }
+        if (!canFitInContainer(stack)) {
+            player.sendSystemMessage(Component.literal("Container does not have room for that stack."));
+            return;
+        }
+
+        RaidInventoryItem removed = removeAt(inventory, source, sourceIndex);
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return;
+        }
+
+        insertIntoContainer(stack);
+        container.setChanged();
+        rebuildRaidDisplay();
+        player.sendSystemMessage(Component.literal("Returned " + stack.getCount() + "x " + stack.getHoverName().getString() + " to container."));
+    }
+
     private void addRaidDisplaySlots() {
-        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 6, 12, 38);
-        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 162);
-        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 102, 162);
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, PRIMARY_WEAPON_START, 150, 48));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, SECONDARY_WEAPON_START, 150, 110));
+        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 6, 12, 66);
+        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 248);
+        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 104, 248);
     }
 
     private void addDisplayGrid(int start, int count, int columns, int x, int y) {
@@ -279,7 +431,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     private void addContainerSlots() {
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             int x = 226 + (slot % CONTAINER_COLUMNS) * 18;
-            int y = 38 + (slot / CONTAINER_COLUMNS) * 18;
+            int y = 58 + (slot / CONTAINER_COLUMNS) * 18;
             addSlot(new ReadOnlyContainerSlot(container, slot, x, y));
         }
     }
@@ -291,6 +443,12 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
         raidDisplay.clearContent();
         RaidInventory inventory = RaidInventoryManager.get(serverPlayer);
+        if (inventory.primaryWeapon() != null) {
+            raidDisplay.setItem(PRIMARY_WEAPON_START, displayStack(inventory.primaryWeapon()));
+        }
+        if (inventory.secondaryWeapon() != null) {
+            raidDisplay.setItem(SECONDARY_WEAPON_START, displayStack(inventory.secondaryWeapon()));
+        }
         fillDisplay(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, inventory.backpack().items());
         fillDisplay(VEST_START, VEST_DISPLAY_SLOTS, inventory.vest().items());
         fillDisplay(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, inventory.safeBox().items());
@@ -312,11 +470,75 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 });
     }
 
+    private boolean canFitInContainer(ItemStack stack) {
+        ItemStack remaining = stack.copy();
+        for (int slot = 0; slot < container.getContainerSize(); slot++) {
+            ItemStack current = container.getItem(slot);
+            if (current.isEmpty()) {
+                return true;
+            }
+            if (ItemStack.isSameItemSameComponents(current, remaining) && current.getCount() < current.getMaxStackSize()) {
+                int transferable = Math.min(remaining.getCount(), current.getMaxStackSize() - current.getCount());
+                remaining.shrink(transferable);
+                if (remaining.isEmpty()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void insertIntoContainer(ItemStack stack) {
+        ItemStack remaining = stack.copy();
+        for (int slot = 0; slot < container.getContainerSize() && !remaining.isEmpty(); slot++) {
+            ItemStack current = container.getItem(slot);
+            if (current.isEmpty()) {
+                container.setItem(slot, remaining.copy());
+                remaining.setCount(0);
+            } else if (ItemStack.isSameItemSameComponents(current, remaining) && current.getCount() < current.getMaxStackSize()) {
+                int transferable = Math.min(remaining.getCount(), current.getMaxStackSize() - current.getCount());
+                current.grow(transferable);
+                remaining.shrink(transferable);
+                container.setItem(slot, current);
+            }
+        }
+    }
+
+    private static RaidInventoryItem itemAt(RaidInventory inventory, RaidEquipmentSlot source, int sourceIndex) {
+        return inventory.itemAt(source, sourceIndex);
+    }
+
+    private static RaidInventoryItem removeAt(RaidInventory inventory, RaidEquipmentSlot source, int sourceIndex) {
+        return inventory.removeAt(source, sourceIndex);
+    }
+
     private static String targetName(RaidEquipmentSlot target) {
         return switch (target) {
+            case PRIMARY_WEAPON -> "primary weapon";
+            case SECONDARY_WEAPON -> "secondary weapon";
             case BACKPACK -> "backpack";
             case VEST -> "vest";
             case SAFE_BOX -> "safe box";
+        };
+    }
+
+    private static int slotId(RaidEquipmentSlot slot) {
+        return switch (slot) {
+            case PRIMARY_WEAPON -> 0;
+            case SECONDARY_WEAPON -> 1;
+            case BACKPACK -> 2;
+            case VEST -> 3;
+            case SAFE_BOX -> 4;
+        };
+    }
+
+    private static RaidEquipmentSlot slotFromId(int id) {
+        return switch (id) {
+            case 0 -> RaidEquipmentSlot.PRIMARY_WEAPON;
+            case 1 -> RaidEquipmentSlot.SECONDARY_WEAPON;
+            case 3 -> RaidEquipmentSlot.VEST;
+            case 4 -> RaidEquipmentSlot.SAFE_BOX;
+            default -> RaidEquipmentSlot.BACKPACK;
         };
     }
 
@@ -372,5 +594,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         SAFE_BOX_MAX_WEIGHT_TENTHS,
         SAFE_BOX_VALUE,
         TOTAL_VALUE
+    }
+
+    private record ClientData(boolean hasWorldContainer, int containerSlotCount, BlockPos containerPos) {
     }
 }

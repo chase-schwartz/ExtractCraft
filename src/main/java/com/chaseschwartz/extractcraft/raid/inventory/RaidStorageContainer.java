@@ -26,6 +26,20 @@ public class RaidStorageContainer {
         items.add(item);
     }
 
+    public RaidInventoryItem itemAt(int index) {
+        if (index < 0 || index >= items.size()) {
+            return null;
+        }
+        return items.get(index);
+    }
+
+    public RaidInventoryItem removeAt(int index) {
+        if (index < 0 || index >= items.size()) {
+            return null;
+        }
+        return items.remove(index);
+    }
+
     public void clear() {
         items.clear();
     }
