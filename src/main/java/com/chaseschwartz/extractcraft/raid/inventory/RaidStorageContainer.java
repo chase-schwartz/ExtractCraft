@@ -46,6 +46,10 @@ public class RaidStorageContainer {
         return items.size();
     }
 
+    public List<RaidInventoryItem> items() {
+        return List.copyOf(items);
+    }
+
     public String id() {
         return id;
     }

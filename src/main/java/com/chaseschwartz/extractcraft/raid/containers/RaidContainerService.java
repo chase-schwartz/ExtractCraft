@@ -334,6 +334,11 @@ public class RaidContainerService {
                 .collect(Collectors.groupingBy(entry -> entry.clusterId().orElse("unclustered"), LinkedHashMap::new, Collectors.counting()));
     }
 
+    public static boolean isActiveLootContainer(RaidContainerLayout layout, BlockPos pos) {
+        return layout.containers().stream()
+                .anyMatch(entry -> entry.activeLootContainer() && entry.pos().equals(pos));
+    }
+
     private static RaidDevBounds scanBounds(RaidMapDefinition raidMap) {
         return raidMap.source().authoringBounds()
                 .or(() -> raidMap.source().cleanupBounds())

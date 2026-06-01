@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -42,7 +44,7 @@ public class RaidInventoryManager {
         int slotCost = profile.slotCost() * stackUnits;
         double weight = profile.weight() * stack.getCount();
         int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
-        RaidInventoryItem item = new RaidInventoryItem(itemId, stack.getCount(), slotCost, weight, value);
+        RaidInventoryItem item = inventoryItem(stack, itemId, profile, slotCost, weight, value);
         return get(player).add(item, profile);
     }
 
@@ -61,8 +63,21 @@ public class RaidInventoryManager {
         int slotCost = profile.slotCost() * stackUnits;
         double weight = profile.weight() * stack.getCount();
         int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
-        RaidInventoryItem item = new RaidInventoryItem(itemId, stack.getCount(), slotCost, weight, value);
+        RaidInventoryItem item = inventoryItem(stack, itemId, profile, slotCost, weight, value);
         return get(player).addToBackpack(item);
+    }
+
+    private static RaidInventoryItem inventoryItem(ItemStack stack, ResourceLocation itemId, ItemCarryProfile profile, int slotCost, double weight, int value) {
+        ItemIdentity identity = ItemIdentityResolver.resolve(stack);
+        return new RaidInventoryItem(
+                itemId,
+                identity.normalizedKey(),
+                stack.getHoverName().getString(),
+                profile.category().name().toLowerCase(),
+                stack.getCount(),
+                slotCost,
+                weight,
+                value);
     }
 
     public static Optional<ItemCarryProfile> profileFor(ItemStack stack) {

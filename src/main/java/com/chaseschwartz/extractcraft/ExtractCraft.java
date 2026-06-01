@@ -6,9 +6,12 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
+import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerInteractionHandler;
+import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
 import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryCommands;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryMenu;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
 import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
@@ -22,6 +25,8 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -38,6 +43,7 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -56,6 +62,7 @@ public class ExtractCraft {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "extractcraft" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MODID);
 
     // Creates a new Block with the id "extractcraft:example_block", combining the namespace and path
     public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
@@ -71,6 +78,10 @@ public class ExtractCraft {
     public static final DeferredItem<BlockItem> RARE_LOOT_MARKER_ITEM = ITEMS.registerSimpleBlockItem("rare_loot_marker", RARE_LOOT_MARKER);
     public static final DeferredBlock<Block> MOB_SPAWN_MARKER = registerMarkerBlock("mob_spawn_marker", MapColor.COLOR_RED);
     public static final DeferredItem<BlockItem> MOB_SPAWN_MARKER_ITEM = ITEMS.registerSimpleBlockItem("mob_spawn_marker", MOB_SPAWN_MARKER);
+    public static final DeferredHolder<MenuType<?>, MenuType<ActiveLootContainerMenu>> ACTIVE_LOOT_CONTAINER_MENU = MENUS.register("active_loot_container",
+            () -> new MenuType<>((IContainerFactory<ActiveLootContainerMenu>) ActiveLootContainerMenu::new, FeatureFlags.VANILLA_SET));
+    public static final DeferredHolder<MenuType<?>, MenuType<RaidInventoryMenu>> RAID_INVENTORY_MENU = MENUS.register("raid_inventory",
+            () -> new MenuType<>((IContainerFactory<RaidInventoryMenu>) RaidInventoryMenu::new, FeatureFlags.VANILLA_SET));
 
     // Creates a new food item with the id "extractcraft:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
@@ -102,6 +113,7 @@ public class ExtractCraft {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+        MENUS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExtractCraft) to respond directly to events.
@@ -110,6 +122,7 @@ public class ExtractCraft {
         NeoForge.EVENT_BUS.register(new ExtractionZoneHandler());
         NeoForge.EVENT_BUS.register(new RaidMapBakeService());
         NeoForge.EVENT_BUS.register(new RaidMapBoundaryService());
+        NeoForge.EVENT_BUS.register(new ActiveLootContainerInteractionHandler());
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

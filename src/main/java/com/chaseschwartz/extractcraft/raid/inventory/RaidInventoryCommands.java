@@ -26,6 +26,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -53,6 +54,12 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("status")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> status(context.getSource())))
+                        .then(Commands.literal("screen")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> openScreen(context.getSource())))
+                        .then(Commands.literal("open")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> openScreen(context.getSource())))
                         .then(Commands.literal("setbackpack")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("type", StringArgumentType.word())
@@ -157,6 +164,17 @@ public class RaidInventoryCommands {
 
     private static int status(CommandSourceStack source) throws CommandSyntaxException {
         sendStatus(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int openScreen(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        RaidInventory inventory = RaidInventoryManager.get(player);
+        RaidInventoryMenu.RaidInventorySnapshot snapshot = RaidInventoryMenu.RaidInventorySnapshot.from(inventory);
+        player.openMenu(new SimpleMenuProvider(
+                (containerId, playerInventory, menuPlayer) -> new RaidInventoryMenu(containerId, playerInventory, inventory),
+                Component.literal("Raid Inventory")),
+                snapshot::write);
         return 1;
     }
 
