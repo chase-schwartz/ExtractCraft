@@ -49,14 +49,18 @@ public class RaidInventoryManager {
     }
 
     public static RaidInventory.AddResult addStackToBackpack(ServerPlayer player, ItemStack stack) {
+        return addStackTo(player, stack, RaidEquipmentSlot.BACKPACK);
+    }
+
+    public static RaidInventory.AddResult addStackTo(ServerPlayer player, ItemStack stack, RaidEquipmentSlot slot) {
         if (stack.isEmpty()) {
-            return new RaidInventory.AddResult(false, RaidEquipmentSlot.BACKPACK, "Cannot add an empty stack.");
+            return new RaidInventory.AddResult(false, slot, "Cannot add an empty stack.");
         }
 
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
         ItemCarryProfile profile = ItemCarryProfileRegistry.get(stack).orElse(null);
         if (profile == null) {
-            return new RaidInventory.AddResult(false, RaidEquipmentSlot.BACKPACK, itemId + " has no carry profile.");
+            return new RaidInventory.AddResult(false, slot, itemId + " has no carry profile.");
         }
 
         int stackUnits = Math.max(1, (int) Math.ceil(stack.getCount() / (double) Math.max(1, stack.getMaxStackSize())));
@@ -64,7 +68,12 @@ public class RaidInventoryManager {
         double weight = profile.weight() * stack.getCount();
         int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
         RaidInventoryItem item = inventoryItem(stack, itemId, profile, slotCost, weight, value);
-        return get(player).addToBackpack(item);
+        RaidInventory inventory = get(player);
+        return switch (slot) {
+            case BACKPACK -> inventory.addToBackpack(item);
+            case VEST -> inventory.addToVest(item, profile);
+            case SAFE_BOX -> inventory.addToSafeBox(item, profile);
+        };
     }
 
     private static RaidInventoryItem inventoryItem(ItemStack stack, ResourceLocation itemId, ItemCarryProfile profile, int slotCost, double weight, int value) {

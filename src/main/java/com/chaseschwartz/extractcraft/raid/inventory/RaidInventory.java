@@ -40,6 +40,30 @@ public class RaidInventory {
         return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack does not have enough capacity or weight allowance.");
     }
 
+    public AddResult addToVest(RaidInventoryItem item, ItemCarryProfile profile) {
+        if (!profile.allowInVest() || !loadout.vest().allowedCategories().contains(profile.category())) {
+            return new AddResult(false, RaidEquipmentSlot.VEST, "Item is not allowed in vest.");
+        }
+        if (vest.canAdd(item)) {
+            vest.add(item);
+            return new AddResult(true, RaidEquipmentSlot.VEST, "Added to vest.");
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.VEST, "Vest does not have enough capacity or weight allowance.");
+    }
+
+    public AddResult addToSafeBox(RaidInventoryItem item, ItemCarryProfile profile) {
+        if (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR) {
+            return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Item is not allowed in safe box.");
+        }
+        if (safeBox.canAdd(item)) {
+            safeBox.add(item);
+            return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, "Added to safe box.");
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Safe box does not have enough capacity or weight allowance.");
+    }
+
     public void clear() {
         backpack.clear();
         vest.clear();
