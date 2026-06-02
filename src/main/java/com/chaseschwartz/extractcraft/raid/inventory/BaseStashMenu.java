@@ -157,6 +157,25 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return true;
     }
 
+    public GridMoveResult handleGridMoveRequest(ServerPlayer player, int operation, int sourceSlotId, int sourceIndex, int targetSlotId, int targetCell) {
+        boolean changed = switch (operation) {
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_TO_BASE_CELL ->
+                    moveStashToBase(player, sourceIndex, slotFromId(targetSlotId), targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_TO_BASE_CELL ->
+                    moveBaseToBase(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId), targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_TO_STASH ->
+                    moveBaseToStash(player, slotFromId(sourceSlotId), sourceIndex);
+            default -> false;
+        };
+        if (changed) {
+            PlayerStashService.save(player, stashData);
+            rebuildDisplays();
+        }
+        setCarried(ItemStack.EMPTY);
+        broadcastChanges();
+        return changed ? GridMoveResult.success("Move committed.") : GridMoveResult.failure("Move rejected.");
+    }
+
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;

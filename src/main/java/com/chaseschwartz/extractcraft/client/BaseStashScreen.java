@@ -3,6 +3,8 @@ package com.chaseschwartz.extractcraft.client;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
@@ -15,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private static final int PANEL_COLOR = 0xF0101116;
@@ -35,6 +38,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private final Set<Integer> draggedSourceMenuSlots = new HashSet<>();
     private final Set<Integer> pendingSourceMenuSlots = new HashSet<>();
     private int pendingSourceTicks;
+    private boolean pendingSourceObservedPresent;
+    private int nextTransactionId = 1;
+    private int pendingTransactionId = -1;
+    private String gridMoveStatus = "";
     private double dragStartX;
     private double dragStartY;
     private String lastPreviewLogKey = "";
@@ -50,6 +57,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderFootprintOverlays(guiGraphics);
         renderDragPreview(guiGraphics, mouseX, mouseY);
+        renderFootprintHover(guiGraphics, mouseX, mouseY);
         if (!draggedStack.isEmpty()) {
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
@@ -91,6 +99,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             }
         }
         super.renderSlot(guiGraphics, slot);
+    }
+
+    @Override
+    protected void renderSlotHighlight(GuiGraphics guiGraphics, Slot slot, int mouseX, int mouseY, float partialTick) {
+        if ((isBaseSlot(slot) && !isWeaponSlot(slot)) || isStashSlot(slot)) {
+            return;
+        }
+        super.renderSlotHighlight(guiGraphics, slot, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -194,7 +210,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private boolean tryPlaceHeldStack(double mouseX, double mouseY) {
         RaidEquipmentSlot baseTarget = targetAt((int) mouseX, (int) mouseY);
         if (dragSource == DragSource.STASH && baseTarget != null) {
-            int targetCell = targetCellAt(baseTarget, (int) mouseX, (int) mouseY);
+            int targetCell = placementCellAt(baseTarget, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             logDropTarget("stash-to-base", mouseX, mouseY, baseTarget, targetCell);
             sendStashToBase(draggedSourceIndex, baseTarget, targetCell);
             markPendingSource();
@@ -206,14 +222,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             return true;
         }
         if (dragSource == DragSource.BASE && baseTarget != null && baseTarget != draggedBaseSlot) {
-            int targetCell = targetCellAt(baseTarget, (int) mouseX, (int) mouseY);
+            int targetCell = placementCellAt(baseTarget, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             logDropTarget("base-to-base", mouseX, mouseY, baseTarget, targetCell);
             sendBaseToBase(draggedBaseSlot, draggedSourceIndex, baseTarget, targetCell);
             markPendingSource();
             return true;
         }
         if (dragSource == DragSource.BASE && baseTarget != null && baseTarget == draggedBaseSlot) {
-            int targetCell = targetCellAt(baseTarget, (int) mouseX, (int) mouseY);
+            int targetCell = placementCellAt(baseTarget, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             if (targetCell >= 0) {
                 logDropTarget("base-reposition", mouseX, mouseY, baseTarget, targetCell);
                 sendBaseToBase(draggedBaseSlot, draggedSourceIndex, baseTarget, targetCell);
@@ -266,7 +282,8 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private void markPendingSource() {
         this.pendingSourceMenuSlots.clear();
         this.pendingSourceMenuSlots.addAll(this.draggedSourceMenuSlots);
-        this.pendingSourceTicks = 8;
+        this.pendingSourceTicks = 20;
+        this.pendingSourceObservedPresent = true;
     }
 
     private boolean isClickRelease(double mouseX, double mouseY) {
@@ -275,7 +292,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private void sendBaseToStash(RaidEquipmentSlot source, int sourceIndex) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
-            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, BaseStashMenu.baseToStashButtonId(source, sourceIndex));
+            sendGridMove(GridMoveRequestPayload.BASE_BASE_TO_STASH, source, sourceIndex, null, -1);
         }
     }
 
@@ -285,6 +302,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private void sendStashToBase(int stashDisplayIndex, RaidEquipmentSlot target, int targetCell) {
         if (this.minecraft != null && this.minecraft.gameMode != null && target != null) {
+            if (targetCell >= 0) {
+                sendGridMove(GridMoveRequestPayload.BASE_STASH_TO_BASE_CELL, null, stashDisplayIndex, target, targetCell);
+                return;
+            }
             int buttonId = targetCell >= 0
                     ? BaseStashMenu.stashToBaseCellButtonId(stashDisplayIndex, target, targetCell)
                     : BaseStashMenu.stashToBaseButtonId(stashDisplayIndex, target);
@@ -298,10 +319,44 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private void sendBaseToBase(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null && target != null) {
+            if (targetCell >= 0) {
+                sendGridMove(GridMoveRequestPayload.BASE_BASE_TO_BASE_CELL, source, sourceIndex, target, targetCell);
+                return;
+            }
             int buttonId = targetCell >= 0
                     ? BaseStashMenu.baseToBaseCellButtonId(source, sourceIndex, target, targetCell)
                     : BaseStashMenu.baseToBaseButtonId(source, sourceIndex, target);
             this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, buttonId);
+        }
+    }
+
+    private void sendGridMove(int operation, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
+        int transactionId = nextTransactionId++;
+        pendingTransactionId = transactionId;
+        gridMoveStatus = "";
+        ExtractCraft.LOGGER.info("Base grid move request sent: tx={}, menu={}, op={}, source={}#{}, target={}, cell={}",
+                transactionId,
+                this.menu.containerId,
+                operation,
+                source,
+                sourceIndex,
+                target,
+                targetCell);
+        PacketDistributor.sendToServer(new GridMoveRequestPayload(transactionId, this.menu.containerId, operation, slotId(source), sourceIndex, slotId(target), targetCell));
+    }
+
+    public void handleGridMoveResult(int transactionId, boolean success, String message) {
+        if (pendingTransactionId != transactionId) {
+            ExtractCraft.LOGGER.info("Base grid move result ignored: tx={}, pendingTx={}, success={}, message={}", transactionId, pendingTransactionId, success, message);
+            return;
+        }
+        ExtractCraft.LOGGER.info("Base grid move result applied: tx={}, success={}, message={}, pendingSlots={}", transactionId, success, message, pendingSourceMenuSlots);
+        pendingTransactionId = -1;
+        gridMoveStatus = success ? "" : message;
+        if (!success) {
+            pendingSourceMenuSlots.clear();
+            pendingSourceTicks = 0;
+            pendingSourceObservedPresent = false;
         }
     }
 
@@ -330,6 +385,35 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             case SAFE_BOX -> gridCell(localX, localY, 104, 226, 3, 3);
             case PRIMARY_WEAPON, SECONDARY_WEAPON -> -1;
         };
+    }
+
+    private int placementCellAt(RaidEquipmentSlot target, int mouseX, int mouseY, Footprint footprint) {
+        Placement placement = placementAt(target, mouseX, mouseY, footprint);
+        if (!placement.inGrid()) {
+            return -1;
+        }
+        if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return -1;
+        }
+        return placement.valid() ? placement.y() * placement.layout().columns() + placement.x() : -1;
+    }
+
+    private Placement placementAt(RaidEquipmentSlot target, int mouseX, int mouseY, Footprint footprint) {
+        if (target == null || target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return Placement.invalid(layoutFor(RaidEquipmentSlot.BACKPACK), 0, 0, false);
+        }
+        GridLayout layout = layoutFor(target);
+        int localX = mouseX - this.leftPos - layout.x();
+        int localY = mouseY - this.topPos - layout.y();
+        boolean inGrid = localX >= 0 && localY >= 0 && localX < layout.columns() * 18 && localY < layout.rows() * 18;
+        double visualTopLeftX = localX - (footprint.width() * 18) / 2.0D;
+        double visualTopLeftY = localY - (footprint.height() * 18) / 2.0D;
+        int topLeftX = (int) Math.round(visualTopLeftX / 18);
+        int topLeftY = (int) Math.round(visualTopLeftY / 18);
+        boolean valid = inGrid && topLeftX >= 0 && topLeftY >= 0
+                && topLeftX + footprint.width() <= layout.columns()
+                && topLeftY + footprint.height() <= layout.rows();
+        return new Placement(layout, topLeftX, topLeftY, inGrid, valid);
     }
 
     private static int gridCell(int localX, int localY, int gridX, int gridY, int columns, int rows) {
@@ -460,6 +544,19 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         };
     }
 
+    private static int slotId(RaidEquipmentSlot slot) {
+        if (slot == null) {
+            return -1;
+        }
+        return switch (slot) {
+            case PRIMARY_WEAPON -> 0;
+            case SECONDARY_WEAPON -> 1;
+            case BACKPACK -> 2;
+            case VEST -> 3;
+            case SAFE_BOX -> 4;
+        };
+    }
+
     private boolean isStashPanel(int mouseX, int mouseY) {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
@@ -495,6 +592,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
         int width = metadata.footprintWidth() * 18 - 2;
         int height = metadata.footprintHeight() * 18 - 2;
+        guiGraphics.fill(slot.x, slot.y, slot.x + width, slot.y + height, 0x2210151D);
         border(guiGraphics, slot.x - 1, slot.y - 1, width + 2, height + 2, 0x8849D8E8);
     }
 
@@ -525,6 +623,57 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         guiGraphics.pose().popPose();
     }
 
+    private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (dragSource != DragSource.NONE) {
+            return;
+        }
+        Slot slot = slotAt(mouseX, mouseY);
+        if (slot == null || !slot.hasItem()) {
+            return;
+        }
+        if (isWeaponSlot(slot)) {
+            return;
+        }
+        if (isBaseSlot(slot)) {
+            Slot owner = ownerSlotFor(slot, this.menu.baseSlotForMenuSlot(slot.index), this.menu.baseItemIndexForMenuSlot(slot.index));
+            renderOwnerHover(guiGraphics, owner == null ? slot : owner);
+            return;
+        }
+        if (isStashSlot(slot)) {
+            renderOwnerHover(guiGraphics, slot);
+        }
+    }
+
+    private Slot ownerSlotFor(Slot clickedSlot, RaidEquipmentSlot section, int ownerIndex) {
+        if (section == null || ownerIndex < 0) {
+            return clickedSlot;
+        }
+        for (Slot slot : this.menu.slots) {
+            if (!slot.hasItem() || !isBaseSlot(slot) || this.menu.baseSlotForMenuSlot(slot.index) != section) {
+                continue;
+            }
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+            if (metadata.present() && metadata.sourceIndex() == ownerIndex && metadata.anchor()) {
+                return slot;
+            }
+        }
+        return clickedSlot;
+    }
+
+    private void renderOwnerHover(GuiGraphics guiGraphics, Slot ownerSlot) {
+        if (ownerSlot == null || !ownerSlot.hasItem()) {
+            return;
+        }
+        GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(ownerSlot.getItem());
+        int width = metadata.present() ? metadata.footprintWidth() * 18 : 18;
+        int height = metadata.present() ? metadata.footprintHeight() * 18 : 18;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(this.leftPos, this.topPos, 0.0F);
+        guiGraphics.fill(ownerSlot.x, ownerSlot.y, ownerSlot.x + width - 2, ownerSlot.y + height - 2, 0x3349D8E8);
+        border(guiGraphics, ownerSlot.x - 1, ownerSlot.y - 1, width, height, 0xCC9CF6FF);
+        guiGraphics.pose().popPose();
+    }
+
     private void renderDragPreview(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (dragSource == DragSource.NONE || draggedStack.isEmpty()) {
             return;
@@ -533,26 +682,22 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (target == null || target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
             return;
         }
-        int cell = targetCellAt(target, mouseX, mouseY);
-        if (cell < 0) {
+        Footprint footprint = footprintFor(draggedStack);
+        Placement placement = placementAt(target, mouseX, mouseY, footprint);
+        if (!placement.inGrid()) {
             return;
         }
-
-        Footprint footprint = footprintFor(draggedStack);
-        GridLayout layout = layoutFor(target);
-        int cellX = cellX(target, cell);
-        int cellY = cellY(target, cell);
-        int localX = layout.x() + cellX * 18;
-        int localY = layout.y() + cellY * 18;
-        boolean fits = previewFits(target, cellX, cellY, footprint);
+        int localX = placement.layout().x() + placement.x() * 18;
+        int localY = placement.layout().y() + placement.y() * 18;
+        boolean fits = placement.valid() && previewFits(target, placement.x(), placement.y(), footprint);
         int width = footprint.width() * 18;
         int height = footprint.height() * 18;
         int color = fits ? 0xAA62F3E8 : 0xAAFF5D5D;
-        logPreview(target, cellX, cellY, footprint, fits);
+        logPreview(target, placement.x(), placement.y(), footprint, fits);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(this.leftPos, this.topPos, 0.0F);
-        guiGraphics.fill(localX, localY, localX + width - 2, localY + height - 2, fits ? 0x2249D8E8 : 0x22FF5D5D);
+        guiGraphics.fill(localX, localY, localX + width - 2, localY + height - 2, fits ? 0x3349D8E8 : 0x33FF5D5D);
         border(guiGraphics, localX - 1, localY - 1, width, height, color);
         guiGraphics.pose().popPose();
     }
@@ -623,9 +768,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             return;
         }
         pendingSourceTicks--;
-        if (pendingSourceTicks <= 0 || pendingSourceMenuSlots.stream().noneMatch(this::slotStillHasItem)) {
+        boolean sourceStillVisible = pendingSourceMenuSlots.stream().anyMatch(this::slotStillHasItem);
+        if (sourceStillVisible) {
+            pendingSourceObservedPresent = true;
+        }
+        if (pendingSourceTicks <= 0 || pendingSourceObservedPresent && !sourceStillVisible) {
             pendingSourceMenuSlots.clear();
             pendingSourceTicks = 0;
+            pendingSourceObservedPresent = false;
         }
     }
 
@@ -634,15 +784,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private static void renderItemCentered(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
-        float scale = Math.min(2.75F, Math.max(1.0F, Math.min(width, height) / 18.0F));
-        int renderSize = Math.round(16.0F * scale);
-        int renderX = x + (width - renderSize) / 2;
-        int renderY = y + (height - renderSize) / 2;
+        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
+        double centerX = x + width / 2.0D;
+        double centerY = y + height / 2.0D;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(renderX, renderY, 0.0F);
+        guiGraphics.pose().translate(centerX, centerY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, 0, 0);
-        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
+        guiGraphics.renderItem(stack, -8, -8);
+        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, -8, -8);
         guiGraphics.pose().popPose();
     }
 
@@ -745,5 +894,11 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private record GridLayout(int x, int y, int columns, int rows) {
+    }
+
+    private record Placement(GridLayout layout, int x, int y, boolean inGrid, boolean valid) {
+        private static Placement invalid(GridLayout layout, int x, int y, boolean inGrid) {
+            return new Placement(layout, x, y, inGrid, false);
+        }
     }
 }

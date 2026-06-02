@@ -3,6 +3,7 @@ package com.chaseschwartz.extractcraft.raid.containers;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
+import com.chaseschwartz.extractcraft.raid.inventory.GridMoveResult;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventory;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryItem;
@@ -231,6 +232,25 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         setCarried(ItemStack.EMPTY);
         broadcastChanges();
         return true;
+    }
+
+    public GridMoveResult handleGridMoveRequest(ServerPlayer player, int operation, int sourceSlotId, int sourceIndex, int targetSlotId, int targetCell) {
+        GridMoveResult result = switch (operation) {
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CONTAINER_TO_RAID_CELL -> {
+                ItemStack moved = transferContainerSlot(player, sourceIndex, slotFromId(targetSlotId), targetCell);
+                yield moved.isEmpty()
+                        ? GridMoveResult.failure("Move rejected.")
+                        : GridMoveResult.success("Moved " + moved.getHoverName().getString() + ".");
+            }
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_TO_RAID_CELL ->
+                    moveStoredItem(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId), targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_TO_CONTAINER ->
+                    returnStoredItemToContainer(player, slotFromId(sourceSlotId), sourceIndex);
+            default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
+        };
+        setCarried(ItemStack.EMPTY);
+        broadcastChanges();
+        return result;
     }
 
     @Override
@@ -483,15 +503,16 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return copy;
     }
 
-    private void moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
-        moveStoredItem(player, source, sourceIndex, target, -1);
+    private GridMoveResult moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
+        return moveStoredItem(player, source, sourceIndex, target, -1);
     }
 
-    private void moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int cell) {
+    private GridMoveResult moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int cell) {
         if (source == null || target == null) {
-            return;
+            return GridMoveResult.failure("Invalid source or target.");
         }
 
+        RaidInventoryItem sourceItem = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
         ExtractCraft.LOGGER.info("Raid grid move attempt: player={}, source={}#{}, target={}, targetCell={}, targetXY=({},{}), sourceItem={}",
                 player.getGameProfile().getName(),
                 source,
@@ -505,65 +526,91 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 ? RaidInventoryManager.moveBetween(player, source, sourceIndex, target, cellX(target, cell), cellY(target, cell), false)
                 : RaidInventoryManager.moveBetween(player, source, sourceIndex, target);
         if (!result.success()) {
-            ExtractCraft.LOGGER.info("Raid loot cursor move failed: player={}, source={}#{}, target={}, reason={}, movedCount={}",
+            ExtractCraft.LOGGER.info("Raid loot cursor move failed: player={}, source={}#{}, sourceKey={}, sourceGrid=({},{}), sourceFootprint={}x{}, target={}, targetCell={}, targetXY=({},{}), sameSection={}, reason={}, movedCount={}",
                     player.getGameProfile().getName(),
                     source,
                     sourceIndex,
+                    sourceItem == null ? "none" : sourceItem.lookupKey(),
+                    sourceItem == null ? -1 : sourceItem.gridX(),
+                    sourceItem == null ? -1 : sourceItem.gridY(),
+                    sourceItem == null ? -1 : sourceItem.gridWidth(),
+                    sourceItem == null ? -1 : sourceItem.gridHeight(),
                     target,
+                    cell,
+                    cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                    cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                    source == target,
                     result.message(),
                     result.movedCount());
             player.sendSystemMessage(Component.literal(result.message()));
-            return;
+            return GridMoveResult.failure(result.message());
         }
 
         rebuildRaidDisplay();
-        ExtractCraft.LOGGER.info("Raid loot cursor move committed: player={}, source={}#{}, target={}, movedCount={}, pendingCleared=true",
+        ExtractCraft.LOGGER.info("Raid loot cursor move committed: player={}, source={}#{}, sourceKey={}, sourceGrid=({},{}), sourceFootprint={}x{}, target={}, targetCell={}, targetXY=({},{}), sameSection={}, movedCount={}, pendingCleared=true",
                 player.getGameProfile().getName(),
                 source,
                 sourceIndex,
+                sourceItem == null ? "none" : sourceItem.lookupKey(),
+                sourceItem == null ? -1 : sourceItem.gridX(),
+                sourceItem == null ? -1 : sourceItem.gridY(),
+                sourceItem == null ? -1 : sourceItem.gridWidth(),
+                sourceItem == null ? -1 : sourceItem.gridHeight(),
                 target,
+                cell,
+                cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                source == target,
                 result.movedCount());
         player.sendSystemMessage(Component.literal(result.message()));
+        return GridMoveResult.success(result.message());
     }
 
-    private void returnStoredItemToContainer(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+    private GridMoveResult returnStoredItemToContainer(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
         if (!hasWorldContainer) {
-            player.sendSystemMessage(Component.literal("No container is open."));
-            return;
+            String message = "No container is open.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
         }
         if (source == null) {
-            return;
+            return GridMoveResult.failure("Invalid source.");
         }
 
         RaidInventory inventory = RaidInventoryManager.get(player);
         RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
         if (item == null) {
-            player.sendSystemMessage(Component.literal("Source item is no longer available."));
-            return;
+            String message = "Source item is no longer available.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
         }
 
         ItemStack stack = item.toItemStack();
         if (stack.isEmpty()) {
-            player.sendSystemMessage(Component.literal("Unable to rebuild item stack for " + item.lookupKey() + "."));
-            return;
+            String message = "Unable to rebuild item stack for " + item.lookupKey() + ".";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
         }
         int fitCount = countFitInContainer(stack);
         if (fitCount <= 0) {
-            player.sendSystemMessage(Component.literal("Container does not have room for that stack."));
-            return;
+            String message = "Container does not have room for that stack.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
         }
 
         RaidInventoryItem removed = inventory.removeCountAt(source, sourceIndex, Math.min(stack.getCount(), fitCount));
         if (removed == null) {
-            player.sendSystemMessage(Component.literal("Source item is no longer available."));
-            return;
+            String message = "Source item is no longer available.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
         }
 
         ItemStack removedStack = removed.toItemStack();
         insertIntoContainer(removedStack);
         container.setChanged();
         rebuildRaidDisplay();
-        player.sendSystemMessage(Component.literal("Returned " + removedStack.getCount() + "x " + removedStack.getHoverName().getString() + " to container."));
+        String message = "Returned " + removedStack.getCount() + "x " + removedStack.getHoverName().getString() + " to container.";
+        player.sendSystemMessage(Component.literal(message));
+        return GridMoveResult.success(message);
     }
 
     private void addRaidDisplaySlots() {

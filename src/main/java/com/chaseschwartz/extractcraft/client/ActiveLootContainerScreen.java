@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
@@ -16,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLootContainerMenu> {
     private static final int CONTAINER_PANEL_X = 214;
@@ -42,6 +44,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private final Set<Integer> draggedSourceMenuSlots = new HashSet<>();
     private final Set<Integer> pendingSourceMenuSlots = new HashSet<>();
     private int pendingSourceTicks;
+    private boolean pendingSourceObservedPresent;
+    private int nextTransactionId = 1;
+    private int pendingTransactionId = -1;
+    private String gridMoveStatus = "";
     private double dragStartX;
     private double dragStartY;
     private boolean loggedLayout;
@@ -58,6 +64,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderFootprintOverlays(guiGraphics);
         renderDragPreview(guiGraphics, mouseX, mouseY);
+        renderFootprintHover(guiGraphics, mouseX, mouseY);
         if (!draggedStack.isEmpty()) {
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
@@ -102,6 +109,14 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             }
         }
         super.renderSlot(guiGraphics, slot);
+    }
+
+    @Override
+    protected void renderSlotHighlight(GuiGraphics guiGraphics, Slot slot, int mouseX, int mouseY, float partialTick) {
+        if ((isRaidInventorySlot(slot) && !isWeaponSlot(slot)) || isContainerSlot(slot)) {
+            return;
+        }
+        super.renderSlotHighlight(guiGraphics, slot, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -194,15 +209,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
             RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
             if (target != null) {
-                int targetCell = targetCellAt(target, (int) mouseX, (int) mouseY);
+                int targetCell = placementCellAt(target, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
                 logDropTarget("release", mouseX, mouseY, target, targetCell);
                 if (dragSource == DragSource.CONTAINER) {
                     sendTransfer(draggedSourceIndex, target, targetCell);
                 } else if (dragSource == DragSource.RAID_INVENTORY) {
                     sendMove(draggedRaidSlot, draggedSourceIndex, target, targetCell);
                 }
+                markPendingSource();
             } else if (dragSource == DragSource.RAID_INVENTORY && isContainerPanel((int) mouseX, (int) mouseY)) {
                 sendReturn(draggedRaidSlot, draggedSourceIndex);
+                markPendingSource();
             }
             clearDrag();
             return true;
@@ -235,7 +252,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private void markPendingSource() {
         this.pendingSourceMenuSlots.clear();
         this.pendingSourceMenuSlots.addAll(this.draggedSourceMenuSlots);
-        this.pendingSourceTicks = 8;
+        this.pendingSourceTicks = 20;
+        this.pendingSourceObservedPresent = true;
     }
 
     private boolean isClickRelease(double mouseX, double mouseY) {
@@ -245,7 +263,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private boolean tryPlaceHeldStack(double mouseX, double mouseY) {
         RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
         if (target != null) {
-            int targetCell = targetCellAt(target, (int) mouseX, (int) mouseY);
+            int targetCell = placementCellAt(target, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             logDropTarget("click-place", mouseX, mouseY, target, targetCell);
             if (dragSource == DragSource.CONTAINER) {
                 sendTransfer(draggedSourceIndex, target, targetCell);
@@ -280,6 +298,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private void sendTransfer(int containerSlot, RaidEquipmentSlot target, int targetCell) {
         if (this.minecraft != null && this.minecraft.gameMode != null) {
+            if (targetCell >= 0) {
+                sendGridMove(GridMoveRequestPayload.ACTIVE_CONTAINER_TO_RAID_CELL, null, containerSlot, target, targetCell);
+                return;
+            }
             int buttonId = targetCell >= 0
                     ? ActiveLootContainerMenu.cellButtonId(target, containerSlot, targetCell)
                     : ActiveLootContainerMenu.buttonId(target, containerSlot);
@@ -293,6 +315,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private void sendMove(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null && target != null) {
+            if (targetCell >= 0) {
+                sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_TO_RAID_CELL, source, sourceIndex, target, targetCell);
+                return;
+            }
             int buttonId = targetCell >= 0
                     ? ActiveLootContainerMenu.moveCellButtonId(source, sourceIndex, target, targetCell)
                     : ActiveLootContainerMenu.moveButtonId(source, sourceIndex, target);
@@ -302,7 +328,37 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private void sendReturn(RaidEquipmentSlot source, int sourceIndex) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
-            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, ActiveLootContainerMenu.returnButtonId(source, sourceIndex));
+            sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_TO_CONTAINER, source, sourceIndex, null, -1);
+        }
+    }
+
+    private void sendGridMove(int operation, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
+        int transactionId = nextTransactionId++;
+        pendingTransactionId = transactionId;
+        gridMoveStatus = "";
+        ExtractCraft.LOGGER.info("Grid move request sent: tx={}, menu={}, op={}, source={}#{}, target={}, cell={}",
+                transactionId,
+                this.menu.containerId,
+                operation,
+                source,
+                sourceIndex,
+                target,
+                targetCell);
+        PacketDistributor.sendToServer(new GridMoveRequestPayload(transactionId, this.menu.containerId, operation, slotId(source), sourceIndex, slotId(target), targetCell));
+    }
+
+    public void handleGridMoveResult(int transactionId, boolean success, String message) {
+        if (pendingTransactionId != transactionId) {
+            ExtractCraft.LOGGER.info("Grid move result ignored: tx={}, pendingTx={}, success={}, message={}", transactionId, pendingTransactionId, success, message);
+            return;
+        }
+        ExtractCraft.LOGGER.info("Grid move result applied: tx={}, success={}, message={}, pendingSlots={}", transactionId, success, message, pendingSourceMenuSlots);
+        pendingTransactionId = -1;
+        gridMoveStatus = success ? "" : message;
+        if (!success) {
+            pendingSourceMenuSlots.clear();
+            pendingSourceTicks = 0;
+            pendingSourceObservedPresent = false;
         }
     }
 
@@ -325,6 +381,35 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             case SAFE_BOX -> gridCell(localX, localY, 104, 248, 3, 3);
             case PRIMARY_WEAPON, SECONDARY_WEAPON -> -1;
         };
+    }
+
+    private int placementCellAt(RaidEquipmentSlot target, int mouseX, int mouseY, Footprint footprint) {
+        Placement placement = placementAt(target, mouseX, mouseY, footprint);
+        if (!placement.inGrid()) {
+            return -1;
+        }
+        if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return -1;
+        }
+        return placement.valid() ? placement.y() * placement.layout().columns() + placement.x() : -1;
+    }
+
+    private Placement placementAt(RaidEquipmentSlot target, int mouseX, int mouseY, Footprint footprint) {
+        if (target == null || target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return Placement.invalid(layoutFor(RaidEquipmentSlot.BACKPACK), 0, 0, false);
+        }
+        GridLayout layout = layoutFor(target);
+        int localX = mouseX - this.leftPos - layout.x();
+        int localY = mouseY - this.topPos - layout.y();
+        boolean inGrid = localX >= 0 && localY >= 0 && localX < layout.columns() * SLOT_STEP && localY < layout.rows() * SLOT_STEP;
+        double visualTopLeftX = localX - (footprint.width() * SLOT_STEP) / 2.0D;
+        double visualTopLeftY = localY - (footprint.height() * SLOT_STEP) / 2.0D;
+        int topLeftX = (int) Math.round(visualTopLeftX / SLOT_STEP);
+        int topLeftY = (int) Math.round(visualTopLeftY / SLOT_STEP);
+        boolean valid = inGrid && topLeftX >= 0 && topLeftY >= 0
+                && topLeftX + footprint.width() <= layout.columns()
+                && topLeftY + footprint.height() <= layout.rows();
+        return new Placement(layout, topLeftX, topLeftY, inGrid, valid);
     }
 
     private static int gridCell(int localX, int localY, int gridX, int gridY, int columns, int rows) {
@@ -457,6 +542,19 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         };
     }
 
+    private static int slotId(RaidEquipmentSlot slot) {
+        if (slot == null) {
+            return -1;
+        }
+        return switch (slot) {
+            case PRIMARY_WEAPON -> 0;
+            case SECONDARY_WEAPON -> 1;
+            case BACKPACK -> 2;
+            case VEST -> 3;
+            case SAFE_BOX -> 4;
+        };
+    }
+
     private boolean isContainerPanel(int mouseX, int mouseY) {
         if (!this.menu.hasWorldContainer()) {
             return false;
@@ -512,6 +610,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int width = metadata.footprintWidth() * SLOT_STEP - 2;
         int height = metadata.footprintHeight() * SLOT_STEP - 2;
+        guiGraphics.fill(slot.x, slot.y, slot.x + width, slot.y + height, 0x2210151D);
         border(guiGraphics, slot.x - 1, slot.y - 1, width + 2, height + 2, 0x8849D8E8);
     }
 
@@ -545,6 +644,57 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         guiGraphics.pose().popPose();
     }
 
+    private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (dragSource != DragSource.NONE) {
+            return;
+        }
+        Slot slot = slotAt(mouseX, mouseY);
+        if (slot == null || !slot.hasItem()) {
+            return;
+        }
+        if (isWeaponSlot(slot)) {
+            return;
+        }
+        if (isRaidInventorySlot(slot)) {
+            Slot owner = ownerSlotFor(slot, this.menu.raidSlotForMenuSlot(slot.index), this.menu.raidItemIndexForMenuSlot(slot.index));
+            renderOwnerHover(guiGraphics, owner == null ? slot : owner);
+            return;
+        }
+        if (isContainerSlot(slot)) {
+            renderOwnerHover(guiGraphics, slot);
+        }
+    }
+
+    private Slot ownerSlotFor(Slot clickedSlot, RaidEquipmentSlot section, int ownerIndex) {
+        if (section == null || ownerIndex < 0) {
+            return clickedSlot;
+        }
+        for (Slot slot : this.menu.slots) {
+            if (!slot.hasItem() || !isRaidInventorySlot(slot) || this.menu.raidSlotForMenuSlot(slot.index) != section) {
+                continue;
+            }
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+            if (metadata.present() && metadata.sourceIndex() == ownerIndex && metadata.anchor()) {
+                return slot;
+            }
+        }
+        return clickedSlot;
+    }
+
+    private void renderOwnerHover(GuiGraphics guiGraphics, Slot ownerSlot) {
+        if (ownerSlot == null || !ownerSlot.hasItem()) {
+            return;
+        }
+        GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(ownerSlot.getItem());
+        int width = metadata.present() ? metadata.footprintWidth() * SLOT_STEP : SLOT_STEP;
+        int height = metadata.present() ? metadata.footprintHeight() * SLOT_STEP : SLOT_STEP;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(this.leftPos, this.topPos, 0.0F);
+        guiGraphics.fill(ownerSlot.x, ownerSlot.y, ownerSlot.x + width - 2, ownerSlot.y + height - 2, 0x3349D8E8);
+        border(guiGraphics, ownerSlot.x - 1, ownerSlot.y - 1, width, height, 0xCC9CF6FF);
+        guiGraphics.pose().popPose();
+    }
+
     private void renderDragPreview(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (dragSource == DragSource.NONE || draggedStack.isEmpty()) {
             return;
@@ -553,26 +703,22 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         if (target == null || target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
             return;
         }
-        int cell = targetCellAt(target, mouseX, mouseY);
-        if (cell < 0) {
+        Footprint footprint = footprintFor(draggedStack);
+        Placement placement = placementAt(target, mouseX, mouseY, footprint);
+        if (!placement.inGrid()) {
             return;
         }
-
-        Footprint footprint = footprintFor(draggedStack);
-        GridLayout layout = layoutFor(target);
-        int cellX = cellX(target, cell);
-        int cellY = cellY(target, cell);
-        int localX = layout.x() + cellX * SLOT_STEP;
-        int localY = layout.y() + cellY * SLOT_STEP;
-        boolean fits = previewFits(target, cellX, cellY, footprint);
+        int localX = placement.layout().x() + placement.x() * SLOT_STEP;
+        int localY = placement.layout().y() + placement.y() * SLOT_STEP;
+        boolean fits = placement.valid() && previewFits(target, placement.x(), placement.y(), footprint);
         int color = fits ? 0xAA62F3E8 : 0xAAFF5D5D;
-        logPreview(target, cellX, cellY, footprint, fits);
+        logPreview(target, placement.x(), placement.y(), footprint, fits);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(this.leftPos, this.topPos, 0.0F);
         int width = footprint.width() * SLOT_STEP;
         int height = footprint.height() * SLOT_STEP;
-        guiGraphics.fill(localX, localY, localX + width - 2, localY + height - 2, fits ? 0x2249D8E8 : 0x22FF5D5D);
+        guiGraphics.fill(localX, localY, localX + width - 2, localY + height - 2, fits ? 0x3349D8E8 : 0x33FF5D5D);
         border(guiGraphics, localX - 1, localY - 1, width, height, color);
         guiGraphics.pose().popPose();
     }
@@ -643,9 +789,14 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return;
         }
         pendingSourceTicks--;
-        if (pendingSourceTicks <= 0 || pendingSourceMenuSlots.stream().noneMatch(this::slotStillHasItem)) {
+        boolean sourceStillVisible = pendingSourceMenuSlots.stream().anyMatch(this::slotStillHasItem);
+        if (sourceStillVisible) {
+            pendingSourceObservedPresent = true;
+        }
+        if (pendingSourceTicks <= 0 || pendingSourceObservedPresent && !sourceStillVisible) {
             pendingSourceMenuSlots.clear();
             pendingSourceTicks = 0;
+            pendingSourceObservedPresent = false;
         }
     }
 
@@ -654,15 +805,14 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private static void renderItemCentered(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
-        float scale = Math.min(2.75F, Math.max(1.0F, Math.min(width, height) / 18.0F));
-        int renderSize = Math.round(16.0F * scale);
-        int renderX = x + (width - renderSize) / 2;
-        int renderY = y + (height - renderSize) / 2;
+        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
+        double centerX = x + width / 2.0D;
+        double centerY = y + height / 2.0D;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(renderX, renderY, 0.0F);
+        guiGraphics.pose().translate(centerX, centerY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, 0, 0);
-        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
+        guiGraphics.renderItem(stack, -8, -8);
+        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, -8, -8);
         guiGraphics.pose().popPose();
     }
 
@@ -869,5 +1019,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private record GridLayout(int x, int y, int columns, int rows) {
+    }
+
+    private record Placement(GridLayout layout, int x, int y, boolean inGrid, boolean valid) {
+        private static Placement invalid(GridLayout layout, int x, int y, boolean inGrid) {
+            return new Placement(layout, x, y, inGrid, false);
+        }
     }
 }

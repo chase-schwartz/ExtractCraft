@@ -327,15 +327,14 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
             renderItem(guiGraphics, item, x, y);
             return;
         }
-        float scale = Math.min(2.0F, Math.max(1.0F, Math.min(width, height) / 18.0F));
-        int renderSize = Math.round(16.0F * scale);
-        int renderX = x + (width - renderSize) / 2;
-        int renderY = y + (height - renderSize) / 2;
+        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
+        double centerX = x + width / 2.0D;
+        double centerY = y + height / 2.0D;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(renderX, renderY, 0.0F);
+        guiGraphics.pose().translate(centerX, centerY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, 0, 0);
-        guiGraphics.renderItemDecorations(this.font, stack, 0, 0);
+        guiGraphics.renderItem(stack, -8, -8);
+        guiGraphics.renderItemDecorations(this.font, stack, -8, -8);
         guiGraphics.pose().popPose();
     }
 
@@ -377,6 +376,7 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         int width = widthCells * SLOT_STEP - 2;
         int height = heightCells * SLOT_STEP - 2;
         int color = 0x8849D8E8;
+        guiGraphics.fill(x, y, x + width, y + height, 0x2210151D);
         border(guiGraphics, x - 1, y - 1, width + 2, height + 2, color);
     }
 

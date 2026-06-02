@@ -3,6 +3,8 @@ package com.chaseschwartz.extractcraft.raid.inventory;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.chaseschwartz.extractcraft.ExtractCraft;
+
 public class RaidStorageContainer {
     private final String id;
     private final String name;
@@ -113,7 +115,32 @@ public class RaidStorageContainer {
         }
 
         RaidInventoryItem stack = item.withCount(transfer);
-        if (usedCapacity() + stack.totalSlotCost() > capacity || !canFit(stack, x, y, rotated, excludedIndex)) {
+        if (usedCapacity() + stack.totalSlotCost() > capacity) {
+            ExtractCraft.LOGGER.info("Raid grid placement rejected: container={}, target=({},{}), item={}x {}, footprint={}x{}, cells={}, reason=capacity used={} itemCost={} capacity={}",
+                    id,
+                    x,
+                    y,
+                    stack.count(),
+                    stack.lookupKey(),
+                    footprintWidth(stack, rotated),
+                    footprintHeight(stack, rotated),
+                    checkedCells(x, y, footprintWidth(stack, rotated), footprintHeight(stack, rotated)),
+                    usedCapacity(),
+                    stack.totalSlotCost(),
+                    capacity);
+            return 0;
+        }
+        if (!canFit(stack, x, y, rotated, excludedIndex)) {
+            ExtractCraft.LOGGER.info("Raid grid placement rejected: container={}, target=({},{}), item={}x {}, footprint={}x{}, cells={}, reason={}",
+                    id,
+                    x,
+                    y,
+                    stack.count(),
+                    stack.lookupKey(),
+                    footprintWidth(stack, rotated),
+                    footprintHeight(stack, rotated),
+                    checkedCells(x, y, footprintWidth(stack, rotated), footprintHeight(stack, rotated)),
+                    fitFailureDescription(stack, x, y, rotated, excludedIndex));
             return 0;
         }
 
@@ -155,6 +182,43 @@ public class RaidStorageContainer {
             }
         }
         return true;
+    }
+
+    public String fitFailureDescription(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        if (item == null) {
+            return "item=null";
+        }
+        if (gridWidth <= 0 || gridHeight <= 0) {
+            return "grid disabled " + gridWidth + "x" + gridHeight;
+        }
+
+        int width = footprintWidth(item, rotated);
+        int height = footprintHeight(item, rotated);
+        if (x < 0 || y < 0 || x + width > gridWidth || y + height > gridHeight) {
+            return "out_of_bounds grid=" + gridWidth + "x" + gridHeight;
+        }
+
+        for (int index = 0; index < items.size(); index++) {
+            if (index == excludedIndex) {
+                continue;
+            }
+            RaidInventoryItem existing = items.get(index);
+            if (!existing.isPlaced()) {
+                continue;
+            }
+            int existingWidth = footprintWidth(existing, existing.rotated());
+            int existingHeight = footprintHeight(existing, existing.rotated());
+            if (overlaps(x, y, width, height, existing.gridX(), existing.gridY(), existingWidth, existingHeight)) {
+                return "blocked_by index=" + index
+                        + " key=" + existing.lookupKey()
+                        + " item=" + existing.count() + "x " + existing.displayName()
+                        + " at=(" + existing.gridX() + "," + existing.gridY() + ")"
+                        + " footprint=" + existingWidth + "x" + existingHeight
+                        + " rotated=" + existing.rotated()
+                        + " existsInCurrentItems=true";
+            }
+        }
+        return "unknown_no_overlap_found";
     }
 
     public RaidInventoryItem itemAtCell(int x, int y) {
@@ -308,6 +372,21 @@ public class RaidStorageContainer {
         int width = footprintWidth(item, item.rotated());
         int height = footprintHeight(item, item.rotated());
         return x >= item.gridX() && x < item.gridX() + width && y >= item.gridY() && y < item.gridY() + height;
+    }
+
+    private static String checkedCells(int x, int y, int width, int height) {
+        StringBuilder builder = new StringBuilder("[");
+        boolean first = true;
+        for (int cellY = y; cellY < y + height; cellY++) {
+            for (int cellX = x; cellX < x + width; cellX++) {
+                if (!first) {
+                    builder.append(",");
+                }
+                builder.append("(").append(cellX).append(",").append(cellY).append(")");
+                first = false;
+            }
+        }
+        return builder.append("]").toString();
     }
 
     public record GridPlacement(int x, int y, boolean rotated) {
