@@ -116,6 +116,13 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && dragSource != DragSource.NONE) {
+            if (tryPlaceHeldStack(mouseX, mouseY)) {
+                clearDrag();
+            }
+            return true;
+        }
+
         Slot slot = slotAt(mouseX, mouseY);
         if (button == 0 && slot != null && isContainerSlot(slot) && slot.hasItem()) {
             int containerSlot = slot.index - this.menu.containerMenuSlotStart();
@@ -139,10 +146,12 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0 && dragSource != DragSource.NONE) {
+            if (isClickRelease(mouseX, mouseY)) {
+                return true;
+            }
+
             RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
-            if (dragSource == DragSource.CONTAINER && target == null && isClickRelease(mouseX, mouseY)) {
-                sendTransfer(draggedSourceIndex, RaidEquipmentSlot.BACKPACK);
-            } else if (target != null) {
+            if (target != null) {
                 if (dragSource == DragSource.CONTAINER) {
                     sendTransfer(draggedSourceIndex, target);
                 } else if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot != target) {
@@ -177,6 +186,33 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private boolean isClickRelease(double mouseX, double mouseY) {
         return Math.abs(mouseX - dragStartX) <= 3.0D && Math.abs(mouseY - dragStartY) <= 3.0D;
+    }
+
+    private boolean tryPlaceHeldStack(double mouseX, double mouseY) {
+        RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
+        if (target != null) {
+            if (dragSource == DragSource.CONTAINER) {
+                sendTransfer(draggedSourceIndex, target);
+                return true;
+            }
+            if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot != target) {
+                sendMove(draggedRaidSlot, draggedSourceIndex, target);
+                return true;
+            }
+            return false;
+        }
+
+        if (dragSource == DragSource.RAID_INVENTORY && isContainerPanel((int) mouseX, (int) mouseY)) {
+            sendReturn(draggedRaidSlot, draggedSourceIndex);
+            return true;
+        }
+
+        if (dragSource == DragSource.CONTAINER && isContainerPanel((int) mouseX, (int) mouseY)) {
+            clearDrag();
+            return false;
+        }
+
+        return false;
     }
 
     private void sendTransfer(int containerSlot, RaidEquipmentSlot target) {

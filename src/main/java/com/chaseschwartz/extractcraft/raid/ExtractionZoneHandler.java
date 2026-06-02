@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,6 +33,8 @@ public class ExtractionZoneHandler {
                 continue;
             }
 
+            RaidWeaponService.enforceBridgeSlot(player);
+
             if (RaidManager.hasExpired(player, currentGameTime)) {
                 extractionTicks.remove(player.getUUID());
                 RaidManager.failRaidAndReturnNow(player, "time expired");
@@ -55,6 +58,9 @@ public class ExtractionZoneHandler {
             return;
         }
 
+        if (RaidManager.isInRaid(player)) {
+            RaidWeaponService.syncAndClearBridge(player);
+        }
         boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID(), player.server);
         boolean clearedCountdown = extractionTicks.remove(player.getUUID()) != null;
         if (clearedRaid || clearedCountdown) {

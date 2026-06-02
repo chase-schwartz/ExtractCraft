@@ -6,6 +6,7 @@ public class RaidInventory {
     private RaidLoadout loadout;
     private RaidInventoryItem primaryWeapon;
     private RaidInventoryItem secondaryWeapon;
+    private RaidEquipmentSlot selectedWeaponSlot;
     private RaidStorageContainer backpack;
     private RaidStorageContainer vest;
     private RaidStorageContainer safeBox;
@@ -89,6 +90,13 @@ public class RaidInventory {
         return new AddResult(true, slot, "Equipped " + item.displayName() + " in " + weaponSlotName(slot) + ".");
     }
 
+    public void setWeaponSlot(RaidEquipmentSlot slot, RaidInventoryItem item) {
+        if (slot != RaidEquipmentSlot.PRIMARY_WEAPON && slot != RaidEquipmentSlot.SECONDARY_WEAPON) {
+            throw new IllegalArgumentException("Invalid weapon slot " + slot);
+        }
+        setWeaponItem(slot, item);
+    }
+
     public AddResult move(RaidEquipmentSlot sourceSlot, int sourceIndex, RaidEquipmentSlot targetSlot, ItemCarryProfile profile) {
         if (sourceSlot == targetSlot) {
             return new AddResult(true, targetSlot, "Item is already in " + targetSlot.name().toLowerCase() + ".");
@@ -116,6 +124,7 @@ public class RaidInventory {
     public void clear() {
         primaryWeapon = null;
         secondaryWeapon = null;
+        selectedWeaponSlot = null;
         backpack.clear();
         vest.clear();
         safeBox.clear();
@@ -154,6 +163,17 @@ public class RaidInventory {
 
     public RaidInventoryItem secondaryWeapon() {
         return secondaryWeapon;
+    }
+
+    public RaidEquipmentSlot selectedWeaponSlot() {
+        return selectedWeaponSlot;
+    }
+
+    public void setSelectedWeaponSlot(RaidEquipmentSlot selectedWeaponSlot) {
+        if (selectedWeaponSlot != null && selectedWeaponSlot != RaidEquipmentSlot.PRIMARY_WEAPON && selectedWeaponSlot != RaidEquipmentSlot.SECONDARY_WEAPON) {
+            throw new IllegalArgumentException("Invalid selected weapon slot " + selectedWeaponSlot);
+        }
+        this.selectedWeaponSlot = selectedWeaponSlot;
     }
 
     public RaidStorageContainer vest() {

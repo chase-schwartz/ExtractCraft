@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 
 import net.minecraft.network.chat.Component;
@@ -87,6 +88,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
+        RaidWeaponService.syncAndClearBridge(player);
         ExtractCraftNetwork.syncRaidState(player, false);
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
         ExtractCraft.LOGGER.info("Raid failed for {}; queued return to {} at {}, {}, {} after respawn",
@@ -136,6 +138,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
+        RaidWeaponService.syncAndClearBridge(player);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
@@ -206,6 +209,7 @@ public class RaidManager {
         }
 
         cleanupRaidMobs(player.server, raidState, "successful extraction");
+        RaidWeaponService.syncAndClearBridge(player);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());

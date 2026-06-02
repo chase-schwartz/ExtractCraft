@@ -157,7 +157,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotId, int button, ClickType clickType, Player player) {
-        if (isWorldContainerSlot(slotId) && (clickType == ClickType.PICKUP || clickType == ClickType.QUICK_MOVE)) {
+        if (isWorldContainerSlot(slotId) && clickType == ClickType.QUICK_MOVE) {
             if (player instanceof ServerPlayer serverPlayer) {
                 transferContainerSlot(serverPlayer, containerSlotForMenuSlot(slotId), RaidEquipmentSlot.BACKPACK);
             }
@@ -166,8 +166,14 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return;
         }
 
+        if (isWorldContainerSlot(slotId) && clickType == ClickType.PICKUP) {
+            setCarried(ItemStack.EMPTY);
+            broadcastChanges();
+            return;
+        }
+
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.sendSystemMessage(Component.literal("Drag or click loot into Backpack, Vest, or Safe Box."));
+            serverPlayer.sendSystemMessage(Component.literal("Drag loot to a section, or shift-click to quick-move to Backpack."));
         }
         setCarried(ItemStack.EMPTY);
     }
@@ -481,6 +487,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private static ItemStack displayStack(RaidInventoryItem item) {
+        ItemStack stored = item.toItemStack();
+        if (!stored.isEmpty()) {
+            return stored;
+        }
         return ItemStackVariantFactory.create(item.lookupKey(), item.count())
                 .orElseGet(() -> {
                     if (BuiltInRegistries.ITEM.containsKey(item.itemId())) {

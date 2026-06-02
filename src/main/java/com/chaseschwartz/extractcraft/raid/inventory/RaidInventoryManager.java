@@ -92,6 +92,24 @@ public class RaidInventoryManager {
         return inventory.move(source, sourceIndex, target, profile);
     }
 
+    public static Optional<RaidInventoryItem> stackAsItem(ServerPlayer player, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return Optional.empty();
+        }
+
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(stack).orElse(null);
+        if (profile == null) {
+            return Optional.empty();
+        }
+
+        int stackUnits = Math.max(1, (int) Math.ceil(stack.getCount() / (double) Math.max(1, stack.getMaxStackSize())));
+        int slotCost = profile.slotCost() * stackUnits;
+        double weight = profile.weight() * stack.getCount();
+        int value = ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
+        return Optional.of(inventoryItem(stack, itemId, profile, slotCost, weight, value));
+    }
+
     private static RaidInventoryItem inventoryItem(ItemStack stack, ResourceLocation itemId, ItemCarryProfile profile, int slotCost, double weight, int value) {
         ItemIdentity identity = ItemIdentityResolver.resolve(stack);
         return new RaidInventoryItem(
@@ -102,7 +120,8 @@ public class RaidInventoryManager {
                 stack.getCount(),
                 slotCost,
                 weight,
-                value);
+                value,
+                stack.copy());
     }
 
     public static Optional<ItemCarryProfile> profileFor(ItemStack stack) {

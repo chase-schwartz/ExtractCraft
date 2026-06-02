@@ -14,6 +14,7 @@ import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerLayout;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerService;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
@@ -90,7 +91,27 @@ public class RaidInventoryCommands {
                 .then(Commands.literal("debug")
                         .then(Commands.literal("vanilla_inventory")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> openVanillaInventory(context.getSource())))));
+                                .executes(context -> openVanillaInventory(context.getSource()))))
+                .then(Commands.literal("raidweapon")
+                        .then(Commands.literal("primary")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> equipRaidWeapon(context.getSource(), RaidEquipmentSlot.PRIMARY_WEAPON)))
+                        .then(Commands.literal("secondary")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> equipRaidWeapon(context.getSource(), RaidEquipmentSlot.SECONDARY_WEAPON)))
+                        .then(Commands.literal("holster")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> holsterRaidWeapon(context.getSource())))
+                        .then(Commands.literal("debugammo")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(context -> setRaidWeaponDebugAmmo(context.getSource(), BoolArgumentType.getBool(context, "enabled")))))
+                        .then(Commands.literal("ammodebug")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> raidWeaponAmmoDebug(context.getSource())))
+                        .then(Commands.literal("status")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> raidWeaponStatus(context.getSource())))));
     }
 
     private static int carryProfileHeld(CommandSourceStack source) throws CommandSyntaxException {
@@ -195,6 +216,30 @@ public class RaidInventoryCommands {
             player.sendSystemMessage(Component.literal("Debug: opening vanilla inventory during an active raid. This bypass is for testing only."));
         }
         PacketDistributor.sendToPlayer(player, OpenVanillaInventoryPayload.INSTANCE);
+        return 1;
+    }
+
+    private static int equipRaidWeapon(CommandSourceStack source, RaidEquipmentSlot slot) throws CommandSyntaxException {
+        return RaidWeaponService.equip(source.getPlayerOrException(), slot) ? 1 : 0;
+    }
+
+    private static int holsterRaidWeapon(CommandSourceStack source) throws CommandSyntaxException {
+        return RaidWeaponService.holster(source.getPlayerOrException()) ? 1 : 0;
+    }
+
+    private static int raidWeaponStatus(CommandSourceStack source) throws CommandSyntaxException {
+        source.getPlayerOrException().sendSystemMessage(Component.literal(RaidWeaponService.status(source.getPlayerOrException())));
+        return 1;
+    }
+
+    private static int setRaidWeaponDebugAmmo(CommandSourceStack source, boolean enabled) throws CommandSyntaxException {
+        RaidWeaponService.setDebugInfiniteAmmo(enabled);
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Raid weapon debug infinite ammo " + (enabled ? "enabled" : "disabled") + ". Re-equip a weapon for the bridge stack to update."));
+        return 1;
+    }
+
+    private static int raidWeaponAmmoDebug(CommandSourceStack source) throws CommandSyntaxException {
+        RaidWeaponService.sendAmmoDebug(source.getPlayerOrException());
         return 1;
     }
 
