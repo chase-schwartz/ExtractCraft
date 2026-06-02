@@ -34,9 +34,11 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
@@ -59,6 +61,7 @@ public class ExtractCraftClient {
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onMouseScroll);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, InputEvent.MouseButton.Pre.class, ExtractCraftClient::onMouseButtonPre);
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onInteractionKeyMapping);
+        NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onRenderGuiLayerPre);
     }
 
     @SubscribeEvent
@@ -139,6 +142,12 @@ public class ExtractCraftClient {
         }
 
         event.setCanceled(tryUseTargetedInteractable());
+    }
+
+    private static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
+        if (VanillaGuiLayers.FOOD_LEVEL.equals(event.getName())) {
+            event.setCanceled(true);
+        }
     }
 
     private static boolean tryUseTargetedInteractable() {

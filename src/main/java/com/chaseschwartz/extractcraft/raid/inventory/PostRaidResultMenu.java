@@ -36,13 +36,15 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
         }
 
         if (id == MOVE_ALL_TO_STASH_BUTTON) {
-            RaidResultService.movePendingToStash(serverPlayer);
-            serverPlayer.closeContainer();
+            if (RaidResultService.movePendingToStash(serverPlayer)) {
+                serverPlayer.closeContainer();
+            }
             return true;
         }
         if (id == KEEP_ON_CHARACTER_BUTTON) {
-            RaidResultService.keepPendingOnCharacter(serverPlayer);
-            serverPlayer.closeContainer();
+            if (RaidResultService.keepPendingOnCharacter(serverPlayer)) {
+                serverPlayer.closeContainer();
+            }
             return true;
         }
         return true;

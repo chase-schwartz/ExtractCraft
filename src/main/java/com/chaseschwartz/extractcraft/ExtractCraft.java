@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
+import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerInteractionHandler;
@@ -127,6 +128,7 @@ public class ExtractCraft {
         // Note that this is necessary if and only if we want *this* class (ExtractCraft) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(new ExtractCraftGameplayRulesHandler());
         NeoForge.EVENT_BUS.register(new ExtractionZoneHandler());
         NeoForge.EVENT_BUS.register(new RaidMapBakeService());
         NeoForge.EVENT_BUS.register(new RaidMapBoundaryService());

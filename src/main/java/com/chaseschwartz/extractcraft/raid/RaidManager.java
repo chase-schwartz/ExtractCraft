@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
@@ -18,6 +19,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
@@ -48,6 +50,7 @@ public class RaidManager {
         GameType previousGameMode = player.gameMode.getGameModeForPlayer();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
                 InventorySnapshot.capture(player), previousGameMode, expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
+        preparePlayerForRaid(player);
         if (!debugKeepGameMode && previousGameMode != GameType.SURVIVAL) {
             player.setGameMode(GameType.SURVIVAL);
             player.sendSystemMessage(Component.literal("Raid mode: switched to survival to prevent creative/infinite-ammo behavior."));
@@ -265,6 +268,10 @@ public class RaidManager {
         return debugKeepGameMode;
     }
 
+    public static void suppressHungerForRaid(ServerPlayer player) {
+        ExtractCraftGameplayRulesHandler.suppressHunger(player);
+    }
+
     private static void restorePreviousGameMode(ServerPlayer player, RaidState raidState) {
         if (debugKeepGameMode || raidState.previousGameMode() == null || player.gameMode.getGameModeForPlayer() == raidState.previousGameMode()) {
             return;
@@ -272,6 +279,15 @@ public class RaidManager {
 
         player.setGameMode(raidState.previousGameMode());
         player.sendSystemMessage(Component.literal("Restored previous game mode: " + raidState.previousGameMode().getName() + "."));
+    }
+
+    private static void preparePlayerForRaid(ServerPlayer player) {
+        player.setHealth(player.getMaxHealth());
+        player.setRemainingFireTicks(0);
+        player.removeEffect(MobEffects.POISON);
+        player.removeEffect(MobEffects.WITHER);
+        player.removeEffect(MobEffects.HUNGER);
+        suppressHungerForRaid(player);
     }
 
     private static void cleanupRaidMobs(MinecraftServer server, RaidState raidState, String reason) {

@@ -97,28 +97,31 @@ public class RaidResultService {
         }
     }
 
-    public static void movePendingToStash(ServerPlayer player) {
+    public static boolean movePendingToStash(ServerPlayer player) {
         PendingRaidResult pending = PENDING_RESULTS.get(player.getUUID());
         if (pending == null || !pending.success()) {
             player.sendSystemMessage(Component.literal("No successful pending raid result to move into stash."));
-            return;
+            return false;
         }
 
         PlayerStashService.StashTransferResult result = PlayerStashService.addToStash(player, pending.allItems());
-        player.sendSystemMessage(Component.literal(result.summary("stash")));
         if (result.movedAll()) {
+            player.sendSystemMessage(Component.literal(result.summary("stash")));
             PENDING_RESULTS.remove(player.getUUID());
             player.sendSystemMessage(Component.literal("Pending extracted result cleared after moving everything to stash."));
+            return true;
         } else {
-            player.sendSystemMessage(Component.literal("Some extracted items did not fit. Pending result is still available."));
+            player.sendSystemMessage(Component.literal("Stash is full. Choose Keep On Character or free stash space."));
+            player.sendSystemMessage(Component.literal(result.summary("stash")));
+            return false;
         }
     }
 
-    public static void keepPendingOnCharacter(ServerPlayer player) {
+    public static boolean keepPendingOnCharacter(ServerPlayer player) {
         PendingRaidResult pending = PENDING_RESULTS.get(player.getUUID());
         if (pending == null || !pending.success()) {
             player.sendSystemMessage(Component.literal("No successful pending raid result to keep on character."));
-            return;
+            return false;
         }
 
         PlayerStashService.StashTransferResult result = PlayerStashService.addToBaseInventory(player, pending);
@@ -126,8 +129,10 @@ public class RaidResultService {
         if (result.movedAll()) {
             PENDING_RESULTS.remove(player.getUUID());
             player.sendSystemMessage(Component.literal("Pending extracted result cleared after keeping everything on character."));
+            return true;
         } else {
             player.sendSystemMessage(Component.literal("Some extracted items did not fit. Pending result is still available."));
+            return false;
         }
     }
 

@@ -22,6 +22,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -135,6 +136,36 @@ public class PlayerStashService {
 
     public static void clear(ServerPlayer player) {
         save(player, PlayerStashData.createDefault());
+    }
+
+    public static FillTestResult fillTest(ServerPlayer player, int requestedStacks) {
+        PlayerStashData data = load(player);
+        int targetStacks = requestedStacks <= 0 ? data.stash().capacity() : requestedStacks;
+        int addedStacks = 0;
+        int skippedStacks = 0;
+        int itemCursor = 0;
+        int maxAttempts = Math.max(TEST_FILL_ITEMS.size(), targetStacks * TEST_FILL_ITEMS.size());
+
+        while (addedStacks < targetStacks && itemCursor < maxAttempts && data.stash().usedCapacity() < data.stash().capacity()) {
+            ResourceLocation itemId = TEST_FILL_ITEMS.get(itemCursor % TEST_FILL_ITEMS.size());
+            itemCursor++;
+
+            ItemStack stack = testStack(itemId);
+            RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, stack).orElse(null);
+            if (item == null) {
+                skippedStacks++;
+                continue;
+            }
+
+            int moved = data.stash().addPartial(item);
+            if (moved <= 0) {
+                break;
+            }
+            addedStacks++;
+        }
+
+        save(player, data);
+        return new FillTestResult(addedStacks, skippedStacks, data.stash().usedCapacity(), data.stash().capacity());
     }
 
     public static List<String> statusLines(ServerPlayer player, String sortMode) {
@@ -414,6 +445,21 @@ public class PlayerStashService {
         return item == null ? "empty" : item.displayName() + " [" + item.lookupKey() + "]";
     }
 
+    private static final List<ResourceLocation> TEST_FILL_ITEMS = List.of(
+            ResourceLocation.withDefaultNamespace("paper"),
+            ResourceLocation.withDefaultNamespace("string"),
+            ResourceLocation.withDefaultNamespace("bone"),
+            ResourceLocation.withDefaultNamespace("glass_bottle"),
+            ResourceLocation.withDefaultNamespace("apple"),
+            ResourceLocation.withDefaultNamespace("bread"),
+            ResourceLocation.withDefaultNamespace("iron_ingot"));
+
+    private static ItemStack testStack(ResourceLocation itemId) {
+        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId));
+        stack.setCount(Math.max(1, stack.getMaxStackSize()));
+        return stack;
+    }
+
     private static StashLevel level(int level) {
         return STASH_LEVELS.stream().filter(entry -> entry.level() == level).findFirst().orElse(null);
     }
@@ -540,6 +586,9 @@ public class PlayerStashService {
         public boolean movedAll() {
             return failedItems == 0;
         }
+    }
+
+    public record FillTestResult(int addedStacks, int skippedStacks, int usedCapacity, int maxCapacity) {
     }
 
     private record StashLevel(int level, int capacity, int cost) {

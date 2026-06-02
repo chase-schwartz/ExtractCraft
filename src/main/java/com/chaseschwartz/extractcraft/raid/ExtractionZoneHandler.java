@@ -35,6 +35,7 @@ public class ExtractionZoneHandler {
             }
 
             RaidWeaponService.enforceBridgeSlot(player);
+            RaidManager.suppressHungerForRaid(player);
 
             if (RaidManager.hasExpired(player, currentGameTime)) {
                 extractionTicks.remove(player.getUUID());

@@ -122,6 +122,11 @@ public class RaidInventoryCommands {
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.literal("confirm")
                                         .executes(context -> stashClear(context.getSource()))))
+                        .then(Commands.literal("filltest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> stashFillTest(context.getSource(), 0))
+                                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                        .executes(context -> stashFillTest(context.getSource(), IntegerArgumentType.getInteger(context, "count")))))
                         .then(Commands.literal("sort")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("mode", StringArgumentType.word())
@@ -334,6 +339,17 @@ public class RaidInventoryCommands {
         PlayerStashService.clear(source.getPlayerOrException());
         source.getPlayerOrException().sendSystemMessage(Component.literal("Cleared persistent ExtractCraft stash, base inventory, credits, and stash upgrades."));
         return 1;
+    }
+
+    private static int stashFillTest(CommandSourceStack source, int count) throws CommandSyntaxException {
+        PlayerStashService.FillTestResult result = PlayerStashService.fillTest(source.getPlayerOrException(), count);
+        source.getPlayerOrException().sendSystemMessage(Component.literal(String.format(
+                "Stash filltest added %d stacks%s. Stash now %d/%d slots.",
+                result.addedStacks(),
+                result.skippedStacks() > 0 ? " (skipped " + result.skippedStacks() + " missing/profileless stacks)" : "",
+                result.usedCapacity(),
+                result.maxCapacity())));
+        return result.addedStacks() > 0 ? 1 : 0;
     }
 
     private static int stashUpgrade(CommandSourceStack source) throws CommandSyntaxException {
