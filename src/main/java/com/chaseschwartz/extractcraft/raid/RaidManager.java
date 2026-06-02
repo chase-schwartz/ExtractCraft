@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
+import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
@@ -240,6 +241,7 @@ public class RaidManager {
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
         ACTIVE_RAIDS.remove(player.getUUID());
+        PostRaidResultScreenOpener.open(player);
 
         ExtractCraft.LOGGER.info("Extracted {} via {} to {} at {}, {}, {}",
                 player.getGameProfile().getName(),
