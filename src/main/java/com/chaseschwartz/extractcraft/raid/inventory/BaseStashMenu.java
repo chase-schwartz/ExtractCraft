@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
+import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -23,14 +24,14 @@ public class BaseStashMenu extends AbstractContainerMenu {
     public static final int PRIMARY_WEAPON_START = 0;
     public static final int SECONDARY_WEAPON_START = 1;
     public static final int BACKPACK_START = 2;
-    public static final int BACKPACK_DISPLAY_SLOTS = 36;
+    public static final int BACKPACK_DISPLAY_SLOTS = 64;
     public static final int VEST_START = BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
     public static final int VEST_DISPLAY_SLOTS = 12;
     public static final int SAFE_BOX_START = VEST_START + VEST_DISPLAY_SLOTS;
     public static final int SAFE_BOX_DISPLAY_SLOTS = 9;
     public static final int BASE_DISPLAY_SLOTS = SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS;
     public static final int STASH_COLUMNS_MIN = 10;
-    private static final int STASH_SLOT_X = 236;
+    private static final int STASH_SLOT_X = 274;
     private static final int STASH_SLOT_Y = 82;
     private static final int MOVE_BASE_TO_STASH_OFFSET = 100_000;
     private static final int MOVE_STASH_TO_BASE_OFFSET = 200_000;
@@ -176,6 +177,12 @@ public class BaseStashMenu extends AbstractContainerMenu {
                     moveBaseToBase(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId), targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_TO_STASH ->
                     moveBaseToStash(player, slotFromId(sourceSlotId), sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_DROP ->
+                    dropBaseItem(player, slotFromId(sourceSlotId), sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_DROP ->
+                    dropStashItem(player, sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_QUICK_TO_BASE ->
+                    quickMoveStashToBase(player, sourceIndex);
             default -> false;
         };
         if (changed) {
@@ -401,6 +408,47 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return true;
     }
 
+    private boolean dropBaseItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        RaidInventoryItem item = stashData.baseInventory().itemAt(source, sourceIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+        RaidInventoryItem removed = stashData.baseInventory().removeCountAt(source, sourceIndex, item.count());
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+        return spawnManagedDropOrRestore(player, false, source, removed);
+    }
+
+    private boolean dropStashItem(ServerPlayer player, int stashDisplayIndex) {
+        int stashIndex = stashSourceIndex(stashDisplayIndex);
+        RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+        RaidInventoryItem removed = stashData.stash().removeCountAt(stashIndex, item.count());
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+        return spawnManagedDropOrRestore(player, true, RaidEquipmentSlot.BACKPACK, removed);
+    }
+
+    private boolean spawnManagedDropOrRestore(ServerPlayer player, boolean stashSource, RaidEquipmentSlot source, RaidInventoryItem removed) {
+        ItemStack stack = removed.toItemStack();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Could not rebuild item stack for drop."));
+            restoreRemovedItem(stashSource, source, removed);
+            return false;
+        }
+        ManagedDropService.spawnManagedDrop(player, stack);
+        player.sendSystemMessage(Component.literal("Dropped " + removed.displayName() + "."));
+        return true;
+    }
+
     private void restoreRemovedItem(boolean stashSource, RaidEquipmentSlot source, RaidInventoryItem removed) {
         if (stashSource) {
             stashData.stash().addPartial(removed);
@@ -423,6 +471,98 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return moveStashToBase(player, stashDisplayIndex, target, -1);
     }
 
+    private boolean quickMoveStashToBase(ServerPlayer player, int stashDisplayIndex) {
+        int stashIndex = stashSourceIndex(stashDisplayIndex);
+        RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+        if (profile == null) {
+            player.sendSystemMessage(Component.literal(item.lookupKey() + " has no carry profile."));
+            return false;
+        }
+
+        RaidInventory.AddResult lastResult = null;
+        for (RaidEquipmentSlot target : List.of(RaidEquipmentSlot.BACKPACK, RaidEquipmentSlot.VEST, RaidEquipmentSlot.SAFE_BOX)) {
+            RaidInventory candidate = PlayerStashService.copyInventory(stashData.baseInventory());
+            RaidInventoryItem copy = PlayerStashService.copyItem(item).withoutPlacement();
+            RaidInventory.AddResult result = quickAddToBaseStorage(candidate, copy, profile, target);
+            lastResult = result;
+            RaidStorageContainer targetStorage = storage(candidate, target);
+            ExtractCraft.LOGGER.info("BaseStash shift-click first-fit attempt: key={}, footprint={}x{}, target={}, grid={}x{}, moved={}/{}, success={}, message={}",
+                    item.lookupKey(),
+                    copy.gridWidth(),
+                    copy.gridHeight(),
+                    target,
+                    targetStorage.gridWidth(),
+                    targetStorage.gridHeight(),
+                    result.movedCount(),
+                    item.count(),
+                    result.success(),
+                    result.message());
+            ExtractCraft.LOGGER.info("BaseStash shift-click diagnostics: source=STASH key={} displayName='{}' count={} rotated={} target={} existingItems={} usedCapacity={}/{} usedWeight={}/{} occupied={} firstFit={} firstFitFailure={} legacyCountAddable={}",
+                    item.lookupKey(),
+                    item.displayName(),
+                    item.count(),
+                    item.rotated(),
+                    target,
+                    targetStorage.itemCount(),
+                    targetStorage.usedCapacity(),
+                    targetStorage.capacity(),
+                    targetStorage.usedWeight(),
+                    targetStorage.maxWeight(),
+                    targetStorage.occupiedCellsDescription(),
+                    targetStorage.findFirstFit(copy).map(placement -> "(" + placement.x() + "," + placement.y() + ") rotated=" + placement.rotated()).orElse("none"),
+                    targetStorage.firstFitFailureDescription(copy),
+                    targetStorage.countAddable(copy, -1));
+            if (result.movedCount() >= item.count()) {
+                int beforeBackpackCount = stashData.baseInventory().backpack().itemCount();
+                stashData.stash().removeCountAt(stashIndex, item.count());
+                PlayerStashService.replaceInventoryContents(stashData.baseInventory(), candidate);
+                ExtractCraft.LOGGER.info("BaseStash shift-click success: player={}, target={}, targetBackpack={} '{}', targetGrid={}x{}, key={}, count={}, footprint={}x{}, backpackItemsBefore={}, backpackItemsAfter={}, stashItemsAfter={}",
+                        player.getUUID(),
+                        target,
+                        stashData.baseInventory().loadout().backpack().id(),
+                        stashData.baseInventory().loadout().backpack().name(),
+                        stashData.baseInventory().backpack().gridWidth(),
+                        stashData.baseInventory().backpack().gridHeight(),
+                        item.lookupKey(),
+                        item.count(),
+                        item.gridWidth(),
+                        item.gridHeight(),
+                        beforeBackpackCount,
+                        stashData.baseInventory().backpack().itemCount(),
+                        stashData.stash().itemCount());
+                player.sendSystemMessage(Component.literal(result.message()));
+                return true;
+            }
+        }
+
+        player.sendSystemMessage(Component.literal(lastResult == null
+                ? "No room in Backpack, Vest, or Safe Box."
+                : "No room in Backpack, Vest, or Safe Box. " + lastResult.message()));
+        return false;
+    }
+
+    private RaidInventory.AddResult quickAddToBaseStorage(RaidInventory candidate, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target) {
+        RaidStorageContainer targetStorage = storage(candidate, target);
+        if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
+            return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
+        }
+        if (target == RaidEquipmentSlot.SAFE_BOX && (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR)) {
+            return new RaidInventory.AddResult(false, target, "Item is not allowed in safe box.", 0);
+        }
+
+        int moved = targetStorage.addPartialGridFirstFit(item, true);
+        if (moved > 0) {
+            return new RaidInventory.AddResult(true, target, "Moved " + moved + "x " + item.displayName() + " to " + targetStorage.name() + ".", moved);
+        }
+        return new RaidInventory.AddResult(false, target, targetStorage.name() + " has no Grid v2 first-fit space for " + item.displayName() + ".", 0);
+    }
+
     private boolean moveStashToBase(ServerPlayer player, int stashDisplayIndex, RaidEquipmentSlot target, int cell) {
         int stashIndex = stashSourceIndex(stashDisplayIndex);
         RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
@@ -430,6 +570,19 @@ public class BaseStashMenu extends AbstractContainerMenu {
             player.sendSystemMessage(Component.literal("Stash item is no longer available."));
             return false;
         }
+
+        ExtractCraft.LOGGER.info("BaseStash exact move received: source=STASH displayIndex={} actualIndex={} key={} oldGrid=({},{}), target={} targetCell={} targetXY=({},{}), exactCell={}, fallbackFirstFit={}",
+                stashDisplayIndex,
+                stashIndex,
+                item.lookupKey(),
+                item.gridX(),
+                item.gridY(),
+                target,
+                cell,
+                cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                cell >= 0 && isGridSlot(target),
+                !(cell >= 0 && isGridSlot(target)));
 
         RaidInventory candidate = PlayerStashService.copyInventory(stashData.baseInventory());
         ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
@@ -441,19 +594,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
         RaidInventoryItem copy = PlayerStashService.copyItem(item);
         RaidInventory.AddResult result;
         if (cell >= 0 && isGridSlot(target)) {
-            result = switch (target) {
-                case BACKPACK -> candidate.addToBackpackAt(copy, cellX(target, cell), cellY(target, cell), false);
-                case VEST -> candidate.addToVestAt(copy, profile, cellX(target, cell), cellY(target, cell), false);
-                case SAFE_BOX -> candidate.addToSafeBoxAt(copy, profile, cellX(target, cell), cellY(target, cell), false);
-                case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Weapon slots are not grid targets.");
-            };
+            result = baseAddToStorageAt(candidate, copy, profile, target, cellX(target, cell), cellY(target, cell), false);
         } else {
-            result = switch (target) {
-                case PRIMARY_WEAPON, SECONDARY_WEAPON -> candidate.addToWeaponSlot(copy, target);
-                case BACKPACK -> candidate.addToBackpack(copy);
-                case VEST -> candidate.addToVest(copy, profile);
-                case SAFE_BOX -> candidate.addToSafeBox(copy, profile);
-            };
+            result = baseAddToTarget(candidate, copy, profile, target);
         }
         if (result.movedCount() < item.count()) {
             player.sendSystemMessage(Component.literal(result.success() ? "Base target does not have enough capacity." : result.message()));
@@ -462,6 +605,17 @@ public class BaseStashMenu extends AbstractContainerMenu {
 
         stashData.stash().removeCountAt(stashIndex, item.count());
         PlayerStashService.replaceInventoryContents(stashData.baseInventory(), candidate);
+        RaidInventoryItem placed = cell >= 0 && isGridSlot(target)
+                ? storage(stashData.baseInventory(), target).itemAtCell(cellX(target, cell), cellY(target, cell))
+                : null;
+        ExtractCraft.LOGGER.info("BaseStash exact move committed: source=STASH key={}, target={} targetXY=({},{}), placedKey={}, placedGrid=({},{}), savedToPersistentBaseInventory=true, repacked=false",
+                item.lookupKey(),
+                target,
+                cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                placed == null ? "unknown" : placed.lookupKey(),
+                placed == null ? -1 : placed.gridX(),
+                placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
         return true;
     }
@@ -478,23 +632,121 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return false;
         }
 
+        ExtractCraft.LOGGER.info("BaseStash exact move received: source={}#{} key={} oldGrid=({},{}), target={} targetCell={} targetXY=({},{}), exactCell={}, fallbackFirstFit={}",
+                source,
+                sourceIndex,
+                item.lookupKey(),
+                item.gridX(),
+                item.gridY(),
+                target,
+                cell,
+                cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                cell >= 0 && isGridSlot(target),
+                !(cell >= 0 && isGridSlot(target)));
+
         ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
         if (profile == null) {
             player.sendSystemMessage(Component.literal(item.lookupKey() + " has no carry profile."));
             return false;
         }
 
-        RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
-                ? candidate.moveToCell(source, sourceIndex, target, profile, cellX(target, cell), cellY(target, cell), false)
-                : candidate.move(source, sourceIndex, target, profile);
+        RaidInventory.AddResult result = baseMove(candidate, source, sourceIndex, target, profile, cell);
         if (result.movedCount() < item.count()) {
             player.sendSystemMessage(Component.literal(result.success() ? "Base target does not have enough capacity." : result.message()));
             return false;
         }
 
         PlayerStashService.replaceInventoryContents(stashData.baseInventory(), candidate);
+        RaidInventoryItem placed = cell >= 0 && isGridSlot(target)
+                ? storage(stashData.baseInventory(), target).itemAtCell(cellX(target, cell), cellY(target, cell))
+                : null;
+        ExtractCraft.LOGGER.info("BaseStash exact move committed: source={}#{} key={}, target={} targetXY=({},{}), placedKey={}, placedGrid=({},{}), savedToPersistentBaseInventory=true, repacked=false",
+                source,
+                sourceIndex,
+                item.lookupKey(),
+                target,
+                cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
+                cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
+                placed == null ? "unknown" : placed.lookupKey(),
+                placed == null ? -1 : placed.gridX(),
+                placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
         return true;
+    }
+
+    private RaidInventory.AddResult baseMove(RaidInventory candidate, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, ItemCarryProfile profile, int cell) {
+        RaidInventoryItem item = candidate.itemAt(source, sourceIndex);
+        if (item == null) {
+            return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);
+        }
+
+        RaidInventoryItem removed = candidate.removeCountAt(source, sourceIndex, item.count());
+        if (removed == null) {
+            return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);
+        }
+
+        RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
+                ? baseAddToStorageAt(candidate, removed, profile, target, cellX(target, cell), cellY(target, cell), false)
+                : baseAddToTarget(candidate, removed, profile, target);
+        if (result.movedCount() >= removed.count()) {
+            return result;
+        }
+
+        restoreToBaseCandidate(candidate, source, removed);
+        return result;
+    }
+
+    private RaidInventory.AddResult baseAddToTarget(RaidInventory candidate, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target) {
+        if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return candidate.addToWeaponSlot(item, target);
+        }
+        if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
+            return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
+        }
+        if (target == RaidEquipmentSlot.SAFE_BOX && (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR)) {
+            return new RaidInventory.AddResult(false, target, "Item is not allowed in safe box.", 0);
+        }
+
+        RaidStorageContainer targetStorage = storage(candidate, target);
+        int moved = targetStorage.addPartialGridFirstFit(item, true);
+        if (moved > 0) {
+            return new RaidInventory.AddResult(true, target, "Moved " + moved + "x " + item.displayName() + " to " + targetStorage.name() + ".", moved);
+        }
+        return new RaidInventory.AddResult(false, target, targetStorage.name() + " has no room.", 0);
+    }
+
+    private RaidInventory.AddResult baseAddToStorageAt(RaidInventory candidate, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target, int x, int y, boolean rotated) {
+        if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
+            return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
+        }
+        if (target == RaidEquipmentSlot.SAFE_BOX && (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR)) {
+            return new RaidInventory.AddResult(false, target, "Item is not allowed in safe box.", 0);
+        }
+
+        RaidStorageContainer targetStorage = storage(candidate, target);
+        int moved = targetStorage.addPartialAt(item, x, y, rotated, -1, true);
+        if (moved > 0) {
+            return new RaidInventory.AddResult(true, target, "Moved " + moved + "x " + item.displayName() + " to " + targetStorage.name() + ".", moved);
+        }
+        return new RaidInventory.AddResult(false, target, targetStorage.name() + " target cell is blocked.", 0);
+    }
+
+    private static void restoreToBaseCandidate(RaidInventory candidate, RaidEquipmentSlot source, RaidInventoryItem removed) {
+        if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            candidate.setWeaponSlot(source, removed);
+            return;
+        }
+        storage(candidate, source).addPartialAt(removed, removed.gridX(), removed.gridY(), removed.rotated(), -1, true);
+    }
+
+    private static RaidStorageContainer storage(RaidInventory inventory, RaidEquipmentSlot slot) {
+        return switch (slot) {
+            case BACKPACK -> inventory.backpack();
+            case VEST -> inventory.vest();
+            case SAFE_BOX -> inventory.safeBox();
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Weapon slots do not have grid storage.");
+        };
     }
 
     private int stashSourceIndex(int stashDisplayIndex) {
@@ -505,11 +757,11 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private void addBaseDisplaySlots() {
-        addSlot(new ReadOnlyDisplaySlot(baseDisplay, PRIMARY_WEAPON_START, 150, 50));
-        addSlot(new ReadOnlyDisplaySlot(baseDisplay, SECONDARY_WEAPON_START, 150, 112));
-        addDisplayGrid(baseDisplay, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 6, 12, 62);
-        addDisplayGrid(baseDisplay, VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 226);
-        addDisplayGrid(baseDisplay, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 104, 226);
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, PRIMARY_WEAPON_START, 194, 50));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, SECONDARY_WEAPON_START, 194, 112));
+        addDisplayGrid(baseDisplay, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 8, 12, 62);
+        addDisplayGrid(baseDisplay, VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 256);
+        addDisplayGrid(baseDisplay, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 104, 256);
     }
 
     private void addStashSlots() {
@@ -547,9 +799,16 @@ public class BaseStashMenu extends AbstractContainerMenu {
             displayedBaseIndexes[SECONDARY_WEAPON_START] = 0;
             baseDisplay.setItem(SECONDARY_WEAPON_START, displayStack(baseInventory.secondaryWeapon(), 0));
         }
-        fillDisplay(baseDisplay, displayedBaseIndexes, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, baseInventory.backpack().gridWidth(), baseInventory.backpack().items());
+        fillDisplay(baseDisplay, displayedBaseIndexes, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 8, baseInventory.backpack().items());
         fillDisplay(baseDisplay, displayedBaseIndexes, VEST_START, VEST_DISPLAY_SLOTS, baseInventory.vest().gridWidth(), baseInventory.vest().items());
         fillDisplay(baseDisplay, displayedBaseIndexes, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, baseInventory.safeBox().gridWidth(), baseInventory.safeBox().items());
+        ExtractCraft.LOGGER.info("BaseStash display rebuild: baseBackpack={} '{}', storageGrid={}x{}, displayGrid=8x8, storageItems={}, visibleBackpackSlots={}",
+                baseInventory.loadout().backpack().id(),
+                baseInventory.loadout().backpack().name(),
+                baseInventory.backpack().gridWidth(),
+                baseInventory.backpack().gridHeight(),
+                baseInventory.backpack().itemCount(),
+                visibleDisplaySlots(BACKPACK_START, BACKPACK_DISPLAY_SLOTS));
 
         List<IndexedItem> stashItems = new ArrayList<>();
         List<RaidInventoryItem> items = stashData.stash().items();
@@ -562,6 +821,18 @@ public class BaseStashMenu extends AbstractContainerMenu {
             displayedStashIndexes[displayIndex] = indexedItem.index();
             stashDisplay.setItem(displayIndex, displayStack(indexedItem.item(), indexedItem.index()));
         }
+        baseDisplay.setChanged();
+        stashDisplay.setChanged();
+    }
+
+    private int visibleDisplaySlots(int start, int count) {
+        int visible = 0;
+        for (int index = start; index < start + count && index < baseDisplay.getContainerSize(); index++) {
+            if (!baseDisplay.getItem(index).isEmpty()) {
+                visible++;
+            }
+        }
+        return visible;
     }
 
     private void fillDisplay(SimpleContainer container, int[] displayedIndexes, int start, int maxSlots, int columns, List<RaidInventoryItem> items) {
@@ -572,6 +843,17 @@ public class BaseStashMenu extends AbstractContainerMenu {
             if (displayIndex < 0 || displayIndex >= maxSlots) {
                 continue;
             }
+            ExtractCraft.LOGGER.info("BaseStash display sync: start={}, itemIndex={}, key={}, itemGrid=({},{}), footprint={}x{}, displayIndex={}, metadataGrid=({},{}), repacked=false",
+                    start,
+                    itemIndex,
+                    item.lookupKey(),
+                    item.gridX(),
+                    item.gridY(),
+                    footprintWidth(item),
+                    footprintHeight(item),
+                    displayIndex,
+                    item.gridX(),
+                    item.gridY());
             placeDisplayFootprint(container, displayedIndexes, start, maxSlots, columns, displayIndex, item, itemIndex);
         }
     }
@@ -671,7 +953,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return switch (slot) {
             case VEST -> 4;
             case SAFE_BOX -> 3;
-            default -> 6;
+            default -> 8;
         };
     }
 

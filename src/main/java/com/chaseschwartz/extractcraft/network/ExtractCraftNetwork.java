@@ -37,7 +37,7 @@ public class ExtractCraftNetwork {
             }
         });
         registrar.playToServer(SelectRaidWeaponPayload.TYPE, SelectRaidWeaponPayload.STREAM_CODEC, (payload, context) -> {
-            if (context.player() instanceof ServerPlayer player && RaidManager.isInRaid(player)) {
+            if (context.player() instanceof ServerPlayer player) {
                 RaidEquipmentSlot slot = switch (payload.selection()) {
                     case SelectRaidWeaponPayload.SELECT_PRIMARY -> RaidEquipmentSlot.PRIMARY_WEAPON;
                     case SelectRaidWeaponPayload.SELECT_SECONDARY -> RaidEquipmentSlot.SECONDARY_WEAPON;

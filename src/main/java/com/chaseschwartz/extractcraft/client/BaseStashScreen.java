@@ -28,9 +28,17 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private static final int HOVER_BORDER = 0xFF9CF6FF;
     private static final int TEXT = 0xFFDFFBFF;
     private static final int MUTED_TEXT = 0xFF9AA6B2;
-    private static final int STASH_X = 226;
+    private static final int BACKPACK_COLUMNS = 8;
+    private static final int BACKPACK_ROWS = 8;
+    private static final int BACKPACK_GRID_X = 12;
+    private static final int BACKPACK_GRID_Y = 62;
+    private static final int VEST_GRID_X = 12;
+    private static final int VEST_GRID_Y = 256;
+    private static final int SAFE_GRID_X = 104;
+    private static final int SAFE_GRID_Y = 256;
+    private static final int STASH_X = 264;
     private static final int STASH_Y = 24;
-    private static final int STASH_SLOT_X = 236;
+    private static final int STASH_SLOT_X = 274;
     private static final int STASH_SLOT_Y = 82;
     private static final int CONTEXT_MENU_WIDTH = 74;
     private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
@@ -54,8 +62,8 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     public BaseStashScreen(BaseStashMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = Math.max(446, STASH_SLOT_X + menu.stashColumns() * 18 + 14);
-        this.imageHeight = Math.max(318, STASH_SLOT_Y + menu.stashRows() * 18 + 38);
+        this.imageWidth = Math.max(486, STASH_SLOT_X + menu.stashColumns() * 18 + 14);
+        this.imageHeight = Math.max(350, STASH_SLOT_Y + menu.stashRows() * 18 + 38);
     }
 
     @Override
@@ -79,11 +87,11 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         border(guiGraphics, x, y, this.imageWidth, this.imageHeight, BORDER_COLOR);
 
         boolean dragging = dragSource != DragSource.NONE;
-        section(guiGraphics, x + 8, y + 24, 128, 178, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
-        section(guiGraphics, x + 8, y + 208, 82, 82, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
-        section(guiGraphics, x + 98, y + 208, 82, 82, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
-        section(guiGraphics, x + 144, y + 28, 72, 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
-        section(guiGraphics, x + 144, y + 90, 72, 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
+        section(guiGraphics, x + 8, y + 24, 164, 210, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
+        section(guiGraphics, x + 8, y + 238, 82, 82, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
+        section(guiGraphics, x + 98, y + 238, 82, 82, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
+        section(guiGraphics, x + 188, y + 28, 72, 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
+        section(guiGraphics, x + 188, y + 90, 72, 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
         section(guiGraphics, x + STASH_X, y + STASH_Y, this.imageWidth - STASH_X - 8, this.imageHeight - STASH_Y - 8, dragging && isStashPanel(mouseX, mouseY));
     }
 
@@ -152,10 +160,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                 false);
 
         guiGraphics.drawString(this.font, "Backpack", 14, 29, TEXT, false);
-        guiGraphics.drawString(this.font, "Primary", 150, 34, TEXT, false);
-        guiGraphics.drawString(this.font, "Secondary", 150, 96, TEXT, false);
-        guiGraphics.drawString(this.font, "Vest", 14, 213, TEXT, false);
-        guiGraphics.drawString(this.font, "Safe Box", 104, 213, TEXT, false);
+        guiGraphics.drawString(this.font, "Primary", 194, 34, TEXT, false);
+        guiGraphics.drawString(this.font, "Secondary", 194, 96, TEXT, false);
+        guiGraphics.drawString(this.font, "Vest", 14, 243, TEXT, false);
+        guiGraphics.drawString(this.font, "Safe Box", 104, 243, TEXT, false);
 
         int sortY = this.imageHeight - 18;
         guiGraphics.drawString(this.font, "[Name]", STASH_X + 8, sortY, MUTED_TEXT, false);
@@ -196,6 +204,25 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
         if (button == 0 && handleSortClick(mouseX, mouseY)) {
             return true;
+        }
+
+        Slot shiftSlot = slotAt(mouseX, mouseY);
+        if (button == 0 && hasShiftDown() && shiftSlot != null && shiftSlot.hasItem()) {
+            if (isStashSlot(shiftSlot)) {
+                int sourceIndex = this.menu.stashDisplayIndexForMenuSlot(shiftSlot.index);
+                sendQuickStashToBase(sourceIndex);
+                markPendingSlots(sourceMenuSlots(DragSource.STASH, sourceIndex, null));
+                return true;
+            }
+            if (isBaseSlot(shiftSlot)) {
+                RaidEquipmentSlot source = this.menu.baseSlotForMenuSlot(shiftSlot.index);
+                int sourceIndex = this.menu.baseItemIndexForMenuSlot(shiftSlot.index);
+                if (sourceIndex >= 0) {
+                    sendBaseToStash(source, sourceIndex);
+                    markPendingSlots(sourceMenuSlots(DragSource.BASE, sourceIndex, source));
+                }
+                return true;
+            }
         }
 
         if (button == 0 && dragSource != DragSource.NONE) {
@@ -261,6 +288,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (dragSource == DragSource.STASH && baseTarget != null) {
             int targetCell = placementCellAt(baseTarget, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             logDropTarget("stash-to-base", mouseX, mouseY, baseTarget, targetCell);
+            if (isGridTarget(baseTarget) && targetCell < 0) {
+                gridMoveStatus = "Target cell is blocked.";
+                return false;
+            }
             sendStashToBase(draggedSourceIndex, baseTarget, targetCell);
             markPendingSource();
             return true;
@@ -273,6 +304,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (dragSource == DragSource.BASE && baseTarget != null && baseTarget != draggedBaseSlot) {
             int targetCell = placementCellAt(baseTarget, (int) mouseX, (int) mouseY, footprintFor(draggedStack));
             logDropTarget("base-to-base", mouseX, mouseY, baseTarget, targetCell);
+            if (isGridTarget(baseTarget) && targetCell < 0) {
+                gridMoveStatus = "Target cell is blocked.";
+                return false;
+            }
             sendBaseToBase(draggedBaseSlot, draggedSourceIndex, baseTarget, targetCell);
             markPendingSource();
             return true;
@@ -285,6 +320,18 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                 markPendingSource();
             }
             return true;
+        }
+        if (isOutsideScreen(mouseX, mouseY)) {
+            if (dragSource == DragSource.BASE) {
+                sendDropBase(draggedBaseSlot, draggedSourceIndex);
+                markPendingSource();
+                return true;
+            }
+            if (dragSource == DragSource.STASH) {
+                sendDropStash(draggedSourceIndex);
+                markPendingSource();
+                return true;
+            }
         }
         return false;
     }
@@ -329,8 +376,12 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private void markPendingSource() {
+        markPendingSlots(this.draggedSourceMenuSlots);
+    }
+
+    private void markPendingSlots(Set<Integer> menuSlots) {
         this.pendingSourceMenuSlots.clear();
-        this.pendingSourceMenuSlots.addAll(this.draggedSourceMenuSlots);
+        this.pendingSourceMenuSlots.addAll(menuSlots);
         this.pendingSourceTicks = 20;
         this.pendingSourceObservedPresent = true;
     }
@@ -392,6 +443,24 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                 target,
                 targetCell);
         PacketDistributor.sendToServer(new GridMoveRequestPayload(transactionId, this.menu.containerId, operation, slotId(source), sourceIndex, slotId(target), targetCell));
+    }
+
+    private void sendDropBase(RaidEquipmentSlot source, int sourceIndex) {
+        if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
+            sendGridMove(GridMoveRequestPayload.BASE_BASE_DROP, source, sourceIndex, null, -1);
+        }
+    }
+
+    private void sendDropStash(int stashDisplayIndex) {
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            sendGridMove(GridMoveRequestPayload.BASE_STASH_DROP, null, stashDisplayIndex, null, -1);
+        }
+    }
+
+    private void sendQuickStashToBase(int stashDisplayIndex) {
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            sendGridMove(GridMoveRequestPayload.BASE_STASH_QUICK_TO_BASE, null, stashDisplayIndex, null, -1);
+        }
     }
 
     public void handleGridMoveResult(int transactionId, boolean success, String message) {
@@ -500,9 +569,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
         return switch (target) {
-            case BACKPACK -> gridCell(localX, localY, 12, 62, 6, 6);
-            case VEST -> gridCell(localX, localY, 12, 226, 4, 3);
-            case SAFE_BOX -> gridCell(localX, localY, 104, 226, 3, 3);
+            case BACKPACK -> gridCell(localX, localY, BACKPACK_GRID_X, BACKPACK_GRID_Y, BACKPACK_COLUMNS, BACKPACK_ROWS);
+            case VEST -> gridCell(localX, localY, VEST_GRID_X, VEST_GRID_Y, 4, 3);
+            case SAFE_BOX -> gridCell(localX, localY, SAFE_GRID_X, SAFE_GRID_Y, 3, 3);
             case PRIMARY_WEAPON, SECONDARY_WEAPON -> -1;
         };
     }
@@ -594,10 +663,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private RaidEquipmentSlot targetAt(int mouseX, int mouseY) {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
-        if (inside(localX, localY, 144, 28, 72, 54)) {
+        if (inside(localX, localY, 188, 28, 72, 54)) {
             return RaidEquipmentSlot.PRIMARY_WEAPON;
         }
-        if (inside(localX, localY, 144, 90, 72, 54)) {
+        if (inside(localX, localY, 188, 90, 72, 54)) {
             return RaidEquipmentSlot.SECONDARY_WEAPON;
         }
         if (insideBackpackGrid(localX, localY)) {
@@ -637,22 +706,22 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private static boolean insideBackpackGrid(int localX, int localY) {
-        return inside(localX, localY, 12, 62, 6 * 18, 6 * 18);
+        return inside(localX, localY, BACKPACK_GRID_X, BACKPACK_GRID_Y, BACKPACK_COLUMNS * 18, BACKPACK_ROWS * 18);
     }
 
     private static boolean insideVestGrid(int localX, int localY) {
-        return inside(localX, localY, 12, 226, 4 * 18, 3 * 18);
+        return inside(localX, localY, VEST_GRID_X, VEST_GRID_Y, 4 * 18, 3 * 18);
     }
 
     private static boolean insideSafeGrid(int localX, int localY) {
-        return inside(localX, localY, 104, 226, 3 * 18, 3 * 18);
+        return inside(localX, localY, SAFE_GRID_X, SAFE_GRID_Y, 3 * 18, 3 * 18);
     }
 
     private static int cellX(RaidEquipmentSlot target, int cell) {
         return cell % switch (target) {
             case VEST -> 4;
             case SAFE_BOX -> 3;
-            default -> 6;
+            default -> BACKPACK_COLUMNS;
         };
     }
 
@@ -660,7 +729,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         return cell / switch (target) {
             case VEST -> 4;
             case SAFE_BOX -> 3;
-            default -> 6;
+            default -> BACKPACK_COLUMNS;
         };
     }
 
@@ -681,6 +750,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
         return inside(localX, localY, STASH_X, STASH_Y, this.imageWidth - STASH_X - 8, this.imageHeight - STASH_Y - 8);
+    }
+
+    private boolean isOutsideScreen(double mouseX, double mouseY) {
+        return !inside((int) mouseX, (int) mouseY, this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+    }
+
+    private static boolean isGridTarget(RaidEquipmentSlot target) {
+        return target == RaidEquipmentSlot.BACKPACK || target == RaidEquipmentSlot.VEST || target == RaidEquipmentSlot.SAFE_BOX;
     }
 
     private static boolean inside(int x, int y, int rectX, int rectY, int width, int height) {
@@ -908,13 +985,13 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private static void renderItemCentered(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
         float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
-        double centerX = x + width / 2.0D;
-        double centerY = y + height / 2.0D;
+        double iconX = x + (width - 16.0D * scale) / 2.0D;
+        double iconY = y + (height - 16.0D * scale) / 2.0D;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(centerX, centerY, 0.0D);
+        guiGraphics.pose().translate(iconX, iconY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, -8, -8);
-        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, -8, -8);
+        guiGraphics.renderItem(stack, 0, 0);
+        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
         guiGraphics.pose().popPose();
     }
 
@@ -1001,9 +1078,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private static GridLayout layoutFor(RaidEquipmentSlot slot) {
         return switch (slot) {
-            case VEST -> new GridLayout(12, 226, 4, 3);
-            case SAFE_BOX -> new GridLayout(104, 226, 3, 3);
-            default -> new GridLayout(12, 62, 6, 6);
+            case VEST -> new GridLayout(VEST_GRID_X, VEST_GRID_Y, 4, 3);
+            case SAFE_BOX -> new GridLayout(SAFE_GRID_X, SAFE_GRID_Y, 3, 3);
+            default -> new GridLayout(BACKPACK_GRID_X, BACKPACK_GRID_Y, BACKPACK_COLUMNS, BACKPACK_ROWS);
         };
     }
 

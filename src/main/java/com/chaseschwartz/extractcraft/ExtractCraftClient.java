@@ -90,10 +90,6 @@ public class ExtractCraftClient {
     }
 
     private static void onClientPreTick(ClientTickEvent.Pre event) {
-        if (!ClientRaidState.isInRaid()) {
-            return;
-        }
-
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.player == null || minecraft.screen != null) {
             return;
@@ -121,7 +117,7 @@ public class ExtractCraftClient {
 
     private static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (ClientRaidState.isInRaid() && minecraft.player != null && minecraft.screen == null) {
+        if (minecraft.player != null && minecraft.screen == null) {
             event.setCanceled(true);
             PacketDistributor.sendToServer(new SelectRaidWeaponPayload(event.getScrollDeltaY() >= 0.0D
                     ? SelectRaidWeaponPayload.CYCLE_FORWARD

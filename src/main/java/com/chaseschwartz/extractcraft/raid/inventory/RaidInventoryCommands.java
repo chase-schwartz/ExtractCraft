@@ -6,6 +6,7 @@ import java.util.List;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
+import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
@@ -95,7 +96,31 @@ public class RaidInventoryCommands {
                 .then(Commands.literal("debug")
                         .then(Commands.literal("vanilla_inventory")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> openVanillaInventory(context.getSource()))))
+                                .executes(context -> openVanillaInventory(context.getSource())))
+                        .then(Commands.literal("givegun")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("gun", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("ak");
+                                            builder.suggest("ak47");
+                                            builder.suggest("glock");
+                                            builder.suggest("m95");
+                                            builder.suggest("rpg");
+                                            builder.suggest("m249");
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("target", StringArgumentType.word())
+                                                .suggests((context, builder) -> {
+                                                    builder.suggest("stash");
+                                                    builder.suggest("backpack");
+                                                    builder.suggest("primary");
+                                                    builder.suggest("secondary");
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(context -> debugGiveGun(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "gun"),
+                                                        StringArgumentType.getString(context, "target")))))))
                 .then(Commands.literal("dropheld")
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                         .executes(context -> dropHeld(context.getSource())))
@@ -284,6 +309,100 @@ public class RaidInventoryCommands {
         }
         PacketDistributor.sendToPlayer(player, OpenVanillaInventoryPayload.INSTANCE);
         return 1;
+    }
+
+    private static int debugGiveGun(CommandSourceStack source, String gunAlias, String targetName) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        String lookupKey = debugGunLookupKey(gunAlias);
+        if (lookupKey == null) {
+            player.sendSystemMessage(Component.literal("Unknown debug gun '" + gunAlias + "'. Try ak, ak47, glock, m95, rpg, or m249."));
+            return 0;
+        }
+
+        ItemStack stack = ItemStackVariantFactory.create(lookupKey, 1).orElse(ItemStack.EMPTY);
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Could not create TaCZ variant stack for " + lookupKey + ". Is TaCZ loaded?"));
+            return 0;
+        }
+
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, stack).orElse(null);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal(lookupKey + " has no carry profile; cannot insert into ExtractCraft storage."));
+            return 0;
+        }
+
+        String target = targetName.toLowerCase(java.util.Locale.ROOT);
+        RaidInventory.AddResult result;
+        if (target.equals("stash")) {
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            RaidInventoryItem stashItem = item.withoutPlacement();
+            int moved = data.stash().addPartial(stashItem);
+            if (moved < stashItem.count()) {
+                player.sendSystemMessage(Component.literal("Stash does not have enough capacity for " + item.displayName() + "."));
+                return 0;
+            }
+            PlayerStashService.save(player, data);
+            player.sendSystemMessage(Component.literal("Debug spawned " + item.displayName() + " into persistent stash."));
+            return 1;
+        }
+
+        RaidEquipmentSlot targetSlot = debugStorageTarget(target);
+        if (targetSlot == null) {
+            player.sendSystemMessage(Component.literal("Unknown target '" + targetName + "'. Use stash, backpack, primary, or secondary."));
+            return 0;
+        }
+
+        if (RaidManager.isInRaid(player)) {
+            result = RaidInventoryManager.addStackTo(player, stack, targetSlot);
+            player.sendSystemMessage(Component.literal("Debug givegun raid target " + target + ": " + result.message()));
+            return result.success() ? 1 : 0;
+        }
+
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+        result = switch (targetSlot) {
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> data.baseInventory().addToWeaponSlot(item.withoutPlacement(), targetSlot);
+            case BACKPACK -> data.baseInventory().addToBackpack(item.withoutPlacement());
+            case VEST -> {
+                ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+                yield profile == null
+                        ? new RaidInventory.AddResult(false, RaidEquipmentSlot.VEST, item.lookupKey() + " has no carry profile.")
+                        : data.baseInventory().addToVest(item.withoutPlacement(), profile);
+            }
+            case SAFE_BOX -> {
+                ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+                yield profile == null
+                        ? new RaidInventory.AddResult(false, RaidEquipmentSlot.SAFE_BOX, item.lookupKey() + " has no carry profile.")
+                        : data.baseInventory().addToSafeBox(item.withoutPlacement(), profile);
+            }
+        };
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal("Debug givegun base target " + target + ": " + result.message()));
+            return 0;
+        }
+
+        PlayerStashService.save(player, data);
+        player.sendSystemMessage(Component.literal("Debug spawned " + item.displayName() + " into base " + target + "."));
+        return 1;
+    }
+
+    private static String debugGunLookupKey(String alias) {
+        return switch (alias.toLowerCase(java.util.Locale.ROOT)) {
+            case "ak", "ak47", "akm" -> "tacz:modern_kinetic_gun#tacz:ak47";
+            case "glock", "glock17", "pistol" -> "tacz:modern_kinetic_gun#tacz:glock_17";
+            case "m95", "sniper" -> "tacz:modern_kinetic_gun#tacz:m95";
+            case "rpg", "rpg7" -> "tacz:modern_kinetic_gun#tacz:rpg7";
+            case "m249", "lmg" -> "tacz:modern_kinetic_gun#tacz:m249";
+            default -> null;
+        };
+    }
+
+    private static RaidEquipmentSlot debugStorageTarget(String target) {
+        return switch (target) {
+            case "backpack" -> RaidEquipmentSlot.BACKPACK;
+            case "primary" -> RaidEquipmentSlot.PRIMARY_WEAPON;
+            case "secondary" -> RaidEquipmentSlot.SECONDARY_WEAPON;
+            default -> null;
+        };
     }
 
     private static int equipRaidWeapon(CommandSourceStack source, RaidEquipmentSlot slot) throws CommandSyntaxException {

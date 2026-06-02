@@ -242,7 +242,7 @@ public class PlayerStashService {
 
         target.clear();
         for (RaidInventoryItem item : candidate.items()) {
-            target.addPartial(item);
+            target.addPartialPreservingPlacement(item);
         }
         return result;
     }
@@ -250,7 +250,7 @@ public class PlayerStashService {
     private static RaidStorageContainer copyStorage(RaidStorageContainer source) {
         RaidStorageContainer copy = new RaidStorageContainer(source.id(), source.name(), source.capacity(), source.maxWeight(), source.gridWidth(), source.gridHeight());
         for (RaidInventoryItem item : source.items()) {
-            copy.addPartial(copyItem(item));
+            copy.addPartialPreservingPlacement(copyItem(item));
         }
         return copy;
     }
@@ -266,13 +266,30 @@ public class PlayerStashService {
         target.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, source.primaryWeapon() == null ? null : copyItem(source.primaryWeapon()));
         target.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, source.secondaryWeapon() == null ? null : copyItem(source.secondaryWeapon()));
         for (RaidInventoryItem item : source.backpack().items()) {
-            target.backpack().addPartial(copyItem(item));
+            int moved = target.backpack().addPartialPreservingPlacement(copyItem(item), true);
+            logBaseCopyResult("backpack", item, moved);
         }
         for (RaidInventoryItem item : source.vest().items()) {
-            target.vest().addPartial(copyItem(item));
+            int moved = target.vest().addPartialPreservingPlacement(copyItem(item), true);
+            logBaseCopyResult("vest", item, moved);
         }
         for (RaidInventoryItem item : source.safeBox().items()) {
-            target.safeBox().addPartial(copyItem(item));
+            int moved = target.safeBox().addPartialPreservingPlacement(copyItem(item), true);
+            logBaseCopyResult("safeBox", item, moved);
+        }
+    }
+
+    private static void logBaseCopyResult(String storageName, RaidInventoryItem item, int moved) {
+        if (moved < item.count()) {
+            ExtractCraft.LOGGER.warn("Unable to preserve full base {} item {} during copy/replace: moved {}/{}; placement=({},{}), footprint={}x{}, ignoreWeight=true",
+                    storageName,
+                    item.lookupKey(),
+                    moved,
+                    item.count(),
+                    item.gridX(),
+                    item.gridY(),
+                    item.gridWidth(),
+                    item.gridHeight());
         }
     }
 
@@ -301,12 +318,16 @@ public class PlayerStashService {
 
         inventory.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, readItem(object.getAsJsonObject("primaryWeapon"), player));
         inventory.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, readItem(object.getAsJsonObject("secondaryWeapon"), player));
-        readStorage(object.getAsJsonObject("backpack"), inventory.backpack(), player);
-        readStorage(object.getAsJsonObject("vest"), inventory.vest(), player);
-        readStorage(object.getAsJsonObject("safeBox"), inventory.safeBox(), player);
+        readStorage(object.getAsJsonObject("backpack"), inventory.backpack(), player, true);
+        readStorage(object.getAsJsonObject("vest"), inventory.vest(), player, true);
+        readStorage(object.getAsJsonObject("safeBox"), inventory.safeBox(), player, true);
     }
 
     private static void readStorage(JsonObject object, RaidStorageContainer container, ServerPlayer player) {
+        readStorage(object, container, player, false);
+    }
+
+    private static void readStorage(JsonObject object, RaidStorageContainer container, ServerPlayer player, boolean ignoreWeight) {
         if (object == null || !object.has("items") || !object.get("items").isJsonArray()) {
             return;
         }
@@ -317,7 +338,15 @@ public class PlayerStashService {
             }
             RaidInventoryItem item = readItem(element.getAsJsonObject(), player);
             if (item != null) {
-                container.addPartial(item);
+                int moved = container.addPartialPreservingPlacement(item, ignoreWeight);
+                if (moved < item.count()) {
+                    ExtractCraft.LOGGER.warn("Unable to place full persisted ExtractCraft item {} in {}: moved {}/{}, ignoreWeight={}",
+                            item.lookupKey(),
+                            container.id(),
+                            moved,
+                            item.count(),
+                            ignoreWeight);
+                }
             }
         }
     }

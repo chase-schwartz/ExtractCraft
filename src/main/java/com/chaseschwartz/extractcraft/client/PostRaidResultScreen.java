@@ -328,13 +328,13 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
             return;
         }
         float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
-        double centerX = x + width / 2.0D;
-        double centerY = y + height / 2.0D;
+        double iconX = x + (width - 16.0D * scale) / 2.0D;
+        double iconY = y + (height - 16.0D * scale) / 2.0D;
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(centerX, centerY, 0.0D);
+        guiGraphics.pose().translate(iconX, iconY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, -8, -8);
-        guiGraphics.renderItemDecorations(this.font, stack, -8, -8);
+        guiGraphics.renderItem(stack, 0, 0);
+        guiGraphics.renderItemDecorations(this.font, stack, 0, 0);
         guiGraphics.pose().popPose();
     }
 

@@ -1,5 +1,9 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.RaidState;
 
@@ -18,6 +22,7 @@ public class RaidWeaponService {
     private static final ResourceLocation TACZ_GUN = ResourceLocation.fromNamespaceAndPath("tacz", "modern_kinetic_gun");
     private static final String TACZ_DUMMY_AMMO = "DummyAmmo";
     private static final String TACZ_MAX_DUMMY_AMMO = "MaxDummyAmmo";
+    private static final Map<UUID, RaidEquipmentSlot> BASE_SELECTED_WEAPONS = new HashMap<>();
     private static boolean debugInfiniteAmmo;
 
     private RaidWeaponService() {
@@ -29,8 +34,7 @@ public class RaidWeaponService {
             return false;
         }
         if (!RaidManager.isInRaid(player)) {
-            player.sendSystemMessage(Component.literal("Raid weapon equip is only active during raids."));
-            return false;
+            return equipBaseWeapon(player, targetSlot);
         }
 
         RaidInventory inventory = RaidInventoryManager.get(player);
@@ -57,6 +61,9 @@ public class RaidWeaponService {
     }
 
     public static boolean holster(ServerPlayer player) {
+        if (!RaidManager.isInRaid(player)) {
+            return holsterBaseWeapon(player);
+        }
         RaidInventory inventory = RaidInventoryManager.get(player);
         syncSelectedWeaponFromHand(player, inventory);
         inventory.setSelectedWeaponSlot(null);
@@ -67,7 +74,7 @@ public class RaidWeaponService {
 
     public static boolean cycle(ServerPlayer player, int direction) {
         if (!RaidManager.isInRaid(player)) {
-            return false;
+            return cycleBaseWeapon(player, direction);
         }
 
         RaidInventory inventory = RaidInventoryManager.get(player);
@@ -93,6 +100,12 @@ public class RaidWeaponService {
     }
 
     public static void syncSelectedWeaponFromHand(ServerPlayer player) {
+        if (!RaidManager.isInRaid(player)) {
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            syncSelectedBaseWeaponFromHand(player, data);
+            PlayerStashService.save(player, data);
+            return;
+        }
         syncSelectedWeaponFromHand(player, RaidInventoryManager.get(player));
     }
 
@@ -127,6 +140,17 @@ public class RaidWeaponService {
     }
 
     public static String status(ServerPlayer player) {
+        if (!RaidManager.isInRaid(player)) {
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            ItemStack held = bridgeStack(player);
+            RaidEquipmentSlot selected = BASE_SELECTED_WEAPONS.get(player.getUUID());
+            return "baseSelected=" + (selected == null ? "none" : slotName(selected))
+                    + ", basePrimary=" + itemName(data.baseInventory().primaryWeapon())
+                    + ", baseSecondary=" + itemName(data.baseInventory().secondaryWeapon())
+                    + ", bridgeSlot=" + (BRIDGE_HOTBAR_SLOT + 1)
+                    + ", selectedHotbar=" + (player.getInventory().selected + 1)
+                    + ", bridgeHeld=" + (held.isEmpty() ? "empty" : BuiltInRegistries.ITEM.getKey(held.getItem()) + " / " + held.getHoverName().getString());
+        }
         RaidInventory inventory = RaidInventoryManager.get(player);
         ItemStack held = bridgeStack(player);
         return "selected=" + (inventory.selectedWeaponSlot() == null ? "none" : slotName(inventory.selectedWeaponSlot()))
@@ -188,10 +212,6 @@ public class RaidWeaponService {
     }
 
     public static void enforceBridgeSlot(ServerPlayer player) {
-        if (!RaidManager.isInRaid(player)) {
-            return;
-        }
-
         Inventory inventory = player.getInventory();
         if (inventory.selected != BRIDGE_HOTBAR_SLOT) {
             inventory.selected = BRIDGE_HOTBAR_SLOT;
@@ -202,6 +222,82 @@ public class RaidWeaponService {
 
     private static ItemStack bridgeStack(ServerPlayer player) {
         return player.getInventory().getItem(BRIDGE_HOTBAR_SLOT);
+    }
+
+    private static boolean equipBaseWeapon(ServerPlayer player, RaidEquipmentSlot targetSlot) {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+        syncSelectedBaseWeaponFromHand(player, data);
+
+        RaidInventoryItem weapon = data.baseInventory().itemAt(targetSlot, 0);
+        if (weapon == null) {
+            BASE_SELECTED_WEAPONS.remove(player.getUUID());
+            setBridgeHand(player, ItemStack.EMPTY);
+            PlayerStashService.save(player, data);
+            player.sendSystemMessage(Component.literal("No base weapon equipped in " + slotName(targetSlot) + "."));
+            return true;
+        }
+
+        ItemStack stack = weapon.toItemStack();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Unable to rebuild base " + slotName(targetSlot) + " weapon stack."));
+            return false;
+        }
+
+        BASE_SELECTED_WEAPONS.put(player.getUUID(), targetSlot);
+        setBridgeHand(player, prepareBridgeStack(stack));
+        PlayerStashService.save(player, data);
+        player.sendSystemMessage(Component.literal("Equipped " + stack.getHoverName().getString() + " from base " + slotName(targetSlot) + "."));
+        return true;
+    }
+
+    private static boolean holsterBaseWeapon(ServerPlayer player) {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+        syncSelectedBaseWeaponFromHand(player, data);
+        BASE_SELECTED_WEAPONS.remove(player.getUUID());
+        setBridgeHand(player, ItemStack.EMPTY);
+        PlayerStashService.save(player, data);
+        player.sendSystemMessage(Component.literal("Holstered base weapon."));
+        return true;
+    }
+
+    private static boolean cycleBaseWeapon(ServerPlayer player, int direction) {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+        boolean hasPrimary = data.baseInventory().primaryWeapon() != null;
+        boolean hasSecondary = data.baseInventory().secondaryWeapon() != null;
+        if (!hasPrimary && !hasSecondary) {
+            return false;
+        }
+
+        RaidEquipmentSlot selected = BASE_SELECTED_WEAPONS.get(player.getUUID());
+        RaidEquipmentSlot target;
+        if (selected == RaidEquipmentSlot.PRIMARY_WEAPON && hasSecondary) {
+            target = RaidEquipmentSlot.SECONDARY_WEAPON;
+        } else if (selected == RaidEquipmentSlot.SECONDARY_WEAPON && hasPrimary) {
+            target = RaidEquipmentSlot.PRIMARY_WEAPON;
+        } else if (direction < 0) {
+            target = hasSecondary ? RaidEquipmentSlot.SECONDARY_WEAPON : RaidEquipmentSlot.PRIMARY_WEAPON;
+        } else {
+            target = hasPrimary ? RaidEquipmentSlot.PRIMARY_WEAPON : RaidEquipmentSlot.SECONDARY_WEAPON;
+        }
+
+        return equipBaseWeapon(player, target);
+    }
+
+    private static void syncSelectedBaseWeaponFromHand(ServerPlayer player, PlayerStashService.PlayerStashData data) {
+        RaidEquipmentSlot selected = BASE_SELECTED_WEAPONS.get(player.getUUID());
+        if (selected == null) {
+            return;
+        }
+
+        ItemStack held = bridgeStack(player);
+        if (held.isEmpty()) {
+            data.baseInventory().setWeaponSlot(selected, null);
+            return;
+        }
+
+        RaidInventoryManager.stackAsItem(player, held).ifPresentOrElse(
+                item -> data.baseInventory().setWeaponSlot(selected, item),
+                () -> player.sendSystemMessage(Component.literal("Unable to sync held base weapon: held weapon has no carry profile.")));
     }
 
     private static ItemStack prepareBridgeStack(ItemStack source) {

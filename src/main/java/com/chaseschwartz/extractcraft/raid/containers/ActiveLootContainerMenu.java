@@ -8,6 +8,7 @@ import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventory;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryItem;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryManager;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidStorageContainer;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -246,6 +247,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                     moveStoredItem(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId), targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_TO_CONTAINER ->
                     returnStoredItemToContainer(player, slotFromId(sourceSlotId), sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_DROP ->
+                    dropStoredItem(player, slotFromId(sourceSlotId), sourceIndex);
             default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
         };
         setCarried(ItemStack.EMPTY);
@@ -611,6 +614,55 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         String message = "Returned " + removedStack.getCount() + "x " + removedStack.getHoverName().getString() + " to container.";
         player.sendSystemMessage(Component.literal(message));
         return GridMoveResult.success(message);
+    }
+
+    private GridMoveResult dropStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        if (source == null) {
+            return GridMoveResult.failure("Invalid source.");
+        }
+
+        RaidInventory inventory = RaidInventoryManager.get(player);
+        RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
+        if (item == null) {
+            String message = "Source item is no longer available.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+
+        RaidInventoryItem removed = inventory.removeCountAt(source, sourceIndex, item.count());
+        if (removed == null) {
+            String message = "Source item is no longer available.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+
+        ItemStack stack = removed.toItemStack();
+        if (stack.isEmpty()) {
+            restoreRemovedItem(inventory, source, removed);
+            String message = "Could not rebuild item stack for drop.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+
+        com.chaseschwartz.extractcraft.raid.inventory.ManagedDropService.spawnManagedDrop(player, stack);
+        rebuildRaidDisplay();
+        String message = "Dropped " + removed.displayName() + ".";
+        player.sendSystemMessage(Component.literal(message));
+        return GridMoveResult.success(message);
+    }
+
+    private void restoreRemovedItem(RaidInventory inventory, RaidEquipmentSlot source, RaidInventoryItem removed) {
+        if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            inventory.setWeaponSlot(source, removed);
+            return;
+        }
+        RaidStorageContainer storage = switch (source) {
+            case BACKPACK -> inventory.backpack();
+            case VEST -> inventory.vest();
+            case SAFE_BOX -> inventory.safeBox();
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalStateException("handled above");
+        };
+        storage.addPartial(removed);
     }
 
     private void addRaidDisplaySlots() {

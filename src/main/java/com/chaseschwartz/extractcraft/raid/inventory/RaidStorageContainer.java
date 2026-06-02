@@ -39,6 +39,27 @@ public class RaidStorageContainer {
         return addPartial(item, -1);
     }
 
+    public int addPartialPreservingPlacement(RaidInventoryItem item) {
+        return addPartialPreservingPlacement(item, false);
+    }
+
+    public int addPartialPreservingPlacement(RaidInventoryItem item, boolean ignoreWeight) {
+        if (item == null || item.count() <= 0) {
+            return 0;
+        }
+        if (!item.isPlaced()) {
+            return ignoreWeight ? addPartialGridFirstFit(item, true) : addPartial(item);
+        }
+
+        int moved = addPartialAt(item, item.gridX(), item.gridY(), item.rotated(), -1, ignoreWeight);
+        if (moved >= item.count()) {
+            return moved;
+        }
+
+        RaidInventoryItem remaining = item.withCount(item.count() - moved);
+        return moved + (ignoreWeight ? addPartialGridFirstFit(remaining, true) : addPartial(remaining));
+    }
+
     public int addPartial(RaidInventoryItem item, int excludedIndex) {
         if (item == null || item.count() <= 0) {
             return 0;
@@ -89,7 +110,58 @@ public class RaidStorageContainer {
         return item.count() - remaining;
     }
 
+    public int addPartialGridFirstFit(RaidInventoryItem item) {
+        return addPartialGridFirstFit(item, false);
+    }
+
+    public int addPartialGridFirstFit(RaidInventoryItem item, boolean ignoreWeight) {
+        if (item == null || item.count() <= 0) {
+            return 0;
+        }
+
+        int remaining = item.count();
+        for (int index = 0; index < items.size() && remaining > 0; index++) {
+            RaidInventoryItem existing = items.get(index);
+            if (!existing.canMerge(item)) {
+                continue;
+            }
+
+            int freeStackSpace = existing.maxStackSize() - existing.count();
+            int weightLimited = weightLimitedCount(item, ignoreWeight);
+            int transfer = Math.min(remaining, Math.min(freeStackSpace, weightLimited));
+            if (transfer <= 0) {
+                continue;
+            }
+
+            items.set(index, existing.withCount(existing.count() + transfer));
+            remaining -= transfer;
+        }
+
+        while (remaining > 0) {
+            int transfer = Math.min(remaining, item.maxStackSize());
+            transfer = Math.min(transfer, weightLimitedCount(item, ignoreWeight));
+            if (transfer <= 0) {
+                break;
+            }
+
+            RaidInventoryItem stack = item.withCount(transfer);
+            GridPlacement placement = findFirstFit(stack).orElse(null);
+            if (placement == null) {
+                break;
+            }
+
+            items.add(stack.withPlacement(placement.x(), placement.y(), placement.rotated()));
+            remaining -= transfer;
+        }
+
+        return item.count() - remaining;
+    }
+
     public int addPartialAt(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        return addPartialAt(item, x, y, rotated, excludedIndex, false);
+    }
+
+    public int addPartialAt(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex, boolean ignoreWeight) {
         if (item == null || item.count() <= 0 || x < 0 || y < 0) {
             return 0;
         }
@@ -99,7 +171,7 @@ public class RaidStorageContainer {
             int mergeIndex = itemIndexAtCell(x, y);
             if (mergeIndex != excludedIndex && mergeTarget.canMerge(item)) {
                 int freeStackSpace = mergeTarget.maxStackSize() - mergeTarget.count();
-                int transfer = Math.min(item.count(), Math.min(freeStackSpace, weightLimitedCount(item)));
+                int transfer = Math.min(item.count(), Math.min(freeStackSpace, weightLimitedCount(item, ignoreWeight)));
                 if (transfer > 0) {
                     items.set(mergeIndex, mergeTarget.withCount(mergeTarget.count() + transfer));
                 }
@@ -109,8 +181,20 @@ public class RaidStorageContainer {
         }
 
         int transfer = Math.min(item.count(), item.maxStackSize());
-        transfer = Math.min(transfer, weightLimitedCount(item));
+        transfer = Math.min(transfer, weightLimitedCount(item, ignoreWeight));
         if (transfer <= 0) {
+            ExtractCraft.LOGGER.info("Raid grid placement rejected: container={}, target=({},{}), item={}x {}, footprint={}x{}, cells={}, reason=weight used={} max={} ignoreWeight={}",
+                    id,
+                    x,
+                    y,
+                    item.count(),
+                    item.lookupKey(),
+                    footprintWidth(item, rotated),
+                    footprintHeight(item, rotated),
+                    checkedCells(x, y, footprintWidth(item, rotated), footprintHeight(item, rotated)),
+                    usedWeight(),
+                    maxWeight,
+                    ignoreWeight);
             return 0;
         }
 
@@ -259,6 +343,68 @@ public class RaidStorageContainer {
         return java.util.Optional.empty();
     }
 
+    public String firstFitFailureDescription(RaidInventoryItem item) {
+        if (item == null) {
+            return "item=null";
+        }
+        if (gridWidth <= 0 || gridHeight <= 0) {
+            return "grid disabled " + gridWidth + "x" + gridHeight;
+        }
+
+        StringBuilder builder = new StringBuilder();
+        for (boolean rotated : rotationOptions(item)) {
+            int width = footprintWidth(item, rotated);
+            int height = footprintHeight(item, rotated);
+            if (width > gridWidth || height > gridHeight) {
+                if (!builder.isEmpty()) {
+                    builder.append("; ");
+                }
+                builder.append("rotated=").append(rotated).append(" out_of_bounds footprint=").append(width).append("x").append(height).append(" grid=").append(gridWidth).append("x").append(gridHeight);
+                continue;
+            }
+            for (int y = 0; y <= gridHeight - height; y++) {
+                for (int x = 0; x <= gridWidth - width; x++) {
+                    if (!canFit(item, x, y, rotated)) {
+                        if (builder.length() < 600) {
+                            if (!builder.isEmpty()) {
+                                builder.append("; ");
+                            }
+                            builder.append("(").append(x).append(",").append(y).append(") ").append(fitFailureDescription(item, x, y, rotated, -1));
+                        }
+                    }
+                }
+            }
+        }
+        return builder.isEmpty() ? "no candidate cells checked" : builder.toString();
+    }
+
+    public String occupiedCellsDescription() {
+        StringBuilder builder = new StringBuilder("[");
+        boolean first = true;
+        for (int index = 0; index < items.size(); index++) {
+            RaidInventoryItem item = items.get(index);
+            if (!item.isPlaced()) {
+                continue;
+            }
+            if (!first) {
+                builder.append(", ");
+            }
+            builder.append(index)
+                    .append(":")
+                    .append(item.lookupKey())
+                    .append("@(")
+                    .append(item.gridX())
+                    .append(",")
+                    .append(item.gridY())
+                    .append(") ")
+                    .append(footprintWidth(item, item.rotated()))
+                    .append("x")
+                    .append(footprintHeight(item, item.rotated()));
+            first = false;
+        }
+        return builder.append("]").toString();
+    }
+
     public RaidInventoryItem itemAt(int index) {
         if (index < 0 || index >= items.size()) {
             return null;
@@ -337,6 +483,13 @@ public class RaidStorageContainer {
     }
 
     private int weightLimitedCount(RaidInventoryItem item) {
+        return weightLimitedCount(item, false);
+    }
+
+    private int weightLimitedCount(RaidInventoryItem item, boolean ignoreWeight) {
+        if (ignoreWeight) {
+            return item.count();
+        }
         double perItemWeight = item.totalWeight() / Math.max(1, item.count());
         if (perItemWeight <= 0.0D) {
             return item.count();
