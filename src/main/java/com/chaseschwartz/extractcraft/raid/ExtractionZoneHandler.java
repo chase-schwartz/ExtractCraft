@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 
@@ -69,6 +70,13 @@ public class ExtractionZoneHandler {
         boolean clearedCountdown = extractionTicks.remove(player.getUUID()) != null;
         if (clearedRaid || clearedCountdown) {
             ExtractCraft.LOGGER.info("Cleared stale test raid state for {} on logout", player.getGameProfile().getName());
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            PostRaidResultScreenOpener.openFailure(player);
         }
     }
 

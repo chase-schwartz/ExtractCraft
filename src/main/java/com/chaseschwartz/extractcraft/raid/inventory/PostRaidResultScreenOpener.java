@@ -16,4 +16,12 @@ public class PostRaidResultScreenOpener {
                         Component.literal("Raid Successful")),
                         buffer -> PostRaidResultMenu.ResultSnapshot.from(pending).write(buffer)));
     }
+
+    public static void openFailure(ServerPlayer player) {
+        RaidResultService.pendingFailureScreen(player)
+                .ifPresent(failed -> player.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new PostRaidResultMenu(containerId, inventory, player, failed),
+                        Component.literal("Raid Failed")),
+                        buffer -> PostRaidResultMenu.ResultSnapshot.from(failed).write(buffer)));
+    }
 }

@@ -24,6 +24,8 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     private static final int TEXT = 0xFFDFFBFF;
     private static final int MUTED_TEXT = 0xFF9AA6B2;
     private static final int WARNING_TEXT = 0xFFFFC857;
+    private static final int FAILED_TEXT = 0xFFFF6F61;
+    private static final int SECURED_TEXT = 0xFF8DFFF2;
     private static final String STASH_FULL_WARNING = "Stash is full. Choose Keep On Character or free stash space.";
     private static final int BACKPACK_X = 14;
     private static final int BACKPACK_Y = 76;
@@ -33,6 +35,14 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     private static final int SAFE_Y = 222;
     private static final int WEAPON_X = 252;
     private static final int WEAPON_Y = 46;
+    private static final int FAILED_BACKPACK_X = 14;
+    private static final int FAILED_BACKPACK_Y = 94;
+    private static final int FAILED_VEST_X = 14;
+    private static final int FAILED_VEST_Y = 244;
+    private static final int FAILED_SAFE_X = 122;
+    private static final int FAILED_SAFE_Y = 244;
+    private static final int FAILED_WEAPON_X = 252;
+    private static final int FAILED_WEAPON_Y = 70;
     private static final int BACKPACK_COLUMNS = 6;
     private static final int VEST_COLUMNS = 4;
     private static final int SAFE_BOX_COLUMNS = 3;
@@ -52,6 +62,13 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     protected void init() {
         super.init();
         int buttonY = this.topPos + this.imageHeight - 28;
+        if (!this.menu.snapshot().success()) {
+            addRenderableWidget(Button.builder(Component.literal("Continue"), button -> sendChoice(PostRaidResultMenu.CONTINUE_BUTTON))
+                    .bounds(this.leftPos + 143, buttonY, 100, 20)
+                    .build());
+            return;
+        }
+
         addRenderableWidget(Button.builder(Component.literal("Move All To Stash"), button -> {
             this.feedbackMessage = STASH_FULL_WARNING;
             sendChoice(PostRaidResultMenu.MOVE_ALL_TO_STASH_BUTTON);
@@ -79,16 +96,31 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         guiGraphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, PANEL_COLOR);
         border(guiGraphics, x, y, this.imageWidth, this.imageHeight, BORDER_COLOR);
 
-        section(guiGraphics, x + 8, y + 46, 202, 142);
-        section(guiGraphics, x + 8, y + 196, 96, 90);
-        section(guiGraphics, x + 114, y + 196, 78, 90);
-        section(guiGraphics, x + 242, y + 46, 132, 148);
+        if (this.menu.snapshot().success()) {
+            section(guiGraphics, x + 8, y + 46, 202, 142);
+            section(guiGraphics, x + 8, y + 196, 96, 90);
+            section(guiGraphics, x + 114, y + 196, 78, 90);
+            section(guiGraphics, x + 242, y + 46, 132, 148);
+        } else {
+            section(guiGraphics, x + 8, y + 64, 202, 152);
+            section(guiGraphics, x + 8, y + 220, 96, 86);
+            section(guiGraphics, x + 114, y + 220, 112, 86);
+            section(guiGraphics, x + 242, y + 58, 132, 154);
+        }
     }
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         PostRaidResultMenu.ResultSnapshot snapshot = this.menu.snapshot();
-        guiGraphics.drawString(this.font, "RAID SUCCESSFUL", 14, 10, 0xFF8DFFF2, false);
+        if (snapshot.success()) {
+            renderSuccessLabels(guiGraphics, snapshot);
+        } else {
+            renderFailureLabels(guiGraphics, snapshot);
+        }
+    }
+
+    private void renderSuccessLabels(GuiGraphics guiGraphics, PostRaidResultMenu.ResultSnapshot snapshot) {
+        guiGraphics.drawString(this.font, "RAID SUCCESSFUL", 14, 10, SECURED_TEXT, false);
         guiGraphics.drawString(this.font,
                 String.format("Time %s | Value %d cr | %.2f wt | Items %d | Stacks %d",
                         formatDuration(snapshot.elapsedSeconds()),
@@ -101,11 +133,48 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
                 MUTED_TEXT,
                 false);
 
-        renderStorageGrid(guiGraphics, "Backpack", snapshot.backpack(), BACKPACK_X, BACKPACK_Y, BACKPACK_COLUMNS, BACKPACK_ROWS);
-        renderStorageGrid(guiGraphics, "Vest", snapshot.vest(), VEST_X, VEST_Y, VEST_COLUMNS, VEST_ROWS);
-        renderStorageGrid(guiGraphics, "Safe Box", snapshot.safeBox(), SAFE_X, SAFE_Y, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS);
-        renderWeapons(guiGraphics, snapshot.weapons(), WEAPON_X, WEAPON_Y);
+        renderStorageGrid(guiGraphics, "Backpack", snapshot.backpack(), BACKPACK_X, BACKPACK_Y, BACKPACK_COLUMNS, BACKPACK_ROWS, TEXT);
+        renderStorageGrid(guiGraphics, "Vest", snapshot.vest(), VEST_X, VEST_Y, VEST_COLUMNS, VEST_ROWS, TEXT);
+        renderStorageGrid(guiGraphics, "Safe Box", snapshot.safeBox(), SAFE_X, SAFE_Y, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS, TEXT);
+        renderWeapons(guiGraphics, "Weapons", snapshot.weapons(), WEAPON_X, WEAPON_Y, TEXT);
         renderFeedback(guiGraphics);
+    }
+
+    private void renderFailureLabels(GuiGraphics guiGraphics, PostRaidResultMenu.ResultSnapshot snapshot) {
+        guiGraphics.drawString(this.font, "RAID FAILED", 14, 10, FAILED_TEXT, false);
+        guiGraphics.drawString(this.font,
+                String.format("Reason: %s | Time: %s",
+                        snapshot.reason(),
+                        formatDuration(snapshot.elapsedSeconds())),
+                14,
+                27,
+                MUTED_TEXT,
+                false);
+        guiGraphics.drawString(this.font,
+                String.format("Lost: %d cr | %.2f wt | Items %d | Stacks %d",
+                        snapshot.totalValue(),
+                        snapshot.totalWeight(),
+                        snapshot.itemCount(),
+                        snapshot.stackCount()),
+                14,
+                39,
+                MUTED_TEXT,
+                false);
+        guiGraphics.drawString(this.font,
+                String.format("Secured: %d cr | %.2f wt | Items %d | Stacks %d",
+                        snapshot.securedValue(),
+                        snapshot.securedWeight(),
+                        snapshot.securedItemCount(),
+                        snapshot.securedStackCount()),
+                14,
+                51,
+                SECURED_TEXT,
+                false);
+
+        renderStorageGrid(guiGraphics, "Lost Backpack", snapshot.backpack(), FAILED_BACKPACK_X, FAILED_BACKPACK_Y, BACKPACK_COLUMNS, BACKPACK_ROWS, FAILED_TEXT);
+        renderStorageGrid(guiGraphics, "Lost Vest", snapshot.vest(), FAILED_VEST_X, FAILED_VEST_Y, VEST_COLUMNS, VEST_ROWS, FAILED_TEXT);
+        renderStorageGrid(guiGraphics, "Safe Box Secured", snapshot.safeBox(), FAILED_SAFE_X, FAILED_SAFE_Y, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS, SECURED_TEXT);
+        renderWeapons(guiGraphics, "Lost Weapons", snapshot.weapons(), FAILED_WEAPON_X, FAILED_WEAPON_Y, FAILED_TEXT);
     }
 
     private void renderFeedback(GuiGraphics guiGraphics) {
@@ -116,8 +185,8 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         guiGraphics.drawString(this.font, trim(feedbackMessage, 64), 14, this.imageHeight - 44, WARNING_TEXT, false);
     }
 
-    private void renderStorageGrid(GuiGraphics guiGraphics, String label, List<ItemSnapshot> items, int x, int y, int columns, int rows) {
-        guiGraphics.drawString(this.font, label, x, y - 18, TEXT, false);
+    private void renderStorageGrid(GuiGraphics guiGraphics, String label, List<ItemSnapshot> items, int x, int y, int columns, int rows, int labelColor) {
+        guiGraphics.drawString(this.font, label, x, y - 18, labelColor, false);
         int visibleSlots = columns * rows;
         for (int index = 0; index < visibleSlots; index++) {
             int slotX = x + (index % columns) * SLOT_STEP;
@@ -132,8 +201,8 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         }
     }
 
-    private void renderWeapons(GuiGraphics guiGraphics, List<ItemSnapshot> weapons, int x, int y) {
-        guiGraphics.drawString(this.font, "Weapons", x, y + 8, TEXT, false);
+    private void renderWeapons(GuiGraphics guiGraphics, String label, List<ItemSnapshot> weapons, int x, int y, int labelColor) {
+        guiGraphics.drawString(this.font, label, x, y + 8, labelColor, false);
         renderWeaponPanel(guiGraphics, "Primary", weaponByLabel(weapons, "Primary"), x, y + 28);
         renderWeaponPanel(guiGraphics, "Secondary", weaponByLabel(weapons, "Secondary"), x, y + 88);
     }
@@ -169,23 +238,33 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     private HoveredItem hoveredItem(int mouseX, int mouseY) {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
-        HoveredItem item = hoveredStorageItem(localX, localY, this.menu.snapshot().backpack(), BACKPACK_X, BACKPACK_Y, BACKPACK_COLUMNS, BACKPACK_ROWS);
+        boolean success = this.menu.snapshot().success();
+        int backpackX = success ? BACKPACK_X : FAILED_BACKPACK_X;
+        int backpackY = success ? BACKPACK_Y : FAILED_BACKPACK_Y;
+        int vestX = success ? VEST_X : FAILED_VEST_X;
+        int vestY = success ? VEST_Y : FAILED_VEST_Y;
+        int safeX = success ? SAFE_X : FAILED_SAFE_X;
+        int safeY = success ? SAFE_Y : FAILED_SAFE_Y;
+        int weaponX = success ? WEAPON_X : FAILED_WEAPON_X;
+        int weaponY = success ? WEAPON_Y : FAILED_WEAPON_Y;
+
+        HoveredItem item = hoveredStorageItem(localX, localY, this.menu.snapshot().backpack(), backpackX, backpackY, BACKPACK_COLUMNS, BACKPACK_ROWS);
         if (item != null) {
             return item;
         }
-        item = hoveredStorageItem(localX, localY, this.menu.snapshot().vest(), VEST_X, VEST_Y, VEST_COLUMNS, VEST_ROWS);
+        item = hoveredStorageItem(localX, localY, this.menu.snapshot().vest(), vestX, vestY, VEST_COLUMNS, VEST_ROWS);
         if (item != null) {
             return item;
         }
-        item = hoveredStorageItem(localX, localY, this.menu.snapshot().safeBox(), SAFE_X, SAFE_Y, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS);
+        item = hoveredStorageItem(localX, localY, this.menu.snapshot().safeBox(), safeX, safeY, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS);
         if (item != null) {
             return item;
         }
-        if (inside(localX, localY, WEAPON_X + 8, WEAPON_Y + 52, 18, 18)) {
+        if (inside(localX, localY, weaponX + 8, weaponY + 52, 18, 18)) {
             ItemSnapshot weapon = weaponByLabel(this.menu.snapshot().weapons(), "Primary");
             return weapon == null ? null : new HoveredItem(weapon);
         }
-        if (inside(localX, localY, WEAPON_X + 8, WEAPON_Y + 112, 18, 18)) {
+        if (inside(localX, localY, weaponX + 8, weaponY + 112, 18, 18)) {
             ItemSnapshot weapon = weaponByLabel(this.menu.snapshot().weapons(), "Secondary");
             return weapon == null ? null : new HoveredItem(weapon);
         }

@@ -17,6 +17,7 @@ public class RaidResultService {
     private static final int DETAIL_LIMIT = 8;
     private static final Map<UUID, RaidResultSummary> LAST_RESULTS = new HashMap<>();
     private static final Map<UUID, PendingRaidResult> PENDING_RESULTS = new HashMap<>();
+    private static final Map<UUID, FailedRaidResult> PENDING_FAILURE_SCREENS = new HashMap<>();
 
     private RaidResultService() {
     }
@@ -61,9 +62,12 @@ public class RaidResultService {
         int lostValue = backpack.value() + vest.value() + weapons.value();
         double lostWeight = backpack.weight() + vest.weight() + weapons.weight();
 
+        int elapsedSeconds = elapsedSeconds(player, raidState);
+        FailedRaidResult failedResult = FailedRaidResult.fromInventory(player.getUUID(), failureReasonLabel(reason), elapsedSeconds, inventory);
+
         List<String> lines = new ArrayList<>();
         lines.add("Raid failed: " + reason + ".");
-        lines.add("Time in raid: " + formatDuration(elapsedSeconds(player, raidState)) + ".");
+        lines.add("Time in raid: " + formatDuration(elapsedSeconds) + ".");
         lines.add(String.format("Lost: %d credits | %.2f weight.", lostValue, lostWeight));
         lines.add(backpack.formatLine());
         lines.add(vest.formatLine());
@@ -75,6 +79,7 @@ public class RaidResultService {
         }
         storeAndSend(player, "FAILED", lines);
         PENDING_RESULTS.remove(player.getUUID());
+        PENDING_FAILURE_SCREENS.put(player.getUUID(), failedResult);
 
         inventory.clear();
         ExtractCraft.LOGGER.info("Recorded failed raid result for {} via {}: lost {} credits, secured safe box {} credits",
@@ -138,6 +143,14 @@ public class RaidResultService {
 
     public static Optional<PendingRaidResult> pendingResult(ServerPlayer player) {
         return Optional.ofNullable(PENDING_RESULTS.get(player.getUUID()));
+    }
+
+    public static Optional<FailedRaidResult> pendingFailureScreen(ServerPlayer player) {
+        return Optional.ofNullable(PENDING_FAILURE_SCREENS.get(player.getUUID()));
+    }
+
+    public static void clearPendingFailureScreen(ServerPlayer player) {
+        PENDING_FAILURE_SCREENS.remove(player.getUUID());
     }
 
     private static void storeAndSend(ServerPlayer player, String outcome, List<String> lines) {
@@ -215,6 +228,19 @@ public class RaidResultService {
         return minutes + "m " + remainder + "s";
     }
 
+    private static String failureReasonLabel(String reason) {
+        if (reason == null || reason.isBlank()) {
+            return "Unknown";
+        }
+
+        return switch (reason.toLowerCase()) {
+            case "death" -> "Death";
+            case "time expired", "timer expired" -> "Timer expired";
+            case "logout" -> "Logout/abandoned";
+            default -> Character.toUpperCase(reason.charAt(0)) + reason.substring(1);
+        };
+    }
+
     private record SectionSummary(String label, int stacks, int items, int value, double weight, List<String> details) {
         private String formatLine() {
             StringBuilder line = new StringBuilder(String.format("%s: %d stacks, %d items, %d credits, %.2f weight",
@@ -264,6 +290,42 @@ public class RaidResultService {
                 items.add(secondaryWeapon);
             }
             return items;
+        }
+
+        private static List<RaidInventoryItem> copyItems(List<RaidInventoryItem> items) {
+            return items.stream().map(RaidResultService::copyItem).toList();
+        }
+    }
+
+    public record FailedRaidResult(UUID playerId, String reason, int elapsedSeconds, List<RaidInventoryItem> lostBackpackItems, List<RaidInventoryItem> lostVestItems,
+            List<RaidInventoryItem> securedSafeBoxItems, RaidInventoryItem lostPrimaryWeapon, RaidInventoryItem lostSecondaryWeapon) {
+        private static FailedRaidResult fromInventory(UUID playerId, String reason, int elapsedSeconds, RaidInventory inventory) {
+            return new FailedRaidResult(
+                    playerId,
+                    reason,
+                    elapsedSeconds,
+                    copyItems(inventory.backpack().items()),
+                    copyItems(inventory.vest().items()),
+                    copyItems(inventory.safeBox().items()),
+                    inventory.primaryWeapon() == null ? null : copyItem(inventory.primaryWeapon()),
+                    inventory.secondaryWeapon() == null ? null : copyItem(inventory.secondaryWeapon()));
+        }
+
+        public List<RaidInventoryItem> lostItems() {
+            List<RaidInventoryItem> items = new ArrayList<>();
+            items.addAll(lostBackpackItems);
+            items.addAll(lostVestItems);
+            if (lostPrimaryWeapon != null) {
+                items.add(lostPrimaryWeapon);
+            }
+            if (lostSecondaryWeapon != null) {
+                items.add(lostSecondaryWeapon);
+            }
+            return items;
+        }
+
+        public List<RaidInventoryItem> securedItems() {
+            return securedSafeBoxItems;
         }
 
         private static List<RaidInventoryItem> copyItems(List<RaidInventoryItem> items) {

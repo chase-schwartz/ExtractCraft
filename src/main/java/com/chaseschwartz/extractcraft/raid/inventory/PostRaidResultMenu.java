@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 public class PostRaidResultMenu extends AbstractContainerMenu {
     public static final int MOVE_ALL_TO_STASH_BUTTON = 0;
     public static final int KEEP_ON_CHARACTER_BUTTON = 1;
+    public static final int CONTINUE_BUTTON = 2;
 
     private final ResultSnapshot snapshot;
 
@@ -27,6 +28,11 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
     public PostRaidResultMenu(int containerId, Inventory playerInventory, ServerPlayer player, RaidResultService.PendingRaidResult pending) {
         super(ExtractCraft.POST_RAID_RESULT_MENU.get(), containerId);
         this.snapshot = ResultSnapshot.from(pending);
+    }
+
+    public PostRaidResultMenu(int containerId, Inventory playerInventory, ServerPlayer player, RaidResultService.FailedRaidResult failed) {
+        super(ExtractCraft.POST_RAID_RESULT_MENU.get(), containerId);
+        this.snapshot = ResultSnapshot.from(failed);
     }
 
     @Override
@@ -47,6 +53,11 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
             }
             return true;
         }
+        if (id == CONTINUE_BUTTON) {
+            RaidResultService.clearPendingFailureScreen(serverPlayer);
+            serverPlayer.closeContainer();
+            return true;
+        }
         return true;
     }
 
@@ -64,20 +75,48 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
         return snapshot;
     }
 
-    public record ResultSnapshot(int elapsedSeconds, int totalValue, double totalWeight, int itemCount, int stackCount,
+    public record ResultSnapshot(boolean success, String reason, int elapsedSeconds, int totalValue, double totalWeight, int itemCount, int stackCount,
+            int securedValue, double securedWeight, int securedItemCount, int securedStackCount,
             List<ItemSnapshot> backpack, List<ItemSnapshot> vest, List<ItemSnapshot> safeBox, List<ItemSnapshot> weapons) {
         static ResultSnapshot from(RaidResultService.PendingRaidResult pending) {
             List<RaidInventoryItem> allItems = pending.allItems();
             return new ResultSnapshot(
+                    true,
+                    "",
                     pending.elapsedSeconds(),
                     allItems.stream().mapToInt(RaidInventoryItem::totalValue).sum(),
                     allItems.stream().mapToDouble(RaidInventoryItem::totalWeight).sum(),
                     allItems.stream().mapToInt(RaidInventoryItem::count).sum(),
                     allItems.size(),
+                    0,
+                    0.0D,
+                    0,
+                    0,
                     itemsFrom(pending.backpackItems()),
                     itemsFrom(pending.vestItems()),
                     itemsFrom(pending.safeBoxItems()),
                     weaponItems(pending.primaryWeapon(), pending.secondaryWeapon()));
+        }
+
+        static ResultSnapshot from(RaidResultService.FailedRaidResult failed) {
+            List<RaidInventoryItem> lostItems = failed.lostItems();
+            List<RaidInventoryItem> securedItems = failed.securedItems();
+            return new ResultSnapshot(
+                    false,
+                    failed.reason(),
+                    failed.elapsedSeconds(),
+                    lostItems.stream().mapToInt(RaidInventoryItem::totalValue).sum(),
+                    lostItems.stream().mapToDouble(RaidInventoryItem::totalWeight).sum(),
+                    lostItems.stream().mapToInt(RaidInventoryItem::count).sum(),
+                    lostItems.size(),
+                    securedItems.stream().mapToInt(RaidInventoryItem::totalValue).sum(),
+                    securedItems.stream().mapToDouble(RaidInventoryItem::totalWeight).sum(),
+                    securedItems.stream().mapToInt(RaidInventoryItem::count).sum(),
+                    securedItems.size(),
+                    itemsFrom(failed.lostBackpackItems()),
+                    itemsFrom(failed.lostVestItems()),
+                    itemsFrom(failed.securedSafeBoxItems()),
+                    weaponItems(failed.lostPrimaryWeapon(), failed.lostSecondaryWeapon()));
         }
 
         private static List<ItemSnapshot> itemsFrom(List<RaidInventoryItem> items) {
@@ -96,11 +135,17 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
         }
 
         public void write(RegistryFriendlyByteBuf buffer) {
+            buffer.writeBoolean(success);
+            buffer.writeUtf(reason);
             buffer.writeVarInt(elapsedSeconds);
             buffer.writeVarInt(totalValue);
             buffer.writeDouble(totalWeight);
             buffer.writeVarInt(itemCount);
             buffer.writeVarInt(stackCount);
+            buffer.writeVarInt(securedValue);
+            buffer.writeDouble(securedWeight);
+            buffer.writeVarInt(securedItemCount);
+            buffer.writeVarInt(securedStackCount);
             writeItems(buffer, backpack);
             writeItems(buffer, vest);
             writeItems(buffer, safeBox);
@@ -109,6 +154,12 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
 
         static ResultSnapshot read(RegistryFriendlyByteBuf buffer) {
             return new ResultSnapshot(
+                    buffer.readBoolean(),
+                    buffer.readUtf(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readDouble(),
+                    buffer.readVarInt(),
                     buffer.readVarInt(),
                     buffer.readVarInt(),
                     buffer.readDouble(),

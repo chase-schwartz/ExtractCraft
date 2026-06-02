@@ -135,6 +135,7 @@ public class RaidManager {
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
         raidState.inventorySnapshot().restore(player);
         player.sendSystemMessage(Component.literal("Raid failed."));
+        PostRaidResultScreenOpener.openFailure(player);
 
         ExtractCraft.LOGGER.info("Returned {} after failed raid to {} at {}, {}, {}",
                 player.getGameProfile().getName(),
@@ -171,6 +172,7 @@ public class RaidManager {
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
         raidState.inventorySnapshot().restore(player);
         player.sendSystemMessage(Component.literal("Raid failed: " + reason + "."));
+        PostRaidResultScreenOpener.openFailure(player);
 
         ExtractCraft.LOGGER.info("Failed raid for {} via {}; returned to {} at {}, {}, {} and restored starting inventory",
                 player.getGameProfile().getName(),
