@@ -23,6 +23,8 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     private static final int BORDER_COLOR = 0xFF49D8E8;
     private static final int TEXT = 0xFFDFFBFF;
     private static final int MUTED_TEXT = 0xFF9AA6B2;
+    private static final int WARNING_TEXT = 0xFFFFC857;
+    private static final String STASH_FULL_WARNING = "Stash is full. Choose Keep On Character or free stash space.";
     private static final int BACKPACK_X = 14;
     private static final int BACKPACK_Y = 76;
     private static final int VEST_X = 14;
@@ -38,6 +40,7 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     private static final int VEST_ROWS = rows(BaseStashMenu.VEST_DISPLAY_SLOTS, VEST_COLUMNS);
     private static final int SAFE_BOX_ROWS = rows(BaseStashMenu.SAFE_BOX_DISPLAY_SLOTS, SAFE_BOX_COLUMNS);
     private static final int SLOT_STEP = 18;
+    private String feedbackMessage = "";
 
     public PostRaidResultScreen(PostRaidResultMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -49,10 +52,16 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     protected void init() {
         super.init();
         int buttonY = this.topPos + this.imageHeight - 28;
-        addRenderableWidget(Button.builder(Component.literal("Move All To Stash"), button -> sendChoice(PostRaidResultMenu.MOVE_ALL_TO_STASH_BUTTON))
+        addRenderableWidget(Button.builder(Component.literal("Move All To Stash"), button -> {
+            this.feedbackMessage = STASH_FULL_WARNING;
+            sendChoice(PostRaidResultMenu.MOVE_ALL_TO_STASH_BUTTON);
+        })
                 .bounds(this.leftPos + 46, buttonY, 138, 20)
                 .build());
-        addRenderableWidget(Button.builder(Component.literal("Keep On Character"), button -> sendChoice(PostRaidResultMenu.KEEP_ON_CHARACTER_BUTTON))
+        addRenderableWidget(Button.builder(Component.literal("Keep On Character"), button -> {
+            this.feedbackMessage = "";
+            sendChoice(PostRaidResultMenu.KEEP_ON_CHARACTER_BUTTON);
+        })
                 .bounds(this.leftPos + 202, buttonY, 138, 20)
                 .build());
     }
@@ -96,6 +105,15 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         renderStorageGrid(guiGraphics, "Vest", snapshot.vest(), VEST_X, VEST_Y, VEST_COLUMNS, VEST_ROWS);
         renderStorageGrid(guiGraphics, "Safe Box", snapshot.safeBox(), SAFE_X, SAFE_Y, SAFE_BOX_COLUMNS, SAFE_BOX_ROWS);
         renderWeapons(guiGraphics, snapshot.weapons(), WEAPON_X, WEAPON_Y);
+        renderFeedback(guiGraphics);
+    }
+
+    private void renderFeedback(GuiGraphics guiGraphics) {
+        if (feedbackMessage.isBlank()) {
+            return;
+        }
+
+        guiGraphics.drawString(this.font, trim(feedbackMessage, 64), 14, this.imageHeight - 44, WARNING_TEXT, false);
     }
 
     private void renderStorageGrid(GuiGraphics guiGraphics, String label, List<ItemSnapshot> items, int x, int y, int columns, int rows) {
