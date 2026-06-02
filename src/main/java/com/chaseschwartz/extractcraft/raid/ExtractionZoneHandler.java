@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 
 import net.minecraft.network.chat.Component;
@@ -60,6 +61,7 @@ public class ExtractionZoneHandler {
 
         if (RaidManager.isInRaid(player)) {
             RaidWeaponService.syncAndClearBridge(player);
+            RaidResultService.recordFailure(player, "logout");
             RaidManager.restorePreviousGameModeIfInRaid(player);
         }
         boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID(), player.server);

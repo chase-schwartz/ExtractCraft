@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 
@@ -96,6 +97,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
         RaidWeaponService.syncAndClearBridge(player);
+        RaidResultService.recordFailure(player, "death");
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
@@ -147,6 +149,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
         RaidWeaponService.syncAndClearBridge(player);
+        RaidResultService.recordFailure(player, reason);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
@@ -220,8 +223,6 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "successful extraction");
         RaidWeaponService.syncAndClearBridge(player);
-        restorePreviousGameMode(player, raidState);
-        ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -233,6 +234,9 @@ public class RaidManager {
             return false;
         }
 
+        RaidResultService.recordSuccessfulExtract(player);
+        restorePreviousGameMode(player, raidState);
+        ExtractCraftNetwork.syncRaidState(player, false);
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
         ACTIVE_RAIDS.remove(player.getUUID());

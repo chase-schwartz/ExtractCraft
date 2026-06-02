@@ -82,6 +82,9 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("clear")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> clear(context.getSource())))
+                        .then(Commands.literal("clearall")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> clear(context.getSource())))
                         .then(Commands.literal("weight")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> weight(context.getSource())))
@@ -97,6 +100,10 @@ public class RaidInventoryCommands {
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("enabled", BoolArgumentType.bool())
                                         .executes(context -> setRaidDebugKeepGameMode(context.getSource(), BoolArgumentType.getBool(context, "enabled"))))))
+                .then(Commands.literal("raidresult")
+                        .then(Commands.literal("status")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> raidResultStatus(context.getSource()))))
                 .then(Commands.literal("raidweapon")
                         .then(Commands.literal("primary")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -251,6 +258,11 @@ public class RaidInventoryCommands {
 
     private static int raidWeaponAmmoDebug(CommandSourceStack source) throws CommandSyntaxException {
         RaidWeaponService.sendAmmoDebug(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int raidResultStatus(CommandSourceStack source) throws CommandSyntaxException {
+        RaidResultService.sendLastResult(source.getPlayerOrException());
         return 1;
     }
 
