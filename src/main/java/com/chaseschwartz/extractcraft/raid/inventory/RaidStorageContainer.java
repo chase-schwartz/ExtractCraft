@@ -18,12 +18,67 @@ public class RaidStorageContainer {
     }
 
     public boolean canAdd(RaidInventoryItem item) {
-        return usedCapacity() + item.totalSlotCost() <= capacity
-                && usedWeight() + item.totalWeight() <= maxWeight;
+        return countAddable(item, -1) >= item.count();
     }
 
     public void add(RaidInventoryItem item) {
-        items.add(item);
+        addPartial(item, -1);
+    }
+
+    public int addPartial(RaidInventoryItem item) {
+        return addPartial(item, -1);
+    }
+
+    public int addPartial(RaidInventoryItem item, int excludedIndex) {
+        if (item == null || item.count() <= 0) {
+            return 0;
+        }
+
+        int remaining = item.count();
+        for (int index = 0; index < items.size() && remaining > 0; index++) {
+            if (index == excludedIndex) {
+                continue;
+            }
+
+            RaidInventoryItem existing = items.get(index);
+            if (!existing.canMerge(item)) {
+                continue;
+            }
+
+            int freeStackSpace = existing.maxStackSize() - existing.count();
+            int weightLimited = weightLimitedCount(item);
+            int transfer = Math.min(remaining, Math.min(freeStackSpace, weightLimited));
+            if (transfer <= 0) {
+                continue;
+            }
+
+            items.set(index, existing.withCount(existing.count() + transfer));
+            remaining -= transfer;
+        }
+
+        while (remaining > 0) {
+            int transfer = Math.min(remaining, item.maxStackSize());
+            transfer = Math.min(transfer, weightLimitedCount(item));
+            if (transfer <= 0) {
+                break;
+            }
+
+            RaidInventoryItem stack = item.withCount(transfer);
+            if (usedCapacity() + stack.totalSlotCost() > capacity) {
+                break;
+            }
+
+            items.add(stack);
+            remaining -= transfer;
+        }
+
+        return item.count() - remaining;
+    }
+
+    public int countAddable(RaidInventoryItem item, int excludedIndex) {
+        RaidStorageContainer copy = new RaidStorageContainer(id, name, capacity, maxWeight);
+        copy.items.addAll(items);
+        return copy.addPartial(item, excludedIndex);
     }
 
     public RaidInventoryItem itemAt(int index) {
@@ -38,6 +93,21 @@ public class RaidStorageContainer {
             return null;
         }
         return items.remove(index);
+    }
+
+    public RaidInventoryItem removeCountAt(int index, int count) {
+        if (index < 0 || index >= items.size() || count <= 0) {
+            return null;
+        }
+
+        RaidInventoryItem item = items.get(index);
+        if (count >= item.count()) {
+            return items.remove(index);
+        }
+
+        RaidInventoryItem removed = item.withCount(count);
+        items.set(index, item.withCount(item.count() - count));
+        return removed;
     }
 
     public void clear() {
@@ -78,5 +148,15 @@ public class RaidStorageContainer {
 
     public double maxWeight() {
         return maxWeight;
+    }
+
+    private int weightLimitedCount(RaidInventoryItem item) {
+        double perItemWeight = item.totalWeight() / Math.max(1, item.count());
+        if (perItemWeight <= 0.0D) {
+            return item.count();
+        }
+
+        double remainingWeight = maxWeight - usedWeight();
+        return Math.max(0, (int) Math.floor((remainingWeight + 0.000001D) / perItemWeight));
     }
 }

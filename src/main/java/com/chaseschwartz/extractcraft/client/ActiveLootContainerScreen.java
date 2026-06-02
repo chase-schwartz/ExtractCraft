@@ -157,7 +157,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             if (target != null) {
                 if (dragSource == DragSource.CONTAINER) {
                     sendTransfer(draggedSourceIndex, target);
-                } else if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot != target) {
+                } else if (dragSource == DragSource.RAID_INVENTORY) {
                     sendMove(draggedRaidSlot, draggedSourceIndex, target);
                 }
             } else if (dragSource == DragSource.RAID_INVENTORY && isContainerPanel((int) mouseX, (int) mouseY)) {
@@ -198,7 +198,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 sendTransfer(draggedSourceIndex, target);
                 return true;
             }
-            if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot != target) {
+            if (dragSource == DragSource.RAID_INVENTORY) {
                 sendMove(draggedRaidSlot, draggedSourceIndex, target);
                 return true;
             }

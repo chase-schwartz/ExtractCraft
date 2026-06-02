@@ -16,36 +16,32 @@ public class RaidInventory {
     }
 
     public AddResult add(RaidInventoryItem item, ItemCarryProfile profile) {
-        if (backpack.canAdd(item)) {
-            backpack.add(item);
-            return new AddResult(true, RaidEquipmentSlot.BACKPACK, "Added to backpack.");
+        int backpackMoved = backpack.addPartial(item);
+        if (backpackMoved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.BACKPACK, movedMessage("backpack", backpackMoved, item), backpackMoved);
         }
 
-        if (!isGun(item) && vest.canAdd(item)) {
-            vest.add(item);
-            return new AddResult(true, RaidEquipmentSlot.VEST, "Added to vest.");
+        if (!isGun(item)) {
+            int vestMoved = vest.addPartial(item);
+            if (vestMoved > 0) {
+                return new AddResult(true, RaidEquipmentSlot.VEST, movedMessage("vest", vestMoved, item), vestMoved);
+            }
         }
 
-        if (profile.allowInSafeBox() && safeBox.canAdd(item) && profile.category() != ItemCategory.GUNS && profile.category() != ItemCategory.ARMOR) {
-            safeBox.add(item);
-            return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, "Added to safe box.");
+        if (profile.allowInSafeBox() && profile.category() != ItemCategory.GUNS && profile.category() != ItemCategory.ARMOR) {
+            int safeMoved = safeBox.addPartial(item);
+            if (safeMoved > 0) {
+                return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, movedMessage("safe box", safeMoved, item), safeMoved);
+            }
         }
 
         return new AddResult(false, RaidEquipmentSlot.BACKPACK, "No raid inventory container has enough compatible capacity.");
     }
 
     public AddResult addToBackpack(RaidInventoryItem item) {
-        if (isGun(item)) {
-            if (backpack.canAdd(item)) {
-                backpack.add(item);
-                return new AddResult(true, RaidEquipmentSlot.BACKPACK, "Added carried gun to backpack.");
-            }
-
-            return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack does not have enough capacity or weight allowance.");
-        }
-        if (backpack.canAdd(item)) {
-            backpack.add(item);
-            return new AddResult(true, RaidEquipmentSlot.BACKPACK, "Added to backpack.");
+        int moved = backpack.addPartial(item);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.BACKPACK, movedMessage("backpack", moved, item), moved);
         }
 
         return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack does not have enough capacity or weight allowance.");
@@ -55,9 +51,9 @@ public class RaidInventory {
         if (isGun(item)) {
             return new AddResult(false, RaidEquipmentSlot.VEST, "Guns must be equipped or carried in backpack.");
         }
-        if (vest.canAdd(item)) {
-            vest.add(item);
-            return new AddResult(true, RaidEquipmentSlot.VEST, "Added to vest.");
+        int moved = vest.addPartial(item);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.VEST, movedMessage("vest", moved, item), moved);
         }
 
         return new AddResult(false, RaidEquipmentSlot.VEST, "Vest does not have enough capacity or weight allowance.");
@@ -67,9 +63,9 @@ public class RaidInventory {
         if (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR) {
             return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Item is not allowed in safe box.");
         }
-        if (safeBox.canAdd(item)) {
-            safeBox.add(item);
-            return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, "Added to safe box.");
+        int moved = safeBox.addPartial(item);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, movedMessage("safe box", moved, item), moved);
         }
 
         return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Safe box does not have enough capacity or weight allowance.");
@@ -87,7 +83,7 @@ public class RaidInventory {
         }
 
         setWeaponItem(slot, item);
-        return new AddResult(true, slot, "Equipped " + item.displayName() + " in " + weaponSlotName(slot) + ".");
+        return new AddResult(true, slot, "Equipped " + item.displayName() + " in " + weaponSlotName(slot) + ".", item.count());
     }
 
     public void setWeaponSlot(RaidEquipmentSlot slot, RaidInventoryItem item) {
@@ -98,13 +94,22 @@ public class RaidInventory {
     }
 
     public AddResult move(RaidEquipmentSlot sourceSlot, int sourceIndex, RaidEquipmentSlot targetSlot, ItemCarryProfile profile) {
-        if (sourceSlot == targetSlot) {
-            return new AddResult(true, targetSlot, "Item is already in " + targetSlot.name().toLowerCase() + ".");
-        }
-
         RaidInventoryItem item = itemAt(sourceSlot, sourceIndex);
         if (item == null) {
             return new AddResult(false, targetSlot, "Source item is no longer available.");
+        }
+
+        if (sourceSlot == targetSlot && isStorageSlot(sourceSlot)) {
+            RaidStorageContainer targetStorage = storage(sourceSlot);
+            RaidInventoryItem removed = targetStorage.removeAt(sourceIndex);
+            if (removed == null) {
+                return new AddResult(false, targetSlot, "Source item is no longer available.");
+            }
+            int moved = targetStorage.addPartial(removed);
+            if (moved < removed.count()) {
+                targetStorage.addPartial(removed.withCount(removed.count() - moved));
+            }
+            return new AddResult(moved > 0, targetSlot, moved > 0 ? "Stacked item in " + targetSlot.name().toLowerCase() + "." : "No compatible stack available.", moved);
         }
 
         AddResult result = switch (targetSlot) {
@@ -113,11 +118,11 @@ public class RaidInventory {
             case VEST -> addToVest(item, profile);
             case SAFE_BOX -> addToSafeBox(item, profile);
         };
-        if (!result.success()) {
+        if (result.movedCount() <= 0) {
             return result;
         }
 
-        removeAt(sourceSlot, sourceIndex);
+        removeCountAt(sourceSlot, sourceIndex, result.movedCount());
         return result;
     }
 
@@ -221,6 +226,15 @@ public class RaidInventory {
         };
     }
 
+    public RaidInventoryItem removeCountAt(RaidEquipmentSlot slot, int sourceIndex, int count) {
+        return switch (slot) {
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> removeAt(slot, sourceIndex);
+            case BACKPACK -> backpack.removeCountAt(sourceIndex, count);
+            case VEST -> vest.removeCountAt(sourceIndex, count);
+            case SAFE_BOX -> safeBox.removeCountAt(sourceIndex, count);
+        };
+    }
+
     private RaidInventoryItem weaponItem(RaidEquipmentSlot slot) {
         return slot == RaidEquipmentSlot.PRIMARY_WEAPON ? primaryWeapon : secondaryWeapon;
     }
@@ -241,6 +255,14 @@ public class RaidInventory {
         return slot == RaidEquipmentSlot.PRIMARY_WEAPON ? "primary weapon" : "secondary weapon";
     }
 
+    private static boolean isStorageSlot(RaidEquipmentSlot slot) {
+        return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
+    }
+
+    private static String movedMessage(String target, int moved, RaidInventoryItem item) {
+        return "Moved " + moved + "x " + item.displayName() + " to " + target + ".";
+    }
+
     private static double weaponWeight(RaidInventoryItem item) {
         return item == null ? 0.0D : item.totalWeight();
     }
@@ -249,6 +271,9 @@ public class RaidInventory {
         return item == null ? 0 : item.totalValue();
     }
 
-    public record AddResult(boolean success, RaidEquipmentSlot slot, String message) {
+    public record AddResult(boolean success, RaidEquipmentSlot slot, String message, int movedCount) {
+        public AddResult(boolean success, RaidEquipmentSlot slot, String message) {
+            this(success, slot, message, 0);
+        }
     }
 }

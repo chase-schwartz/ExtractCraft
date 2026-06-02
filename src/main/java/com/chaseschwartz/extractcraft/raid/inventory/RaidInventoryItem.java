@@ -47,6 +47,43 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
         return value;
     }
 
+    public boolean canMerge(RaidInventoryItem other) {
+        if (other == null || !lookupKey.equals(other.lookupKey)) {
+            return false;
+        }
+
+        ItemStack stack = toItemStack();
+        ItemStack otherStack = other.toItemStack();
+        return !stack.isEmpty()
+                && !otherStack.isEmpty()
+                && ItemStack.isSameItemSameComponents(stack, otherStack)
+                && stack.getMaxStackSize() > 1;
+    }
+
+    public int maxStackSize() {
+        ItemStack stack = toItemStack();
+        return stack.isEmpty() ? 1 : Math.max(1, stack.getMaxStackSize());
+    }
+
+    public RaidInventoryItem withCount(int newCount) {
+        int adjustedCount = Math.max(1, newCount);
+        int oldStackUnits = Math.max(1, (int) Math.ceil(count / (double) maxStackSize()));
+        int unitSlotCost = Math.max(1, (int) Math.ceil(slotCost / (double) oldStackUnits));
+        int newStackUnits = Math.max(1, (int) Math.ceil(adjustedCount / (double) maxStackSize()));
+        double weightPerItem = weight / Math.max(1, count);
+        double valuePerItem = value / (double) Math.max(1, count);
+        return new RaidInventoryItem(
+                itemId,
+                lookupKey,
+                displayName,
+                category,
+                adjustedCount,
+                unitSlotCost * newStackUnits,
+                weightPerItem * adjustedCount,
+                (int) Math.round(valuePerItem * adjustedCount),
+                toItemStack());
+    }
+
     public ItemStack toItemStack() {
         if (!storedStack.isEmpty()) {
             ItemStack copy = storedStack.copy();

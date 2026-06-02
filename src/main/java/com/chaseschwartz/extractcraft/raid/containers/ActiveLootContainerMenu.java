@@ -374,31 +374,68 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         }
 
         ItemStack copy = stack.copy();
+        ExtractCraft.LOGGER.info("Raid loot cursor transfer attempt: player={}, source=CONTAINER#{}, target={}, item={}x {}",
+                player.getGameProfile().getName(),
+                containerSlot,
+                target,
+                copy.getCount(),
+                copy.getHoverName().getString());
         RaidInventory.AddResult result = RaidInventoryManager.addStackTo(player, copy, target);
-        if (!result.success()) {
+        if (result.movedCount() <= 0) {
+            ExtractCraft.LOGGER.info("Raid loot cursor transfer failed: player={}, source=CONTAINER#{}, target={}, reason={}, movedCount={}",
+                    player.getGameProfile().getName(),
+                    containerSlot,
+                    target,
+                    result.message(),
+                    result.movedCount());
             player.sendSystemMessage(Component.literal(result.message()));
             return ItemStack.EMPTY;
         }
 
-        container.setItem(containerSlot, ItemStack.EMPTY);
+        stack.shrink(result.movedCount());
+        container.setItem(containerSlot, stack.isEmpty() ? ItemStack.EMPTY : stack);
         container.setChanged();
         rebuildRaidDisplay();
-        player.sendSystemMessage(Component.literal("Moved " + copy.getCount() + "x " + copy.getHoverName().getString() + " to " + targetName(target) + "."));
+        ExtractCraft.LOGGER.info("Raid loot cursor transfer committed: player={}, source=CONTAINER#{}, target={}, movedCount={}, sourceCleared={}, pendingCleared=true",
+                player.getGameProfile().getName(),
+                containerSlot,
+                target,
+                result.movedCount(),
+                stack.isEmpty());
+        player.sendSystemMessage(Component.literal("Moved " + result.movedCount() + "x " + copy.getHoverName().getString() + " to " + targetName(target) + "."));
         return copy;
     }
 
     private void moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
-        if (source == null || target == null || source == target) {
+        if (source == null || target == null) {
             return;
         }
 
+        ExtractCraft.LOGGER.info("Raid loot cursor move attempt: player={}, source={}#{}, target={}",
+                player.getGameProfile().getName(),
+                source,
+                sourceIndex,
+                target);
         RaidInventory.AddResult result = RaidInventoryManager.moveBetween(player, source, sourceIndex, target);
         if (!result.success()) {
+            ExtractCraft.LOGGER.info("Raid loot cursor move failed: player={}, source={}#{}, target={}, reason={}, movedCount={}",
+                    player.getGameProfile().getName(),
+                    source,
+                    sourceIndex,
+                    target,
+                    result.message(),
+                    result.movedCount());
             player.sendSystemMessage(Component.literal(result.message()));
             return;
         }
 
         rebuildRaidDisplay();
+        ExtractCraft.LOGGER.info("Raid loot cursor move committed: player={}, source={}#{}, target={}, movedCount={}, pendingCleared=true",
+                player.getGameProfile().getName(),
+                source,
+                sourceIndex,
+                target,
+                result.movedCount());
         player.sendSystemMessage(Component.literal(result.message()));
     }
 
@@ -423,21 +460,23 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             player.sendSystemMessage(Component.literal("Unable to rebuild item stack for " + item.lookupKey() + "."));
             return;
         }
-        if (!canFitInContainer(stack)) {
+        int fitCount = countFitInContainer(stack);
+        if (fitCount <= 0) {
             player.sendSystemMessage(Component.literal("Container does not have room for that stack."));
             return;
         }
 
-        RaidInventoryItem removed = removeAt(inventory, source, sourceIndex);
+        RaidInventoryItem removed = inventory.removeCountAt(source, sourceIndex, Math.min(stack.getCount(), fitCount));
         if (removed == null) {
             player.sendSystemMessage(Component.literal("Source item is no longer available."));
             return;
         }
 
-        insertIntoContainer(stack);
+        ItemStack removedStack = displayStack(removed);
+        insertIntoContainer(removedStack);
         container.setChanged();
         rebuildRaidDisplay();
-        player.sendSystemMessage(Component.literal("Returned " + stack.getCount() + "x " + stack.getHoverName().getString() + " to container."));
+        player.sendSystemMessage(Component.literal("Returned " + removedStack.getCount() + "x " + removedStack.getHoverName().getString() + " to container."));
     }
 
     private void addRaidDisplaySlots() {
@@ -500,22 +539,27 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 });
     }
 
-    private boolean canFitInContainer(ItemStack stack) {
+    private int countFitInContainer(ItemStack stack) {
         ItemStack remaining = stack.copy();
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             ItemStack current = container.getItem(slot);
             if (current.isEmpty()) {
-                return true;
+                int free = Math.min(remaining.getCount(), remaining.getMaxStackSize());
+                remaining.shrink(free);
+                if (remaining.isEmpty()) {
+                    return stack.getCount();
+                }
+                continue;
             }
             if (ItemStack.isSameItemSameComponents(current, remaining) && current.getCount() < current.getMaxStackSize()) {
                 int transferable = Math.min(remaining.getCount(), current.getMaxStackSize() - current.getCount());
                 remaining.shrink(transferable);
                 if (remaining.isEmpty()) {
-                    return true;
+                    return stack.getCount();
                 }
             }
         }
-        return false;
+        return stack.getCount() - remaining.getCount();
     }
 
     private void insertIntoContainer(ItemStack stack) {
