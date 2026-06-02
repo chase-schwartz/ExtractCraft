@@ -61,7 +61,7 @@ public class ExtractionZoneHandler {
 
         if (RaidManager.isInRaid(player)) {
             RaidWeaponService.syncAndClearBridge(player);
-            RaidResultService.recordFailure(player, "logout");
+            RaidResultService.recordFailure(player, "logout", RaidManager.getRaidState(player).orElse(null));
             RaidManager.restorePreviousGameModeIfInRaid(player);
         }
         boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID(), player.server);

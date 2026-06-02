@@ -15,6 +15,7 @@ import com.chaseschwartz.extractcraft.raid.containers.RaidContainerLayout;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerService;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
@@ -103,7 +104,46 @@ public class RaidInventoryCommands {
                 .then(Commands.literal("raidresult")
                         .then(Commands.literal("status")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> raidResultStatus(context.getSource()))))
+                                .executes(context -> raidResultStatus(context.getSource())))
+                        .then(Commands.literal("stash")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> raidResultStash(context.getSource())))
+                        .then(Commands.literal("keep")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> raidResultKeep(context.getSource()))))
+                .then(Commands.literal("stash")
+                        .then(Commands.literal("status")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> stashStatus(context.getSource(), "name")))
+                        .then(Commands.literal("open")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> stashStatus(context.getSource(), "name")))
+                        .then(Commands.literal("clear")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.literal("confirm")
+                                        .executes(context -> stashClear(context.getSource()))))
+                        .then(Commands.literal("sort")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("mode", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("value");
+                                            builder.suggest("weight");
+                                            builder.suggest("category");
+                                            builder.suggest("name");
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> stashStatus(context.getSource(), StringArgumentType.getString(context, "mode")))))
+                        .then(Commands.literal("upgrade")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> stashUpgrade(context.getSource()))))
+                .then(Commands.literal("credits")
+                        .then(Commands.literal("get")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> creditsGet(context.getSource())))
+                        .then(Commands.literal("add")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("amount", IntegerArgumentType.integer())
+                                        .executes(context -> creditsAdd(context.getSource(), IntegerArgumentType.getInteger(context, "amount"))))))
                 .then(Commands.literal("raidweapon")
                         .then(Commands.literal("primary")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -263,6 +303,48 @@ public class RaidInventoryCommands {
 
     private static int raidResultStatus(CommandSourceStack source) throws CommandSyntaxException {
         RaidResultService.sendLastResult(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int raidResultStash(CommandSourceStack source) throws CommandSyntaxException {
+        RaidResultService.movePendingToStash(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int raidResultKeep(CommandSourceStack source) throws CommandSyntaxException {
+        RaidResultService.keepPendingOnCharacter(source.getPlayerOrException());
+        return 1;
+    }
+
+    private static int stashStatus(CommandSourceStack source, String sortMode) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        for (String line : PlayerStashService.statusLines(player, sortMode)) {
+            player.sendSystemMessage(Component.literal(line));
+        }
+        player.sendSystemMessage(Component.literal("First-pass stash UI is command-backed for now. Use /extractcraft raidresult stash, /extractcraft raidresult keep, and /extractcraft stash sort <mode>."));
+        return 1;
+    }
+
+    private static int stashClear(CommandSourceStack source) throws CommandSyntaxException {
+        PlayerStashService.clear(source.getPlayerOrException());
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Cleared persistent ExtractCraft stash, base inventory, credits, and stash upgrades."));
+        return 1;
+    }
+
+    private static int stashUpgrade(CommandSourceStack source) throws CommandSyntaxException {
+        return PlayerStashService.upgrade(source.getPlayerOrException()) ? 1 : 0;
+    }
+
+    private static int creditsGet(CommandSourceStack source) throws CommandSyntaxException {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(source.getPlayerOrException());
+        source.getPlayerOrException().sendSystemMessage(Component.literal("ExtractCraft credits: " + data.credits()));
+        return 1;
+    }
+
+    private static int creditsAdd(CommandSourceStack source, int amount) throws CommandSyntaxException {
+        PlayerStashService.addCredits(source.getPlayerOrException(), amount);
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(source.getPlayerOrException());
+        source.getPlayerOrException().sendSystemMessage(Component.literal("ExtractCraft credits: " + data.credits()));
         return 1;
     }
 

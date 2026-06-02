@@ -97,7 +97,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
         RaidWeaponService.syncAndClearBridge(player);
-        RaidResultService.recordFailure(player, "death");
+        RaidResultService.recordFailure(player, "death", raidState);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
@@ -149,7 +149,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
         RaidWeaponService.syncAndClearBridge(player);
-        RaidResultService.recordFailure(player, reason);
+        RaidResultService.recordFailure(player, reason, raidState);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
@@ -234,7 +234,7 @@ public class RaidManager {
             return false;
         }
 
-        RaidResultService.recordSuccessfulExtract(player);
+        RaidResultService.recordSuccessfulExtract(player, raidState);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         Vec3 returnPosition = raidState.returnPosition();
