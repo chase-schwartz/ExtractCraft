@@ -114,6 +114,12 @@ public class PlayerStashService {
         save(player, data);
     }
 
+    public static void setCredits(ServerPlayer player, int amount) {
+        PlayerStashData data = load(player);
+        data.setCredits(amount);
+        save(player, data);
+    }
+
     public static boolean upgrade(ServerPlayer player) {
         PlayerStashData data = load(player);
         StashLevel next = level(data.stashLevel() + 1);
@@ -544,7 +550,7 @@ public class PlayerStashService {
             return credits;
         }
 
-        private void setCredits(int credits) {
+        public void setCredits(int credits) {
             this.credits = Math.max(0, credits);
         }
 

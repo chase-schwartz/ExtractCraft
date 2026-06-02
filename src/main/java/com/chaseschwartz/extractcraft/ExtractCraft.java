@@ -13,6 +13,7 @@ import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
 import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
+import com.chaseschwartz.extractcraft.raid.inventory.ManagedDropService;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryCommands;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryMenu;
@@ -133,6 +134,7 @@ public class ExtractCraft {
         NeoForge.EVENT_BUS.register(new RaidMapBakeService());
         NeoForge.EVENT_BUS.register(new RaidMapBoundaryService());
         NeoForge.EVENT_BUS.register(new ActiveLootContainerInteractionHandler());
+        NeoForge.EVENT_BUS.register(new ManagedDropService());
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

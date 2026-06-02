@@ -96,6 +96,12 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("vanilla_inventory")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> openVanillaInventory(context.getSource()))))
+                .then(Commands.literal("dropheld")
+                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                        .executes(context -> dropHeld(context.getSource())))
+                .then(Commands.literal("currencydebug")
+                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                        .executes(context -> currencyDebug(context.getSource())))
                 .then(Commands.literal("raid")
                         .then(Commands.literal("debug_keep_gamemode")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -148,7 +154,11 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("add")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("amount", IntegerArgumentType.integer())
-                                        .executes(context -> creditsAdd(context.getSource(), IntegerArgumentType.getInteger(context, "amount"))))))
+                                        .executes(context -> creditsAdd(context.getSource(), IntegerArgumentType.getInteger(context, "amount")))))
+                        .then(Commands.literal("set")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(0))
+                                        .executes(context -> creditsSet(context.getSource(), IntegerArgumentType.getInteger(context, "amount"))))))
                 .then(Commands.literal("raidweapon")
                         .then(Commands.literal("primary")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -358,14 +368,42 @@ public class RaidInventoryCommands {
 
     private static int creditsGet(CommandSourceStack source) throws CommandSyntaxException {
         PlayerStashService.PlayerStashData data = PlayerStashService.load(source.getPlayerOrException());
-        source.getPlayerOrException().sendSystemMessage(Component.literal("ExtractCraft credits: " + data.credits()));
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Emeralds: " + data.credits()));
         return 1;
     }
 
     private static int creditsAdd(CommandSourceStack source, int amount) throws CommandSyntaxException {
         PlayerStashService.addCredits(source.getPlayerOrException(), amount);
         PlayerStashService.PlayerStashData data = PlayerStashService.load(source.getPlayerOrException());
-        source.getPlayerOrException().sendSystemMessage(Component.literal("ExtractCraft credits: " + data.credits()));
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Emeralds: " + data.credits()));
+        return 1;
+    }
+
+    private static int creditsSet(CommandSourceStack source, int amount) throws CommandSyntaxException {
+        PlayerStashService.setCredits(source.getPlayerOrException(), amount);
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Emeralds: " + amount));
+        return 1;
+    }
+
+    private static int currencyDebug(CommandSourceStack source) throws CommandSyntaxException {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(source.getPlayerOrException());
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Emeralds: " + data.credits()));
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Stash value: " + data.stash().totalValue() + " credits-equivalent."));
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Base inventory value: " + data.baseInventory().totalValue() + " credits-equivalent."));
+        return 1;
+    }
+
+    private static int dropHeld(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Hold an item to drop it as an ExtractCraft managed drop."));
+            return 0;
+        }
+        ItemStack drop = stack.copy();
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        ManagedDropService.spawnManagedDrop(player, drop);
+        player.sendSystemMessage(Component.literal("Dropped managed item: " + drop.getCount() + "x " + drop.getHoverName().getString()));
         return 1;
     }
 

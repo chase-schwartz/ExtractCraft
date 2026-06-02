@@ -4,10 +4,12 @@ import com.chaseschwartz.extractcraft.client.LootContainerOutlineRenderer;
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
 import com.chaseschwartz.extractcraft.network.OpenBaseStashInventoryPayload;
 import com.chaseschwartz.extractcraft.network.OpenRaidInventoryPayload;
+import com.chaseschwartz.extractcraft.network.PickupManagedDropPayload;
 import com.chaseschwartz.extractcraft.network.SelectRaidWeaponPayload;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -15,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.DoorBlock;
@@ -24,7 +27,9 @@ import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -135,19 +140,75 @@ public class ExtractCraftClient {
     }
 
     private static void onInteractionKeyMapping(InputEvent.InteractionKeyMappingTriggered event) {
-        if (!ClientRaidState.isInRaid()
-                || !event.isUseItem()
+        if (!event.isUseItem()
                 || event.getHand() != InteractionHand.MAIN_HAND) {
             return;
         }
 
-        event.setCanceled(tryUseTargetedInteractable());
+        if (tryPickupTargetedDrop()) {
+            event.setCanceled(true);
+            return;
+        }
+        if (ClientRaidState.isInRaid()) {
+            event.setCanceled(tryUseTargetedInteractable());
+        }
     }
 
     private static void onRenderGuiLayerPre(RenderGuiLayerEvent.Pre event) {
         if (VanillaGuiLayers.FOOD_LEVEL.equals(event.getName())) {
             event.setCanceled(true);
         }
+        if (VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
+            renderDropPrompt(event.getGuiGraphics());
+        }
+    }
+
+    private static boolean tryPickupTargetedDrop() {
+        ItemEntity itemEntity = targetedItemEntity();
+        if (itemEntity == null) {
+            return false;
+        }
+        PacketDistributor.sendToServer(new PickupManagedDropPayload(itemEntity.getUUID()));
+        return true;
+    }
+
+    private static void renderDropPrompt(GuiGraphics guiGraphics) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.screen != null || targetedItemEntity() == null) {
+            return;
+        }
+        String key = minecraft.options.keyUse.getTranslatedKeyMessage().getString();
+        String text = "Press " + key + " to pick up";
+        int x = (minecraft.getWindow().getGuiScaledWidth() - minecraft.font.width(text)) / 2;
+        int y = minecraft.getWindow().getGuiScaledHeight() / 2 + 18;
+        guiGraphics.drawString(minecraft.font, text, x, y, 0xFFDFFBFF, true);
+    }
+
+    private static ItemEntity targetedItemEntity() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || minecraft.level == null || minecraft.screen != null) {
+            return null;
+        }
+        double reach = 4.5D;
+        Vec3 eye = minecraft.player.getEyePosition();
+        Vec3 look = minecraft.player.getViewVector(1.0F);
+        Vec3 end = eye.add(look.scale(reach));
+        AABB searchBox = minecraft.player.getBoundingBox().expandTowards(look.scale(reach)).inflate(1.0D);
+        ItemEntity best = null;
+        double bestDistance = reach * reach;
+        for (ItemEntity itemEntity : minecraft.level.getEntitiesOfClass(ItemEntity.class, searchBox, ItemEntity::isAlive)) {
+            AABB box = itemEntity.getBoundingBox().inflate(0.35D);
+            java.util.Optional<Vec3> hit = box.clip(eye, end);
+            if (hit.isEmpty()) {
+                continue;
+            }
+            double distance = eye.distanceToSqr(hit.get());
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = itemEntity;
+            }
+        }
+        return best;
     }
 
     private static boolean tryUseTargetedInteractable() {

@@ -38,8 +38,12 @@ public class BaseStashMenu extends AbstractContainerMenu {
     private static final int MOVE_STASH_TO_BASE_CELL_OFFSET = 400_000;
     private static final int MOVE_BASE_TO_BASE_CELL_OFFSET = 1_000_000;
     private static final int SORT_OFFSET = 2_000_000;
+    private static final int CONTEXT_ACTION_OFFSET = 3_000_000;
     private static final int SOURCE_FACTOR = 10_000;
     private static final int INDEX_FACTOR = 10;
+    private static final int CONTEXT_ACTION_FACTOR = 1_000_000;
+    private static final int CONTEXT_KIND_FACTOR = 100_000;
+    private static final int CONTEXT_SOURCE_FACTOR = 10_000;
     private static final int CELL_SOURCE_FACTOR = 100_000;
     private static final int CELL_INDEX_FACTOR = 1_000;
     private static final int CELL_TARGET_FACTOR = 100;
@@ -104,14 +108,21 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return true;
         }
 
-        if (id >= SORT_OFFSET) {
+        boolean changed;
+        if (id >= CONTEXT_ACTION_OFFSET) {
+            int payload = id - CONTEXT_ACTION_OFFSET;
+            int action = Math.floorDiv(payload, CONTEXT_ACTION_FACTOR);
+            int remainder = Math.floorMod(payload, CONTEXT_ACTION_FACTOR);
+            int kind = Math.floorDiv(remainder, CONTEXT_KIND_FACTOR);
+            remainder = Math.floorMod(remainder, CONTEXT_KIND_FACTOR);
+            int sourceId = Math.floorDiv(remainder, CONTEXT_SOURCE_FACTOR);
+            int sourceIndex = Math.floorMod(remainder, CONTEXT_SOURCE_FACTOR);
+            changed = handleContextAction(serverPlayer, action, kind == 1, slotFromId(sourceId), sourceIndex);
+        } else if (id >= SORT_OFFSET) {
             sortMode = SortMode.fromId(id - SORT_OFFSET);
             rebuildDisplays();
             return true;
-        }
-
-        boolean changed;
-        if (id >= MOVE_BASE_TO_BASE_CELL_OFFSET) {
+        } else if (id >= MOVE_BASE_TO_BASE_CELL_OFFSET) {
             int payload = id - MOVE_BASE_TO_BASE_CELL_OFFSET;
             int sourceId = Math.floorDiv(payload, CELL_SOURCE_FACTOR);
             int remainder = Math.floorMod(payload, CELL_SOURCE_FACTOR);
@@ -208,6 +219,10 @@ public class BaseStashMenu extends AbstractContainerMenu {
 
     public static int sortButtonId(int sortId) {
         return SORT_OFFSET + sortId;
+    }
+
+    public static int contextActionButtonId(int action, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
+        return CONTEXT_ACTION_OFFSET + action * CONTEXT_ACTION_FACTOR + (stashSource ? 1 : 0) * CONTEXT_KIND_FACTOR + slotId(source) * CONTEXT_SOURCE_FACTOR + sourceIndex;
     }
 
     public RaidEquipmentSlot baseSlotForMenuSlot(int menuSlot) {
@@ -346,6 +361,62 @@ public class BaseStashMenu extends AbstractContainerMenu {
         stashData.stash().addPartial(removed);
         player.sendSystemMessage(Component.literal("Moved " + removed.displayName() + " to stash."));
         return true;
+    }
+
+    private boolean handleContextAction(ServerPlayer player, int action, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
+        RaidInventoryItem item = stashSource ? stashData.stash().itemAt(stashSourceIndex(sourceIndex)) : stashData.baseInventory().itemAt(source, sourceIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+
+        int actualIndex = stashSource ? stashSourceIndex(sourceIndex) : sourceIndex;
+        RaidInventoryItem removed = stashSource
+                ? stashData.stash().removeCountAt(actualIndex, item.count())
+                : stashData.baseInventory().removeCountAt(source, actualIndex, item.count());
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+
+        if (action == 0) {
+            int value = removed.totalValue();
+            stashData.setCredits(stashData.credits() + value);
+            player.sendSystemMessage(Component.literal("Sold " + removed.displayName() + " for " + value + " Emeralds."));
+        } else if (action == 1) {
+            ItemStack stack = removed.toItemStack();
+            if (stack.isEmpty()) {
+                player.sendSystemMessage(Component.literal("Could not rebuild item stack for drop."));
+                restoreRemovedItem(stashSource, source, removed);
+                return false;
+            }
+            ManagedDropService.spawnManagedDrop(player, stack);
+            player.sendSystemMessage(Component.literal("Dropped " + removed.displayName() + "."));
+        } else if (action == 2) {
+            player.sendSystemMessage(Component.literal("Trashed " + removed.displayName() + "."));
+        } else {
+            restoreRemovedItem(stashSource, source, removed);
+            return false;
+        }
+        return true;
+    }
+
+    private void restoreRemovedItem(boolean stashSource, RaidEquipmentSlot source, RaidInventoryItem removed) {
+        if (stashSource) {
+            stashData.stash().addPartial(removed);
+            return;
+        }
+        if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            stashData.baseInventory().setWeaponSlot(source, removed);
+        } else {
+            RaidStorageContainer target = switch (source) {
+                case BACKPACK -> stashData.baseInventory().backpack();
+                case VEST -> stashData.baseInventory().vest();
+                case SAFE_BOX -> stashData.baseInventory().safeBox();
+                case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalStateException("handled above");
+            };
+            target.addPartial(removed);
+        }
     }
 
     private boolean moveStashToBase(ServerPlayer player, int stashDisplayIndex, RaidEquipmentSlot target) {

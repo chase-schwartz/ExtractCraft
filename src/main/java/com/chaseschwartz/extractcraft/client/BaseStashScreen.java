@@ -16,6 +16,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -31,6 +32,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private static final int STASH_Y = 24;
     private static final int STASH_SLOT_X = 236;
     private static final int STASH_SLOT_Y = 82;
+    private static final int CONTEXT_MENU_WIDTH = 74;
+    private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
+    private static final int CONTEXT_MENU_ROWS = 3;
+    private static final int CONTEXT_MENU_HEIGHT = CONTEXT_MENU_ROW_HEIGHT * CONTEXT_MENU_ROWS + 4;
     private DragSource dragSource = DragSource.NONE;
     private RaidEquipmentSlot draggedBaseSlot;
     private int draggedSourceIndex = -1;
@@ -42,6 +47,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private int nextTransactionId = 1;
     private int pendingTransactionId = -1;
     private String gridMoveStatus = "";
+    private ContextMenu contextMenu = null;
     private double dragStartX;
     private double dragStartY;
     private String lastPreviewLogKey = "";
@@ -61,6 +67,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (!draggedStack.isEmpty()) {
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
+        renderContextMenu(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
 
@@ -103,6 +110,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     @Override
     protected void renderSlotHighlight(GuiGraphics guiGraphics, Slot slot, int mouseX, int mouseY, float partialTick) {
+        if (contextMenu != null) {
+            return;
+        }
         if ((isBaseSlot(slot) && !isWeaponSlot(slot)) || isStashSlot(slot)) {
             return;
         }
@@ -110,15 +120,26 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     @Override
+    protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
+        if (contextMenu != null) {
+            return;
+        }
+        super.renderTooltip(guiGraphics, x, y);
+    }
+
+    @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         guiGraphics.drawString(this.font, "Base Inventory", 8, 8, TEXT, false);
+        String emeralds = formatEmeralds(menu.credits());
+        int emeraldTextX = this.imageWidth - 8 - this.font.width(emeralds);
+        guiGraphics.drawString(this.font, emeralds, emeraldTextX, 8, TEXT, false);
+        guiGraphics.renderItem(new ItemStack(Items.EMERALD), emeraldTextX - 19, 4);
         guiGraphics.drawString(this.font, "Persistent Stash", STASH_X + 8, STASH_Y + 7, TEXT, false);
         guiGraphics.drawString(this.font,
-                String.format("Level %d | %d/%d slots | %d cr",
+                String.format("Level %d | %d/%d slots",
                         menu.stashLevel(),
                         menu.stashUsedCapacity(),
-                        menu.stashMaxCapacity(),
-                        menu.credits()),
+                        menu.stashMaxCapacity()),
                 STASH_X + 8,
                 STASH_Y + 19,
                 MUTED_TEXT,
@@ -145,6 +166,34 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (contextMenu != null) {
+            if (button == 0 && handleContextMenuClick(mouseX, mouseY)) {
+                return true;
+            }
+            contextMenu = null;
+            if (button == 0) {
+                return true;
+            }
+        }
+
+        if (button == 1) {
+            Slot slot = slotAt(mouseX, mouseY);
+            if (slot != null && slot.hasItem()) {
+                if (isBaseSlot(slot)) {
+                    RaidEquipmentSlot source = this.menu.baseSlotForMenuSlot(slot.index);
+                    int sourceIndex = this.menu.baseItemIndexForMenuSlot(slot.index);
+                    if (sourceIndex >= 0) {
+                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, false, source, sourceIndex);
+                    }
+                    return true;
+                }
+                if (isStashSlot(slot)) {
+                    contextMenu = new ContextMenu((int) mouseX, (int) mouseY, true, RaidEquipmentSlot.BACKPACK, this.menu.stashDisplayIndexForMenuSlot(slot.index));
+                    return true;
+                }
+            }
+        }
+
         if (button == 0 && handleSortClick(mouseX, mouseY)) {
             return true;
         }
@@ -364,6 +413,77 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (this.minecraft != null && this.minecraft.gameMode != null) {
             this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, BaseStashMenu.sortButtonId(sortId));
         }
+    }
+
+    private void sendContextAction(int action, ContextMenu menu) {
+        if (this.minecraft != null && this.minecraft.gameMode != null) {
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, BaseStashMenu.contextActionButtonId(action, menu.stashSource(), menu.source(), menu.sourceIndex()));
+        }
+    }
+
+    private boolean handleContextMenuClick(double mouseX, double mouseY) {
+        if (contextMenu == null) {
+            return false;
+        }
+        int x = contextMenuX();
+        int y = contextMenuY();
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT)) {
+            return false;
+        }
+        int option = contextMenuOptionAt(mouseX, mouseY);
+        if (option >= 0 && option <= 2) {
+            sendContextAction(option, contextMenu);
+            contextMenu = null;
+            return true;
+        }
+        return false;
+    }
+
+    private void renderContextMenu(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (contextMenu == null) {
+            return;
+        }
+        int x = contextMenuX();
+        int y = contextMenuY();
+        int hovered = contextMenuOptionAt(mouseX, mouseY);
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0D, 0.0D, 500.0D);
+        guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + CONTEXT_MENU_HEIGHT, 0xF0181B22);
+        border(guiGraphics, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT, BORDER_COLOR);
+        renderContextRow(guiGraphics, x, y, 0, "Sell", hovered == 0, TEXT, 0x553A5E66);
+        renderContextRow(guiGraphics, x, y, 1, "Drop", hovered == 1, TEXT, 0x553A5E66);
+        renderContextRow(guiGraphics, x, y, 2, "Trash", hovered == 2, 0xFFFFA0A0, 0x554A2228);
+        guiGraphics.pose().popPose();
+    }
+
+    private void renderContextRow(GuiGraphics guiGraphics, int menuX, int menuY, int row, String label, boolean hovered, int textColor, int hoverColor) {
+        int rowX = menuX + 2;
+        int rowY = menuY + 2 + row * CONTEXT_MENU_ROW_HEIGHT;
+        if (hovered) {
+            guiGraphics.fill(rowX, rowY, rowX + CONTEXT_MENU_WIDTH - 4, rowY + CONTEXT_MENU_ROW_HEIGHT, hoverColor);
+        }
+        guiGraphics.drawString(this.font, label, rowX + 5, rowY + 5, textColor, false);
+    }
+
+    private int contextMenuOptionAt(double mouseX, double mouseY) {
+        if (contextMenu == null) {
+            return -1;
+        }
+        int x = contextMenuX() + 2;
+        int y = contextMenuY() + 2;
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT * CONTEXT_MENU_ROWS)) {
+            return -1;
+        }
+        int option = ((int) mouseY - y) / CONTEXT_MENU_ROW_HEIGHT;
+        return option >= 0 && option < CONTEXT_MENU_ROWS ? option : -1;
+    }
+
+    private int contextMenuX() {
+        return Math.min(contextMenu.x(), this.leftPos + this.imageWidth - CONTEXT_MENU_WIDTH - 4);
+    }
+
+    private int contextMenuY() {
+        return Math.min(contextMenu.y(), this.topPos + this.imageHeight - CONTEXT_MENU_HEIGHT - 4);
     }
 
     private Slot slotAt(double mouseX, double mouseY) {
@@ -624,6 +744,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (contextMenu != null) {
+            return;
+        }
         if (dragSource != DragSource.NONE) {
             return;
         }
@@ -795,6 +918,17 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         guiGraphics.pose().popPose();
     }
 
+    private static String formatEmeralds(int amount) {
+        if (amount >= 1_000_000) {
+            double millions = amount / 1_000_000.0D;
+            String formatted = millions >= 10.0D
+                    ? String.format(java.util.Locale.ROOT, "%.1fm", millions)
+                    : String.format(java.util.Locale.ROOT, "%.2fm", millions);
+            return formatted.replace(".00m", ".0m").replaceAll("0m$", "m");
+        }
+        return String.format(java.util.Locale.US, "%,d", amount);
+    }
+
     private void renderHeldStack(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         Footprint footprint = footprintFor(draggedStack);
         int width = Math.max(18, footprint.width() * 18);
@@ -900,5 +1034,8 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         private static Placement invalid(GridLayout layout, int x, int y, boolean inGrid) {
             return new Placement(layout, x, y, inGrid, false);
         }
+    }
+
+    private record ContextMenu(int x, int y, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
     }
 }

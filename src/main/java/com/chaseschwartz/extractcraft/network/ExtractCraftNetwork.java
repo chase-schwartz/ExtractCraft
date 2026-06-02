@@ -58,6 +58,11 @@ public class ExtractCraftNetwork {
                 PacketDistributor.sendToPlayer(player, new GridMoveResultPayload(payload.transactionId(), result.success(), result.message()));
             }
         });
+        registrar.playToServer(PickupManagedDropPayload.TYPE, PickupManagedDropPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                com.chaseschwartz.extractcraft.raid.inventory.ManagedDropService.handlePickupRequest(player, payload.entityId());
+            }
+        });
         registrar.playToClient(OpenVanillaInventoryPayload.TYPE, OpenVanillaInventoryPayload.STREAM_CODEC, (payload, context) ->
                 ClientRaidState.openVanillaInventoryOnce());
     }
