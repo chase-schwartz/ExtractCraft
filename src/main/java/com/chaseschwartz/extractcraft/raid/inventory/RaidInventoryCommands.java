@@ -92,6 +92,11 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("vanilla_inventory")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> openVanillaInventory(context.getSource()))))
+                .then(Commands.literal("raid")
+                        .then(Commands.literal("debug_keep_gamemode")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("enabled", BoolArgumentType.bool())
+                                        .executes(context -> setRaidDebugKeepGameMode(context.getSource(), BoolArgumentType.getBool(context, "enabled"))))))
                 .then(Commands.literal("raidweapon")
                         .then(Commands.literal("primary")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -235,6 +240,12 @@ public class RaidInventoryCommands {
     private static int setRaidWeaponDebugAmmo(CommandSourceStack source, boolean enabled) throws CommandSyntaxException {
         RaidWeaponService.setDebugInfiniteAmmo(enabled);
         source.getPlayerOrException().sendSystemMessage(Component.literal("Raid weapon debug infinite ammo " + (enabled ? "enabled" : "disabled") + ". Re-equip a weapon for the bridge stack to update."));
+        return 1;
+    }
+
+    private static int setRaidDebugKeepGameMode(CommandSourceStack source, boolean enabled) throws CommandSyntaxException {
+        RaidManager.setDebugKeepGameMode(enabled);
+        source.getPlayerOrException().sendSystemMessage(Component.literal("Raid debug keep game mode " + (enabled ? "enabled" : "disabled") + ". Default false forces survival during raids."));
         return 1;
     }
 

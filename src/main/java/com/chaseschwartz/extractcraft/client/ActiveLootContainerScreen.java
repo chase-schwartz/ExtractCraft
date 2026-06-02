@@ -79,6 +79,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             } else {
                 drawVanillaSlotBackground(guiGraphics, slot.x, slot.y);
             }
+            if (isDragSourceSlot(slot)) {
+                return;
+            }
         }
         super.renderSlot(guiGraphics, slot);
     }
@@ -254,6 +257,26 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private boolean isWeaponSlot(Slot slot) {
         return slot.index == ActiveLootContainerMenu.PRIMARY_WEAPON_START
                 || slot.index == ActiveLootContainerMenu.SECONDARY_WEAPON_START;
+    }
+
+    private boolean isDragSourceSlot(Slot slot) {
+        if (dragSource == DragSource.CONTAINER) {
+            return slot.index == this.menu.containerMenuSlotStart() + draggedSourceIndex;
+        }
+        if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot != null) {
+            return slot.index == sourceMenuSlotIndex(draggedRaidSlot, draggedSourceIndex);
+        }
+        return false;
+    }
+
+    private static int sourceMenuSlotIndex(RaidEquipmentSlot slot, int sourceIndex) {
+        return switch (slot) {
+            case PRIMARY_WEAPON -> ActiveLootContainerMenu.PRIMARY_WEAPON_START;
+            case SECONDARY_WEAPON -> ActiveLootContainerMenu.SECONDARY_WEAPON_START;
+            case BACKPACK -> ActiveLootContainerMenu.BACKPACK_START + sourceIndex;
+            case VEST -> ActiveLootContainerMenu.VEST_START + sourceIndex;
+            case SAFE_BOX -> ActiveLootContainerMenu.SAFE_BOX_START + sourceIndex;
+        };
     }
 
     private RaidEquipmentSlot targetAt(int mouseX, int mouseY) {

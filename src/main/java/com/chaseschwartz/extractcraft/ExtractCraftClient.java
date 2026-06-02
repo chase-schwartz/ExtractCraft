@@ -25,6 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -37,6 +38,7 @@ import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.lwjgl.glfw.GLFW;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = ExtractCraft.MODID, dist = Dist.CLIENT)
@@ -54,6 +56,7 @@ public class ExtractCraftClient {
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onScreenOpening);
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onClientPreTick);
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onMouseScroll);
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, InputEvent.MouseButton.Pre.class, ExtractCraftClient::onMouseButtonPre);
         NeoForge.EVENT_BUS.addListener(ExtractCraftClient::onInteractionKeyMapping);
     }
 
@@ -117,27 +120,41 @@ public class ExtractCraftClient {
         }
     }
 
+    private static void onMouseButtonPre(InputEvent.MouseButton.Pre event) {
+        if (event.getButton() != GLFW.GLFW_MOUSE_BUTTON_RIGHT || event.getAction() != GLFW.GLFW_PRESS) {
+            return;
+        }
+
+        if (tryUseTargetedInteractable()) {
+            event.setCanceled(true);
+        }
+    }
+
     private static void onInteractionKeyMapping(InputEvent.InteractionKeyMappingTriggered event) {
+        if (!ClientRaidState.isInRaid()
+                || !event.isUseItem()
+                || event.getHand() != InteractionHand.MAIN_HAND) {
+            return;
+        }
+
+        event.setCanceled(tryUseTargetedInteractable());
+    }
+
+    private static boolean tryUseTargetedInteractable() {
         Minecraft minecraft = Minecraft.getInstance();
         if (!ClientRaidState.isInRaid()
                 || minecraft.player == null
                 || minecraft.level == null
                 || minecraft.gameMode == null
                 || minecraft.screen != null
-                || !event.isUseItem()
-                || event.getHand() != InteractionHand.MAIN_HAND
                 || !(minecraft.hitResult instanceof BlockHitResult blockHitResult)
-                || blockHitResult.getType() != HitResult.Type.BLOCK) {
-            return;
-        }
-
-        if (!isLikelyInteractableBlock(minecraft, blockHitResult.getBlockPos())) {
-            return;
+                || blockHitResult.getType() != HitResult.Type.BLOCK
+                || !isLikelyInteractableBlock(minecraft, blockHitResult.getBlockPos())) {
+            return false;
         }
 
         InteractionResult result = minecraft.gameMode.useItemOn(minecraft.player, InteractionHand.MAIN_HAND, blockHitResult);
-        event.setSwingHand(result.shouldSwing());
-        event.setCanceled(true);
+        return result.consumesAction();
     }
 
     private static boolean isLikelyInteractableBlock(Minecraft minecraft, BlockPos pos) {

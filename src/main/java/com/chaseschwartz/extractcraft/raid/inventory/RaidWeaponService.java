@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
 import com.chaseschwartz.extractcraft.raid.RaidManager;
+import com.chaseschwartz.extractcraft.raid.RaidState;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -151,7 +152,13 @@ public class RaidWeaponService {
         CustomData customData = bridgeStack.get(DataComponents.CUSTOM_DATA);
         CompoundTag tag = customData == null ? new CompoundTag() : customData.copyTag();
         player.sendSystemMessage(Component.literal("Raid weapon ammo debug:"));
+        String previousMode = RaidManager.getRaidState(player)
+                .map(RaidState::previousGameMode)
+                .map(gameType -> gameType == null ? "none" : gameType.getName())
+                .orElse("none");
         player.sendSystemMessage(Component.literal("gameMode=" + player.gameMode.getGameModeForPlayer().getName()
+                + ", previousRaidGameMode=" + previousMode
+                + ", debugKeepGameMode=" + RaidManager.debugKeepGameMode()
                 + ", instabuild=" + player.getAbilities().instabuild
                 + ", creativeInfiniteLikely=" + player.gameMode.getGameModeForPlayer().isCreative()));
         player.sendSystemMessage(Component.literal("selectedRaidWeapon=" + (inventory.selectedWeaponSlot() == null ? "none" : slotName(inventory.selectedWeaponSlot()))

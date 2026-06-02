@@ -60,6 +60,7 @@ public class ExtractionZoneHandler {
 
         if (RaidManager.isInRaid(player)) {
             RaidWeaponService.syncAndClearBridge(player);
+            RaidManager.restorePreviousGameModeIfInRaid(player);
         }
         boolean clearedRaid = RaidManager.clearPlayerStateIfPresent(player.getUUID(), player.server);
         boolean clearedCountdown = extractionTicks.remove(player.getUUID()) != null;

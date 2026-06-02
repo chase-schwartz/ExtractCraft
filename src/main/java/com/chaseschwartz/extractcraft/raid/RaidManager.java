@@ -16,6 +16,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 public class RaidManager {
@@ -23,6 +24,7 @@ public class RaidManager {
 
     private static final Map<UUID, RaidState> ACTIVE_RAIDS = new HashMap<>();
     private static final Map<UUID, RaidState> PENDING_FAILED_RETURNS = new HashMap<>();
+    private static boolean debugKeepGameMode;
 
     private RaidManager() {
     }
@@ -41,8 +43,13 @@ public class RaidManager {
 
     public static void startRaid(ServerPlayer player, List<UUID> raidMobIds, RaidMapDefinition raidMap) {
         long expiresAtGameTime = player.server.overworld().getGameTime() + raidMap.raidDurationTicks();
+        GameType previousGameMode = player.gameMode.getGameModeForPlayer();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
-                InventorySnapshot.capture(player), expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
+                InventorySnapshot.capture(player), previousGameMode, expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
+        if (!debugKeepGameMode && previousGameMode != GameType.SURVIVAL) {
+            player.setGameMode(GameType.SURVIVAL);
+            player.sendSystemMessage(Component.literal("Raid mode: switched to survival to prevent creative/infinite-ammo behavior."));
+        }
         ExtractCraftNetwork.syncRaidState(player, true);
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
@@ -89,6 +96,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
         RaidWeaponService.syncAndClearBridge(player);
+        restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         PENDING_FAILED_RETURNS.put(player.getUUID(), raidState);
         ExtractCraft.LOGGER.info("Raid failed for {}; queued return to {} at {}, {}, {} after respawn",
@@ -139,6 +147,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
         RaidWeaponService.syncAndClearBridge(player);
+        restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
@@ -188,6 +197,7 @@ public class RaidManager {
                         raidState.returnYaw(),
                         raidState.returnPitch(),
                         raidState.inventorySnapshot(),
+                        raidState.previousGameMode(),
                         raidState.expiresAtGameTime(),
                         warningSeconds,
                         raidState.raidMobIds(),
@@ -210,6 +220,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "successful extraction");
         RaidWeaponService.syncAndClearBridge(player);
+        restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
@@ -234,6 +245,27 @@ public class RaidManager {
                 returnPosition.y,
                 returnPosition.z);
         return true;
+    }
+
+    public static void restorePreviousGameModeIfInRaid(ServerPlayer player) {
+        getRaidState(player).ifPresent(raidState -> restorePreviousGameMode(player, raidState));
+    }
+
+    public static void setDebugKeepGameMode(boolean keepGameMode) {
+        debugKeepGameMode = keepGameMode;
+    }
+
+    public static boolean debugKeepGameMode() {
+        return debugKeepGameMode;
+    }
+
+    private static void restorePreviousGameMode(ServerPlayer player, RaidState raidState) {
+        if (debugKeepGameMode || raidState.previousGameMode() == null || player.gameMode.getGameModeForPlayer() == raidState.previousGameMode()) {
+            return;
+        }
+
+        player.setGameMode(raidState.previousGameMode());
+        player.sendSystemMessage(Component.literal("Restored previous game mode: " + raidState.previousGameMode().getName() + "."));
     }
 
     private static void cleanupRaidMobs(MinecraftServer server, RaidState raidState, String reason) {
