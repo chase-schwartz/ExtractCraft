@@ -16,5 +16,6 @@ public class ExtractCraftClientModEvents {
     public static void registerMenuScreens(RegisterMenuScreensEvent event) {
         event.register(ExtractCraft.ACTIVE_LOOT_CONTAINER_MENU.get(), ActiveLootContainerScreen::new);
         event.register(ExtractCraft.RAID_INVENTORY_MENU.get(), RaidInventoryScreen::new);
+        event.register(ExtractCraft.BASE_STASH_MENU.get(), BaseStashScreen::new);
     }
 }

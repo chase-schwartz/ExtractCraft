@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft.network;
 
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
+import com.chaseschwartz.extractcraft.raid.inventory.BaseStashScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
@@ -22,6 +23,11 @@ public class ExtractCraftNetwork {
         registrar.playToServer(OpenRaidInventoryPayload.TYPE, OpenRaidInventoryPayload.STREAM_CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player && RaidManager.isInRaid(player)) {
                 RaidInventoryScreenOpener.openGrid(player);
+            }
+        });
+        registrar.playToServer(OpenBaseStashInventoryPayload.TYPE, OpenBaseStashInventoryPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player && !RaidManager.isInRaid(player)) {
+                BaseStashScreenOpener.open(player);
             }
         });
         registrar.playToServer(SelectRaidWeaponPayload.TYPE, SelectRaidWeaponPayload.STREAM_CODEC, (payload, context) -> {

@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft;
 
 import com.chaseschwartz.extractcraft.client.LootContainerOutlineRenderer;
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
+import com.chaseschwartz.extractcraft.network.OpenBaseStashInventoryPayload;
 import com.chaseschwartz.extractcraft.network.OpenRaidInventoryPayload;
 import com.chaseschwartz.extractcraft.network.SelectRaidWeaponPayload;
 
@@ -69,7 +70,7 @@ public class ExtractCraftClient {
 
     private static void onScreenOpening(ScreenEvent.Opening event) {
         Screen screen = event.getNewScreen();
-        if (!ClientRaidState.isInRaid() || !isVanillaInventoryScreen(screen)) {
+        if (!isVanillaInventoryScreen(screen)) {
             return;
         }
         if (ClientRaidState.consumeVanillaInventoryBypass()) {
@@ -77,7 +78,7 @@ public class ExtractCraftClient {
         }
 
         event.setCanceled(true);
-        PacketDistributor.sendToServer(OpenRaidInventoryPayload.INSTANCE);
+        PacketDistributor.sendToServer(ClientRaidState.isInRaid() ? OpenRaidInventoryPayload.INSTANCE : OpenBaseStashInventoryPayload.INSTANCE);
     }
 
     private static void onClientPreTick(ClientTickEvent.Pre event) {

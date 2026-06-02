@@ -117,7 +117,7 @@ public class RaidInventoryCommands {
                                 .executes(context -> stashStatus(context.getSource(), "name")))
                         .then(Commands.literal("open")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> stashStatus(context.getSource(), "name")))
+                                .executes(context -> stashOpen(context.getSource())))
                         .then(Commands.literal("clear")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.literal("confirm")
@@ -322,6 +322,11 @@ public class RaidInventoryCommands {
             player.sendSystemMessage(Component.literal(line));
         }
         player.sendSystemMessage(Component.literal("First-pass stash UI is command-backed for now. Use /extractcraft raidresult stash, /extractcraft raidresult keep, and /extractcraft stash sort <mode>."));
+        return 1;
+    }
+
+    private static int stashOpen(CommandSourceStack source) throws CommandSyntaxException {
+        BaseStashScreenOpener.open(source.getPlayerOrException());
         return 1;
     }
 

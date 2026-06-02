@@ -9,6 +9,7 @@ import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
 import com.chaseschwartz.extractcraft.raid.RaidCommands;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerInteractionHandler;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
+import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
 import com.chaseschwartz.extractcraft.raid.containers.RaidMapCommands;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryCommands;
@@ -83,6 +84,8 @@ public class ExtractCraft {
             () -> new MenuType<>((IContainerFactory<ActiveLootContainerMenu>) ActiveLootContainerMenu::new, FeatureFlags.VANILLA_SET));
     public static final DeferredHolder<MenuType<?>, MenuType<RaidInventoryMenu>> RAID_INVENTORY_MENU = MENUS.register("raid_inventory",
             () -> new MenuType<>((IContainerFactory<RaidInventoryMenu>) RaidInventoryMenu::new, FeatureFlags.VANILLA_SET));
+    public static final DeferredHolder<MenuType<?>, MenuType<BaseStashMenu>> BASE_STASH_MENU = MENUS.register("base_stash",
+            () -> new MenuType<>((IContainerFactory<BaseStashMenu>) BaseStashMenu::new, FeatureFlags.VANILLA_SET));
 
     // Creates a new food item with the id "extractcraft:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
