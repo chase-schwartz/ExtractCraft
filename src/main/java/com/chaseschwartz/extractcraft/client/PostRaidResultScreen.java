@@ -192,12 +192,27 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
             int slotX = x + (index % columns) * SLOT_STEP;
             int slotY = y + (index / columns) * SLOT_STEP;
             drawSlot(guiGraphics, slotX, slotY);
-            if (index < items.size()) {
-                renderItem(guiGraphics, items.get(index), slotX, slotY);
-            }
         }
-        if (items.size() > visibleSlots) {
-            guiGraphics.drawString(this.font, "+" + (items.size() - visibleSlots), x + columns * SLOT_STEP + 4, y + rows * SLOT_STEP - 10, MUTED_TEXT, false);
+
+        int hidden = 0;
+        for (int index = 0; index < items.size(); index++) {
+            ItemSnapshot item = items.get(index);
+            GridCell cell = displayCell(item, index, columns, rows);
+            if (cell == null) {
+                hidden++;
+                continue;
+            }
+
+            int slotX = x + cell.x() * SLOT_STEP;
+            int slotY = y + cell.y() * SLOT_STEP;
+            int widthCells = footprintWidth(item);
+            int heightCells = footprintHeight(item);
+            drawFootprint(guiGraphics, slotX, slotY, widthCells, heightCells);
+            renderItem(guiGraphics, item, slotX, slotY, widthCells * SLOT_STEP, heightCells * SLOT_STEP);
+        }
+
+        if (hidden > 0) {
+            guiGraphics.drawString(this.font, "+" + hidden, x + columns * SLOT_STEP + 4, y + rows * SLOT_STEP - 10, MUTED_TEXT, false);
         }
     }
 
@@ -272,10 +287,18 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     }
 
     private HoveredItem hoveredStorageItem(int localX, int localY, List<ItemSnapshot> items, int x, int y, int columns, int rows) {
-        for (int index = 0; index < Math.min(items.size(), columns * rows); index++) {
-            int slotX = x + (index % columns) * SLOT_STEP;
-            int slotY = y + (index / columns) * SLOT_STEP;
-            if (inside(localX, localY, slotX, slotY, 16, 16)) {
+        for (int index = 0; index < items.size(); index++) {
+            ItemSnapshot item = items.get(index);
+            GridCell cell = displayCell(item, index, columns, rows);
+            if (cell == null) {
+                continue;
+            }
+
+            int slotX = x + cell.x() * SLOT_STEP;
+            int slotY = y + cell.y() * SLOT_STEP;
+            int width = footprintWidth(item) * SLOT_STEP;
+            int height = footprintHeight(item) * SLOT_STEP;
+            if (inside(localX, localY, slotX, slotY, width, height)) {
                 return new HoveredItem(items.get(index));
             }
         }
@@ -296,6 +319,24 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         ItemStack stack = displayStack(item);
         guiGraphics.renderItem(stack, x, y);
         guiGraphics.renderItemDecorations(this.font, stack, x, y);
+    }
+
+    private void renderItem(GuiGraphics guiGraphics, ItemSnapshot item, int x, int y, int width, int height) {
+        ItemStack stack = displayStack(item);
+        if (width <= SLOT_STEP && height <= SLOT_STEP) {
+            renderItem(guiGraphics, item, x, y);
+            return;
+        }
+        float scale = Math.min(2.0F, Math.max(1.0F, Math.min(width, height) / 18.0F));
+        int renderSize = Math.round(16.0F * scale);
+        int renderX = x + (width - renderSize) / 2;
+        int renderY = y + (height - renderSize) / 2;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(renderX, renderY, 0.0F);
+        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.renderItem(stack, 0, 0);
+        guiGraphics.renderItemDecorations(this.font, stack, 0, 0);
+        guiGraphics.pose().popPose();
     }
 
     private static ItemStack displayStack(ItemSnapshot item) {
@@ -328,6 +369,17 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         guiGraphics.fill(x, y, x + 16, y + 16, SLOT_COLOR);
     }
 
+    private static void drawFootprint(GuiGraphics guiGraphics, int x, int y, int widthCells, int heightCells) {
+        if (widthCells <= 1 && heightCells <= 1) {
+            return;
+        }
+
+        int width = widthCells * SLOT_STEP - 2;
+        int height = heightCells * SLOT_STEP - 2;
+        int color = 0x8849D8E8;
+        border(guiGraphics, x - 1, y - 1, width + 2, height + 2, color);
+    }
+
     private static void drawWeaponSlot(GuiGraphics guiGraphics, int x, int y) {
         guiGraphics.fill(x - 1, y - 1, x + 19, y + 19, 0xFF1C2028);
         guiGraphics.fill(x, y, x + 18, y + 18, SLOT_COLOR);
@@ -349,10 +401,34 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
         return x >= rectX && x < rectX + width && y >= rectY && y < rectY + height;
     }
 
+    private static GridCell displayCell(ItemSnapshot item, int sequentialIndex, int columns, int rows) {
+        if (item.gridX() >= 0 && item.gridY() >= 0
+                && item.gridX() + footprintWidth(item) <= columns
+                && item.gridY() + footprintHeight(item) <= rows) {
+            return new GridCell(item.gridX(), item.gridY());
+        }
+
+        if (sequentialIndex >= columns * rows) {
+            return null;
+        }
+        return new GridCell(sequentialIndex % columns, sequentialIndex / columns);
+    }
+
+    private static int footprintWidth(ItemSnapshot item) {
+        return Math.max(1, item.rotated() ? item.gridHeight() : item.gridWidth());
+    }
+
+    private static int footprintHeight(ItemSnapshot item) {
+        return Math.max(1, item.rotated() ? item.gridWidth() : item.gridHeight());
+    }
+
     private static int rows(int slotCount, int columns) {
         return (int) Math.ceil(slotCount / (double) columns);
     }
 
     private record HoveredItem(ItemSnapshot item) {
+    }
+
+    private record GridCell(int x, int y) {
     }
 }

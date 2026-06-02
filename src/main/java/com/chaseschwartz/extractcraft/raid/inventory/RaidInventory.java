@@ -47,6 +47,15 @@ public class RaidInventory {
         return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack does not have enough capacity or weight allowance.");
     }
 
+    public AddResult addToBackpackAt(RaidInventoryItem item, int x, int y, boolean rotated) {
+        int moved = backpack.addPartialAt(item, x, y, rotated, -1);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.BACKPACK, movedMessage("backpack", moved, item), moved);
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack target cell is blocked or does not have enough capacity.");
+    }
+
     public AddResult addToVest(RaidInventoryItem item, ItemCarryProfile profile) {
         if (isGun(item)) {
             return new AddResult(false, RaidEquipmentSlot.VEST, "Guns must be equipped or carried in backpack.");
@@ -59,6 +68,18 @@ public class RaidInventory {
         return new AddResult(false, RaidEquipmentSlot.VEST, "Vest does not have enough capacity or weight allowance.");
     }
 
+    public AddResult addToVestAt(RaidInventoryItem item, ItemCarryProfile profile, int x, int y, boolean rotated) {
+        if (isGun(item)) {
+            return new AddResult(false, RaidEquipmentSlot.VEST, "Guns must be equipped or carried in backpack.");
+        }
+        int moved = vest.addPartialAt(item, x, y, rotated, -1);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.VEST, movedMessage("vest", moved, item), moved);
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.VEST, "Vest target cell is blocked or does not have enough capacity.");
+    }
+
     public AddResult addToSafeBox(RaidInventoryItem item, ItemCarryProfile profile) {
         if (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR) {
             return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Item is not allowed in safe box.");
@@ -69,6 +90,18 @@ public class RaidInventory {
         }
 
         return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Safe box does not have enough capacity or weight allowance.");
+    }
+
+    public AddResult addToSafeBoxAt(RaidInventoryItem item, ItemCarryProfile profile, int x, int y, boolean rotated) {
+        if (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR) {
+            return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Item is not allowed in safe box.");
+        }
+        int moved = safeBox.addPartialAt(item, x, y, rotated, -1);
+        if (moved > 0) {
+            return new AddResult(true, RaidEquipmentSlot.SAFE_BOX, movedMessage("safe box", moved, item), moved);
+        }
+
+        return new AddResult(false, RaidEquipmentSlot.SAFE_BOX, "Safe box target cell is blocked or does not have enough capacity.");
     }
 
     public AddResult addToWeaponSlot(RaidInventoryItem item, RaidEquipmentSlot slot) {
@@ -126,6 +159,41 @@ public class RaidInventory {
         return result;
     }
 
+    public AddResult moveToCell(RaidEquipmentSlot sourceSlot, int sourceIndex, RaidEquipmentSlot targetSlot, ItemCarryProfile profile, int x, int y, boolean rotated) {
+        RaidInventoryItem item = itemAt(sourceSlot, sourceIndex);
+        if (item == null) {
+            return new AddResult(false, targetSlot, "Source item is no longer available.");
+        }
+        if (!isStorageSlot(targetSlot)) {
+            return move(sourceSlot, sourceIndex, targetSlot, profile);
+        }
+        if (sourceSlot == targetSlot && isStorageSlot(sourceSlot)) {
+            RaidStorageContainer targetStorage = storage(sourceSlot);
+            RaidInventoryItem removed = targetStorage.removeAt(sourceIndex);
+            if (removed == null) {
+                return new AddResult(false, targetSlot, "Source item is no longer available.");
+            }
+            int moved = targetStorage.addPartialAt(removed, x, y, rotated, -1);
+            if (moved < removed.count()) {
+                targetStorage.addPartialAt(removed.withCount(removed.count() - moved), removed.gridX(), removed.gridY(), removed.rotated(), -1);
+            }
+            return new AddResult(moved > 0, targetSlot, moved > 0 ? "Moved item in " + targetSlot.name().toLowerCase() + "." : "Target cell is blocked.", moved);
+        }
+
+        AddResult result = switch (targetSlot) {
+            case BACKPACK -> addToBackpackAt(item, x, y, rotated);
+            case VEST -> addToVestAt(item, profile, x, y, rotated);
+            case SAFE_BOX -> addToSafeBoxAt(item, profile, x, y, rotated);
+            case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Weapon slots are not grid targets.");
+        };
+        if (result.movedCount() <= 0) {
+            return result;
+        }
+
+        removeCountAt(sourceSlot, sourceIndex, result.movedCount());
+        return result;
+    }
+
     public void clear() {
         primaryWeapon = null;
         secondaryWeapon = null;
@@ -135,15 +203,36 @@ public class RaidInventory {
         safeBox.clear();
     }
 
-    public void setBackpack(BackpackDefinition definition) {
-        setLoadout(new RaidLoadout(definition, loadout.vest(), loadout.safeBox()));
+    public AddResult setBackpack(BackpackDefinition definition) {
+        RaidStorageContainer replacement = storageFor(definition);
+        for (RaidInventoryItem item : backpack.items()) {
+            if (replacement.addPartial(item) < item.count()) {
+                return new AddResult(false, RaidEquipmentSlot.BACKPACK, "Backpack change rejected: existing contents do not fit in " + definition.name() + ".");
+            }
+        }
+
+        this.loadout = new RaidLoadout(definition, loadout.vest(), loadout.safeBox());
+        this.backpack = replacement;
+        return new AddResult(true, RaidEquipmentSlot.BACKPACK, "Raid backpack set to " + definition.name() + ".", 0);
     }
 
     private void setLoadout(RaidLoadout newLoadout) {
         this.loadout = newLoadout;
-        this.backpack = new RaidStorageContainer(newLoadout.backpack().id(), newLoadout.backpack().name(), newLoadout.backpack().capacity(), newLoadout.backpack().maxWeight());
-        this.vest = new RaidStorageContainer(newLoadout.vest().id(), newLoadout.vest().name(), newLoadout.vest().capacity(), newLoadout.vest().maxWeight());
-        this.safeBox = new RaidStorageContainer(newLoadout.safeBox().id(), newLoadout.safeBox().name(), newLoadout.safeBox().capacity(), newLoadout.safeBox().maxWeight());
+        this.backpack = storageFor(newLoadout.backpack());
+        this.vest = storageFor(newLoadout.vest());
+        this.safeBox = storageFor(newLoadout.safeBox());
+    }
+
+    private static RaidStorageContainer storageFor(BackpackDefinition definition) {
+        return new RaidStorageContainer(definition.id(), definition.name(), definition.capacity(), definition.maxWeight(), definition.gridWidth(), definition.gridHeight());
+    }
+
+    private static RaidStorageContainer storageFor(VestDefinition definition) {
+        return new RaidStorageContainer(definition.id(), definition.name(), definition.capacity(), definition.maxWeight(), definition.gridWidth(), definition.gridHeight());
+    }
+
+    private static RaidStorageContainer storageFor(SafeContainerDefinition definition) {
+        return new RaidStorageContainer(definition.id(), definition.name(), definition.capacity(), definition.maxWeight(), definition.gridWidth(), definition.gridHeight());
     }
 
     public double totalWeight() {

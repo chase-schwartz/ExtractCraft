@@ -14,6 +14,7 @@ public record ItemCarryProfile(
         int slotCost,
         Optional<Integer> gridWidth,
         Optional<Integer> gridHeight,
+        boolean canRotate,
         boolean allowInSafeBox,
         boolean allowInVest,
         List<String> notes) {

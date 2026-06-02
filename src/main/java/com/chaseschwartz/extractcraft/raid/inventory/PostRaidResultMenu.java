@@ -188,9 +188,25 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
         }
     }
 
-    public record ItemSnapshot(String sectionLabel, String itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value) {
+    public record ItemSnapshot(String sectionLabel, String itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value,
+            int gridWidth, int gridHeight, int gridX, int gridY, boolean rotated, boolean canRotate) {
         static ItemSnapshot from(RaidInventoryItem item, String sectionLabel) {
-            return new ItemSnapshot(sectionLabel, item.itemId().toString(), item.lookupKey(), item.displayName(), item.category(), item.count(), item.slotCost(), item.totalWeight(), item.totalValue());
+            return new ItemSnapshot(
+                    sectionLabel,
+                    item.itemId().toString(),
+                    item.lookupKey(),
+                    item.displayName(),
+                    item.category(),
+                    item.count(),
+                    item.slotCost(),
+                    item.totalWeight(),
+                    item.totalValue(),
+                    item.gridWidth(),
+                    item.gridHeight(),
+                    item.gridX(),
+                    item.gridY(),
+                    item.rotated(),
+                    item.canRotate());
         }
 
         void write(RegistryFriendlyByteBuf buffer) {
@@ -203,6 +219,12 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
             buffer.writeVarInt(slotCost);
             buffer.writeDouble(weight);
             buffer.writeVarInt(value);
+            buffer.writeVarInt(gridWidth);
+            buffer.writeVarInt(gridHeight);
+            buffer.writeVarInt(gridX);
+            buffer.writeVarInt(gridY);
+            buffer.writeBoolean(rotated);
+            buffer.writeBoolean(canRotate);
         }
 
         static ItemSnapshot read(RegistryFriendlyByteBuf buffer) {
@@ -215,7 +237,13 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
                     buffer.readVarInt(),
                     buffer.readVarInt(),
                     buffer.readDouble(),
-                    buffer.readVarInt());
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readBoolean(),
+                    buffer.readBoolean());
         }
     }
 }

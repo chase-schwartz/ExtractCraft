@@ -208,6 +208,12 @@ public class RaidResultService {
                 item.slotCost(),
                 item.totalWeight(),
                 item.totalValue(),
+                item.gridWidth(),
+                item.gridHeight(),
+                item.gridX(),
+                item.gridY(),
+                item.rotated(),
+                item.canRotate(),
                 item.toItemStack());
     }
 

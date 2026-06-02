@@ -8,13 +8,21 @@ public class RaidStorageContainer {
     private final String name;
     private final int capacity;
     private final double maxWeight;
+    private final int gridWidth;
+    private final int gridHeight;
     private final List<RaidInventoryItem> items = new ArrayList<>();
 
     public RaidStorageContainer(String id, String name, int capacity, double maxWeight) {
+        this(id, name, capacity, maxWeight, Math.max(1, capacity), 1);
+    }
+
+    public RaidStorageContainer(String id, String name, int capacity, double maxWeight, int gridWidth, int gridHeight) {
         this.id = id;
         this.name = name;
         this.capacity = Math.max(0, capacity);
         this.maxWeight = Math.max(0.0D, maxWeight);
+        this.gridWidth = Math.max(0, gridWidth);
+        this.gridHeight = Math.max(0, gridHeight);
     }
 
     public boolean canAdd(RaidInventoryItem item) {
@@ -67,18 +75,124 @@ public class RaidStorageContainer {
             if (usedCapacity() + stack.totalSlotCost() > capacity) {
                 break;
             }
+            GridPlacement placement = findFirstFit(stack).orElse(null);
+            if (placement == null) {
+                break;
+            }
 
-            items.add(stack);
+            items.add(stack.withPlacement(placement.x(), placement.y(), placement.rotated()));
             remaining -= transfer;
         }
 
         return item.count() - remaining;
     }
 
+    public int addPartialAt(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        if (item == null || item.count() <= 0 || x < 0 || y < 0) {
+            return 0;
+        }
+
+        RaidInventoryItem mergeTarget = itemAtCell(x, y, excludedIndex);
+        if (mergeTarget != null) {
+            int mergeIndex = itemIndexAtCell(x, y);
+            if (mergeIndex != excludedIndex && mergeTarget.canMerge(item)) {
+                int freeStackSpace = mergeTarget.maxStackSize() - mergeTarget.count();
+                int transfer = Math.min(item.count(), Math.min(freeStackSpace, weightLimitedCount(item)));
+                if (transfer > 0) {
+                    items.set(mergeIndex, mergeTarget.withCount(mergeTarget.count() + transfer));
+                }
+                return transfer;
+            }
+            return 0;
+        }
+
+        int transfer = Math.min(item.count(), item.maxStackSize());
+        transfer = Math.min(transfer, weightLimitedCount(item));
+        if (transfer <= 0) {
+            return 0;
+        }
+
+        RaidInventoryItem stack = item.withCount(transfer);
+        if (usedCapacity() + stack.totalSlotCost() > capacity || !canFit(stack, x, y, rotated, excludedIndex)) {
+            return 0;
+        }
+
+        items.add(stack.withPlacement(x, y, rotated));
+        return transfer;
+    }
+
     public int countAddable(RaidInventoryItem item, int excludedIndex) {
-        RaidStorageContainer copy = new RaidStorageContainer(id, name, capacity, maxWeight);
+        RaidStorageContainer copy = new RaidStorageContainer(id, name, capacity, maxWeight, gridWidth, gridHeight);
         copy.items.addAll(items);
         return copy.addPartial(item, excludedIndex);
+    }
+
+    public boolean canFit(RaidInventoryItem item, int x, int y, boolean rotated) {
+        return canFit(item, x, y, rotated, -1);
+    }
+
+    public boolean canFit(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        if (item == null || gridWidth <= 0 || gridHeight <= 0) {
+            return false;
+        }
+
+        int width = footprintWidth(item, rotated);
+        int height = footprintHeight(item, rotated);
+        if (x < 0 || y < 0 || x + width > gridWidth || y + height > gridHeight) {
+            return false;
+        }
+
+        for (int index = 0; index < items.size(); index++) {
+            if (index == excludedIndex) {
+                continue;
+            }
+            RaidInventoryItem existing = items.get(index);
+            if (!existing.isPlaced()) {
+                continue;
+            }
+            if (overlaps(x, y, width, height, existing.gridX(), existing.gridY(), footprintWidth(existing, existing.rotated()), footprintHeight(existing, existing.rotated()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public RaidInventoryItem itemAtCell(int x, int y) {
+        return itemAtCell(x, y, -1);
+    }
+
+    public int itemIndexAtCell(int x, int y) {
+        for (int index = 0; index < items.size(); index++) {
+            RaidInventoryItem item = items.get(index);
+            if (coversCell(item, x, y)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private RaidInventoryItem itemAtCell(int x, int y, int excludedIndex) {
+        int index = itemIndexAtCell(x, y);
+        return index < 0 || index == excludedIndex ? null : items.get(index);
+    }
+
+    public java.util.Optional<GridPlacement> findFirstFit(RaidInventoryItem item) {
+        if (gridWidth <= 0 || gridHeight <= 0) {
+            return java.util.Optional.empty();
+        }
+
+        for (boolean rotated : rotationOptions(item)) {
+            int width = footprintWidth(item, rotated);
+            int height = footprintHeight(item, rotated);
+            for (int y = 0; y <= gridHeight - height; y++) {
+                for (int x = 0; x <= gridWidth - width; x++) {
+                    if (canFit(item, x, y, rotated)) {
+                        return java.util.Optional.of(new GridPlacement(x, y, rotated));
+                    }
+                }
+            }
+        }
+        return java.util.Optional.empty();
     }
 
     public RaidInventoryItem itemAt(int index) {
@@ -150,6 +264,14 @@ public class RaidStorageContainer {
         return maxWeight;
     }
 
+    public int gridWidth() {
+        return gridWidth;
+    }
+
+    public int gridHeight() {
+        return gridHeight;
+    }
+
     private int weightLimitedCount(RaidInventoryItem item) {
         double perItemWeight = item.totalWeight() / Math.max(1, item.count());
         if (perItemWeight <= 0.0D) {
@@ -158,5 +280,36 @@ public class RaidStorageContainer {
 
         double remainingWeight = maxWeight - usedWeight();
         return Math.max(0, (int) Math.floor((remainingWeight + 0.000001D) / perItemWeight));
+    }
+
+    private static List<Boolean> rotationOptions(RaidInventoryItem item) {
+        if (!item.canRotate() || item.gridWidth() == item.gridHeight()) {
+            return List.of(false);
+        }
+        return List.of(false, true);
+    }
+
+    private static int footprintWidth(RaidInventoryItem item, boolean rotated) {
+        return rotated ? item.gridHeight() : item.gridWidth();
+    }
+
+    private static int footprintHeight(RaidInventoryItem item, boolean rotated) {
+        return rotated ? item.gridWidth() : item.gridHeight();
+    }
+
+    private static boolean overlaps(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    private static boolean coversCell(RaidInventoryItem item, int x, int y) {
+        if (!item.isPlaced()) {
+            return false;
+        }
+        int width = footprintWidth(item, item.rotated());
+        int height = footprintHeight(item, item.rotated());
+        return x >= item.gridX() && x < item.gridX() + width && y >= item.gridY() && y < item.gridY() + height;
+    }
+
+    public record GridPlacement(int x, int y, boolean rotated) {
     }
 }

@@ -378,8 +378,11 @@ public class RaidInventoryCommands {
         }
 
         RaidInventory inventory = RaidInventoryManager.get(player);
-        inventory.setBackpack(backpack);
-        player.sendSystemMessage(Component.literal("Raid backpack set to " + backpack.name() + ". Current raid inventory contents were cleared."));
+        RaidInventory.AddResult result = inventory.setBackpack(backpack);
+        player.sendSystemMessage(Component.literal(result.message()));
+        if (!result.success()) {
+            return 0;
+        }
         sendStatus(player);
         return 1;
     }

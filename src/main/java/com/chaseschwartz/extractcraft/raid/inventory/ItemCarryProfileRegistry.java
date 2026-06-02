@@ -59,6 +59,7 @@ public class ItemCarryProfileRegistry implements PreparableReloadListener {
                 fallbackSlotCost(value.category()),
                 Optional.empty(),
                 Optional.empty(),
+                true,
                 value.category() != ItemCategory.GUNS && value.category() != ItemCategory.ARMOR,
                 value.category() == ItemCategory.AMMO || value.category() == ItemCategory.MAGAZINES || value.category() == ItemCategory.MEDICAL,
                 List.of("fallback from item value registry")));
@@ -144,10 +145,11 @@ public class ItemCarryProfileRegistry implements PreparableReloadListener {
             int slotCost = Math.max(1, optionalInt(object, "slotCost").orElse(fallbackSlotCost(category)));
             Optional<Integer> gridWidth = optionalInt(object, "gridWidth");
             Optional<Integer> gridHeight = optionalInt(object, "gridHeight");
+            boolean canRotate = optionalBoolean(object, "canRotate").orElse(true);
             boolean allowInSafeBox = optionalBoolean(object, "allowInSafeBox").orElse(category != ItemCategory.GUNS && category != ItemCategory.ARMOR);
             boolean allowInVest = optionalBoolean(object, "allowInVest").orElse(category == ItemCategory.AMMO || category == ItemCategory.MAGAZINES || category == ItemCategory.MEDICAL);
             List<String> notes = optionalStringList(object, "notes");
-            return Optional.of(new ParsedProfile(lookupKey, new ItemCarryProfile(itemId, category, weight, slotCost, gridWidth, gridHeight, allowInSafeBox, allowInVest, notes)));
+            return Optional.of(new ParsedProfile(lookupKey, new ItemCarryProfile(itemId, category, weight, slotCost, gridWidth, gridHeight, canRotate, allowInSafeBox, allowInVest, notes)));
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Skipping invalid carry profile entry in {}: {}", fileId, exception.getMessage());
             return Optional.empty();

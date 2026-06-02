@@ -6,13 +6,18 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
-public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value, ItemStack storedStack) {
+public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value,
+        int gridWidth, int gridHeight, int gridX, int gridY, boolean rotated, boolean canRotate, ItemStack storedStack) {
     public RaidInventoryItem(ResourceLocation itemId, int count, int slotCost, double weight, int value) {
         this(itemId, itemId.toString(), itemId.toString(), "unknown", count, slotCost, weight, value);
     }
 
     public RaidInventoryItem(ResourceLocation itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value) {
         this(itemId, lookupKey, displayName, category, count, slotCost, weight, value, ItemStack.EMPTY);
+    }
+
+    public RaidInventoryItem(ResourceLocation itemId, String lookupKey, String displayName, String category, int count, int slotCost, double weight, int value, ItemStack storedStack) {
+        this(itemId, lookupKey, displayName, category, count, slotCost, weight, value, Math.max(1, slotCost), 1, -1, -1, false, true, storedStack);
     }
 
     public RaidInventoryItem {
@@ -29,6 +34,8 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
         slotCost = Math.max(1, slotCost);
         weight = Math.max(0.0D, weight);
         value = Math.max(0, value);
+        gridWidth = Math.max(1, gridWidth);
+        gridHeight = Math.max(1, gridHeight);
         storedStack = storedStack == null ? ItemStack.EMPTY : storedStack.copy();
         if (!storedStack.isEmpty()) {
             storedStack.setCount(count);
@@ -36,7 +43,7 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
     }
 
     public int totalSlotCost() {
-        return slotCost;
+        return gridWidth * gridHeight;
     }
 
     public double totalWeight() {
@@ -65,6 +72,33 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
         return stack.isEmpty() ? 1 : Math.max(1, stack.getMaxStackSize());
     }
 
+    public boolean isPlaced() {
+        return gridX >= 0 && gridY >= 0;
+    }
+
+    public RaidInventoryItem withPlacement(int x, int y, boolean rotated) {
+        return new RaidInventoryItem(
+                itemId,
+                lookupKey,
+                displayName,
+                category,
+                count,
+                slotCost,
+                weight,
+                value,
+                gridWidth,
+                gridHeight,
+                x,
+                y,
+                rotated,
+                canRotate,
+                toItemStack());
+    }
+
+    public RaidInventoryItem withoutPlacement() {
+        return withPlacement(-1, -1, rotated);
+    }
+
     public RaidInventoryItem withCount(int newCount) {
         int adjustedCount = Math.max(1, newCount);
         int oldStackUnits = Math.max(1, (int) Math.ceil(count / (double) maxStackSize()));
@@ -81,6 +115,12 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
                 unitSlotCost * newStackUnits,
                 weightPerItem * adjustedCount,
                 (int) Math.round(valuePerItem * adjustedCount),
+                gridWidth,
+                gridHeight,
+                gridX,
+                gridY,
+                rotated,
+                canRotate,
                 toItemStack());
     }
 

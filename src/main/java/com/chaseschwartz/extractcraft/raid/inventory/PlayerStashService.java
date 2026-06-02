@@ -242,7 +242,7 @@ public class PlayerStashService {
     }
 
     private static RaidStorageContainer copyStorage(RaidStorageContainer source) {
-        RaidStorageContainer copy = new RaidStorageContainer(source.id(), source.name(), source.capacity(), source.maxWeight());
+        RaidStorageContainer copy = new RaidStorageContainer(source.id(), source.name(), source.capacity(), source.maxWeight(), source.gridWidth(), source.gridHeight());
         for (RaidInventoryItem item : source.items()) {
             copy.addPartial(copyItem(item));
         }
@@ -333,6 +333,13 @@ public class PlayerStashService {
             int slotCost = getInt(object, "slotCost", 1);
             double weight = getDouble(object, "weight", 0.0D);
             int value = getInt(object, "value", 0);
+            ItemCarryProfile profile = ItemCarryProfileRegistry.get(lookupKey).orElse(null);
+            int gridWidth = getInt(object, "gridWidth", profile == null ? 1 : profile.gridWidth().orElse(fallbackGridWidth(profile.category())));
+            int gridHeight = getInt(object, "gridHeight", profile == null ? 1 : profile.gridHeight().orElse(fallbackGridHeight(profile.category())));
+            int gridX = getInt(object, "gridX", -1);
+            int gridY = getInt(object, "gridY", -1);
+            boolean rotated = getBoolean(object, "rotated", false);
+            boolean canRotate = getBoolean(object, "canRotate", profile == null || profile.canRotate());
             ItemStack stack = ItemStack.EMPTY;
             if (object.has("stackTag")) {
                 CompoundTag tag = TagParser.parseTag(object.get("stackTag").getAsString());
@@ -341,7 +348,7 @@ public class PlayerStashService {
                     stack.setCount(count);
                 }
             }
-            return new RaidInventoryItem(itemId, lookupKey, displayName, category, count, slotCost, weight, value, stack);
+            return new RaidInventoryItem(itemId, lookupKey, displayName, category, count, slotCost, weight, value, gridWidth, gridHeight, gridX, gridY, rotated, canRotate, stack);
         } catch (CommandSyntaxException | RuntimeException exception) {
             ExtractCraft.LOGGER.warn("Unable to parse persisted ExtractCraft stash item {}", object, exception);
             return null;
@@ -395,6 +402,12 @@ public class PlayerStashService {
         object.addProperty("slotCost", item.slotCost());
         object.addProperty("weight", item.totalWeight());
         object.addProperty("value", item.totalValue());
+        object.addProperty("gridWidth", item.gridWidth());
+        object.addProperty("gridHeight", item.gridHeight());
+        object.addProperty("gridX", item.gridX());
+        object.addProperty("gridY", item.gridY());
+        object.addProperty("rotated", item.rotated());
+        object.addProperty("canRotate", item.canRotate());
         ItemStack stack = item.toItemStack();
         if (!stack.isEmpty()) {
             Tag tag = stack.saveOptional(player.registryAccess());
@@ -430,6 +443,12 @@ public class PlayerStashService {
                 item.slotCost(),
                 item.totalWeight(),
                 item.totalValue(),
+                item.gridWidth(),
+                item.gridHeight(),
+                item.gridX(),
+                item.gridY(),
+                item.rotated(),
+                item.canRotate(),
                 item.toItemStack());
     }
 
@@ -485,6 +504,10 @@ public class PlayerStashService {
         return object.has(key) ? object.get(key).getAsDouble() : fallback;
     }
 
+    private static boolean getBoolean(JsonObject object, String key, boolean fallback) {
+        return object.has(key) ? object.get(key).getAsBoolean() : fallback;
+    }
+
     public static class PlayerStashData {
         private int credits;
         private int stashLevel;
@@ -494,7 +517,7 @@ public class PlayerStashService {
         private PlayerStashData(int credits, int stashLevel) {
             this.credits = Math.max(0, credits);
             this.stashLevel = Math.max(1, stashLevel);
-            this.stash = new RaidStorageContainer("stash", "Persistent Stash", capacityForLevel(this.stashLevel), 1_000_000.0D);
+            this.stash = stashContainer(this.stashLevel);
             this.baseInventory = new RaidInventory(baseLoadout());
         }
 
@@ -510,7 +533,7 @@ public class PlayerStashService {
         }
 
         private void rebuildStash() {
-            RaidStorageContainer upgraded = new RaidStorageContainer("stash", "Persistent Stash", capacityForLevel(stashLevel), 1_000_000.0D);
+            RaidStorageContainer upgraded = stashContainer(stashLevel);
             for (RaidInventoryItem item : stash.items()) {
                 upgraded.addPartial(item);
             }
@@ -540,6 +563,41 @@ public class PlayerStashService {
         public RaidInventory baseInventory() {
             return baseInventory;
         }
+    }
+
+    private static RaidStorageContainer stashContainer(int stashLevel) {
+        int capacity = capacityForLevel(stashLevel);
+        int columns = stashColumnsForCapacity(capacity);
+        int rows = Math.max(1, (int) Math.ceil(capacity / (double) columns));
+        return new RaidStorageContainer("stash", "Persistent Stash", capacity, 1_000_000.0D, columns, rows);
+    }
+
+    private static int stashColumnsForCapacity(int capacity) {
+        if (capacity >= 220) {
+            return 16;
+        }
+        if (capacity >= 170) {
+            return 15;
+        }
+        return 10;
+    }
+
+    private static int fallbackGridWidth(com.chaseschwartz.extractcraft.itemvalues.ItemCategory category) {
+        return switch (category) {
+            case GUNS -> 2;
+            case ARMOR -> 3;
+            case TOOLS, WEAPON_PARTS, MEDICAL -> 2;
+            default -> 1;
+        };
+    }
+
+    private static int fallbackGridHeight(com.chaseschwartz.extractcraft.itemvalues.ItemCategory category) {
+        return switch (category) {
+            case GUNS -> 5;
+            case ARMOR -> 3;
+            case TOOLS, WEAPON_PARTS, MEDICAL, MAGAZINES -> 2;
+            default -> 1;
+        };
     }
 
     public static class StashTransferResult {
