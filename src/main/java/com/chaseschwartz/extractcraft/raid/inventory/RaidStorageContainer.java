@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
@@ -238,6 +239,12 @@ public class RaidStorageContainer {
         return copy.addPartial(item, excludedIndex);
     }
 
+    public RaidStorageContainer copy() {
+        RaidStorageContainer copy = new RaidStorageContainer(id, name, capacity, maxWeight, gridWidth, gridHeight);
+        copy.items.addAll(items);
+        return copy;
+    }
+
     public boolean canFit(RaidInventoryItem item, int x, int y, boolean rotated) {
         return canFit(item, x, y, rotated, -1);
     }
@@ -456,6 +463,26 @@ public class RaidStorageContainer {
 
     public List<RaidInventoryItem> items() {
         return List.copyOf(items);
+    }
+
+    public void sortItems(Comparator<RaidInventoryItem> comparator) {
+        if (comparator != null) {
+            items.sort(comparator);
+        }
+    }
+
+    public boolean repackFirstFit(boolean ignoreWeight) {
+        List<RaidInventoryItem> ordered = new ArrayList<>(items);
+        items.clear();
+        for (RaidInventoryItem item : ordered) {
+            int moved = addPartialGridFirstFit(item.withoutPlacement(), ignoreWeight);
+            if (moved < item.count()) {
+                items.clear();
+                items.addAll(ordered);
+                return false;
+            }
+        }
+        return true;
     }
 
     public String id() {

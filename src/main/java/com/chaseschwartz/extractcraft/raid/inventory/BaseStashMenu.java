@@ -1,6 +1,5 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -67,12 +66,13 @@ public class BaseStashMenu extends AbstractContainerMenu {
     private final int vestGridHeight;
     private final int safeGridWidth;
     private final int safeGridHeight;
-    private SortMode sortMode = SortMode.NAME;
+    private SortMode sortMode = SortMode.MANUAL;
     private final DataSlot stashUsedCapacity;
     private final DataSlot stashMaxCapacity;
     private final DataSlot stashLevel;
     private final DataSlot credits;
     private final DataSlot totalValue;
+    private boolean reopenAfterChange;
 
     public BaseStashMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf data) {
         this(containerId, playerInventory, null, null, data.readVarInt(), data.readVarInt(), data.readVarInt(),
@@ -131,6 +131,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return true;
         }
 
+        reopenAfterChange = false;
         boolean changed;
         if (id >= CONTEXT_ACTION_OFFSET) {
             int payload = id - CONTEXT_ACTION_OFFSET;
@@ -142,8 +143,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
             int sourceIndex = Math.floorMod(remainder, CONTEXT_SOURCE_FACTOR);
             changed = handleContextAction(serverPlayer, action, kind == 1, slotFromId(sourceId), sourceIndex);
         } else if (id >= SORT_OFFSET) {
-            sortMode = SortMode.fromId(id - SORT_OFFSET);
+            sortStashOnce(serverPlayer, SortMode.fromId(id - SORT_OFFSET));
             rebuildDisplays();
+            broadcastChanges();
             return true;
         } else if (id >= MOVE_BASE_TO_BASE_CELL_OFFSET) {
             int payload = id - MOVE_BASE_TO_BASE_CELL_OFFSET;
@@ -188,23 +190,27 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         setCarried(ItemStack.EMPTY);
         broadcastChanges();
+        reopenIfRequested(serverPlayer, changed);
         return true;
     }
 
     public GridMoveResult handleGridMoveRequest(ServerPlayer player, int operation, int sourceSlotId, int sourceIndex, int targetSlotId, int targetCell) {
+        reopenAfterChange = false;
         boolean changed = switch (operation) {
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_TO_BASE_CELL ->
                     moveStashToBase(player, sourceIndex, slotFromId(targetSlotId), targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_TO_BASE_CELL ->
                     moveBaseToBase(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId), targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_TO_STASH ->
-                    moveBaseToStash(player, slotFromId(sourceSlotId), sourceIndex);
+                    moveBaseToStash(player, slotFromId(sourceSlotId), sourceIndex, targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_DROP ->
                     dropBaseItem(player, slotFromId(sourceSlotId), sourceIndex);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_DROP ->
                     dropStashItem(player, sourceIndex);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_QUICK_TO_BASE ->
                     quickMoveStashToBase(player, sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_TO_STASH_CELL ->
+                    moveStashToStash(player, sourceIndex, targetCell);
             default -> false;
         };
         if (changed) {
@@ -213,6 +219,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         setCarried(ItemStack.EMPTY);
         broadcastChanges();
+        reopenIfRequested(player, changed);
         return changed ? GridMoveResult.success("Move committed.") : GridMoveResult.failure("Move rejected.");
     }
 
@@ -361,6 +368,10 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return menuSlot - stashMenuSlotStart();
     }
 
+    public int stashActualIndexForDisplayIndex(int stashDisplayIndex) {
+        return stashSourceIndex(stashDisplayIndex);
+    }
+
     public int stashMenuSlotStart() {
         return BASE_DISPLAY_SLOTS;
     }
@@ -425,13 +436,36 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return sortMode.label;
     }
 
+    private void sortStashOnce(ServerPlayer player, SortMode mode) {
+        stashData.stash().sortItems(mode.itemComparator);
+        if (!stashData.stash().repackFirstFit(true)) {
+            player.sendSystemMessage(Component.literal("Could not repack stash after sorting."));
+            return;
+        }
+        sortMode = SortMode.MANUAL;
+        PlayerStashService.save(player, stashData);
+        player.sendSystemMessage(Component.literal("Sorted stash by " + mode.label + ". Manual placement restored."));
+    }
+
     private boolean moveBaseToStash(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        return moveBaseToStash(player, source, sourceIndex, -1);
+    }
+
+    private boolean moveBaseToStash(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, int targetCell) {
         RaidInventoryItem item = stashData.baseInventory().itemAt(source, sourceIndex);
         if (item == null) {
             player.sendSystemMessage(Component.literal("Source item is no longer available."));
             return false;
         }
-        if (stashData.stash().countAddable(item, -1) < item.count()) {
+        int targetX = targetCell >= 0 ? stashCellX(targetCell) : -1;
+        int targetY = targetCell >= 0 ? stashCellY(targetCell) : -1;
+        if (targetCell >= 0) {
+            int moved = stashData.stash().copy().addPartialAt(PlayerStashService.copyItem(item).withoutPlacement(), targetX, targetY, false, -1, true);
+            if (moved < item.count()) {
+                player.sendSystemMessage(Component.literal("Stash target is blocked."));
+                return false;
+            }
+        } else if (stashData.stash().countAddable(item, -1) < item.count()) {
             player.sendSystemMessage(Component.literal("Stash does not have enough capacity."));
             return false;
         }
@@ -441,10 +475,55 @@ public class BaseStashMenu extends AbstractContainerMenu {
             player.sendSystemMessage(Component.literal("Source item is no longer available."));
             return false;
         }
-        stashData.stash().addPartial(removed);
+        int moved = targetCell >= 0
+                ? stashData.stash().addPartialAt(removed.withoutPlacement(), targetX, targetY, false, -1, true)
+                : stashData.stash().addPartial(removed);
+        if (moved < removed.count()) {
+            restoreRemovedItem(false, source, removed);
+            player.sendSystemMessage(Component.literal("Stash target is blocked."));
+            return false;
+        }
         player.sendSystemMessage(Component.literal("Moved " + removed.displayName() + " to stash."));
-        reopenIfEquipmentMove(player, source, null);
+        reopenIfEquipmentMove(source, null);
         return true;
+    }
+
+    private boolean moveStashToStash(ServerPlayer player, int stashDisplayIndex, int targetCell) {
+        int stashIndex = stashSourceIndex(stashDisplayIndex);
+        RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+        if (targetCell < 0) {
+            player.sendSystemMessage(Component.literal("No stash target cell selected."));
+            return false;
+        }
+
+        int targetX = stashCellX(targetCell);
+        int targetY = stashCellY(targetCell);
+        RaidStorageContainer copy = stashData.stash().copy();
+        RaidInventoryItem copyRemoved = copy.removeCountAt(stashIndex, item.count());
+        if (copyRemoved == null || copy.addPartialAt(copyRemoved.withoutPlacement(), targetX, targetY, false, -1, true) < item.count()) {
+            player.sendSystemMessage(Component.literal("Stash target is blocked."));
+            return false;
+        }
+
+        RaidInventoryItem removed = stashData.stash().removeCountAt(stashIndex, item.count());
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+
+        int moved = stashData.stash().addPartialAt(removed.withoutPlacement(), targetX, targetY, false, -1, true);
+        if (moved >= removed.count()) {
+            player.sendSystemMessage(Component.literal("Moved " + removed.displayName() + " in stash."));
+            return true;
+        }
+
+        stashData.stash().addPartialAt(removed.withoutPlacement(), removed.gridX(), removed.gridY(), removed.rotated(), -1, true);
+        player.sendSystemMessage(Component.literal("Stash target is blocked."));
+        return false;
     }
 
     private boolean handleContextAction(ServerPlayer player, int action, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
@@ -483,7 +562,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return false;
         }
         if (!stashSource) {
-            reopenIfEquipmentMove(player, source, null);
+            reopenIfEquipmentMove(source, null);
         }
         return true;
     }
@@ -501,7 +580,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         boolean dropped = spawnManagedDropOrRestore(player, false, source, removed);
         if (dropped) {
-            reopenIfEquipmentMove(player, source, null);
+            reopenIfEquipmentMove(source, null);
         }
         return dropped;
     }
@@ -706,7 +785,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
                 placed == null ? -1 : placed.gridX(),
                 placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
-        reopenIfEquipmentMove(player, null, target);
+        reopenIfEquipmentMove(null, target);
         return true;
     }
 
@@ -740,7 +819,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         PlayerStashService.replaceInventoryContents(stashData.baseInventory(), candidate);
         player.sendSystemMessage(Component.literal(result.message()));
-        reopenIfEquipmentMove(player, null, target);
+        reopenIfEquipmentMove(null, target);
         return true;
     }
 
@@ -796,14 +875,21 @@ public class BaseStashMenu extends AbstractContainerMenu {
                 placed == null ? -1 : placed.gridX(),
                 placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
-        reopenIfEquipmentMove(player, source, target);
+        reopenIfEquipmentMove(source, target);
         return true;
     }
 
-    private static void reopenIfEquipmentMove(ServerPlayer player, RaidEquipmentSlot source, RaidEquipmentSlot target) {
+    private void reopenIfEquipmentMove(RaidEquipmentSlot source, RaidEquipmentSlot target) {
         if (RaidInventory.isEquipmentSlot(source) || RaidInventory.isEquipmentSlot(target)) {
+            reopenAfterChange = true;
+        }
+    }
+
+    private void reopenIfRequested(ServerPlayer player, boolean changed) {
+        if (changed && reopenAfterChange) {
             BaseStashScreenOpener.open(player);
         }
+        reopenAfterChange = false;
     }
 
     private RaidInventory.AddResult baseMove(RaidInventory candidate, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, ItemCarryProfile profile, int cell) {
@@ -962,17 +1048,8 @@ public class BaseStashMenu extends AbstractContainerMenu {
                 baseInventory.backpack().itemCount(),
                 visibleDisplaySlots(BACKPACK_START, BACKPACK_DISPLAY_SLOTS));
 
-        List<IndexedItem> stashItems = new ArrayList<>();
         List<RaidInventoryItem> items = stashData.stash().items();
-        for (int index = 0; index < items.size(); index++) {
-            stashItems.add(new IndexedItem(index, items.get(index)));
-        }
-        stashItems.sort(sortMode.comparator);
-        for (int displayIndex = 0; displayIndex < Math.min(stashCapacity, stashItems.size()); displayIndex++) {
-            IndexedItem indexedItem = stashItems.get(displayIndex);
-            displayedStashIndexes[displayIndex] = indexedItem.index();
-            stashDisplay.setItem(displayIndex, displayStack(indexedItem.item(), indexedItem.index()));
-        }
+        fillDisplay(stashDisplay, displayedStashIndexes, 0, stashCapacity, stashData.stash().gridWidth(), items);
         baseDisplay.setChanged();
         stashDisplay.setChanged();
     }
@@ -1127,6 +1204,14 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return cell / columnsFor(slot);
     }
 
+    private int stashCellX(int cell) {
+        return cell % Math.max(1, stashData.stash().gridWidth());
+    }
+
+    private int stashCellY(int cell) {
+        return cell / Math.max(1, stashData.stash().gridWidth());
+    }
+
     private int columnsFor(RaidEquipmentSlot slot) {
         return switch (slot) {
             case VEST -> Math.max(1, vestGridWidth);
@@ -1175,19 +1260,20 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private enum SortMode {
-        NAME(0, "Name", Comparator.comparing((IndexedItem item) -> item.item().displayName())),
-        VALUE(1, "Value", Comparator.comparingInt((IndexedItem item) -> item.item().totalValue()).reversed().thenComparing(item -> item.item().displayName())),
-        WEIGHT(2, "Weight", Comparator.comparingDouble((IndexedItem item) -> item.item().totalWeight()).reversed().thenComparing(item -> item.item().displayName())),
-        CATEGORY(3, "Category", Comparator.comparing((IndexedItem item) -> item.item().category()).thenComparing(item -> item.item().displayName()));
+        MANUAL(-1, "Manual", Comparator.comparing(RaidInventoryItem::displayName)),
+        NAME(0, "Name", Comparator.comparing(RaidInventoryItem::displayName)),
+        VALUE(1, "Value", Comparator.comparingInt(RaidInventoryItem::totalValue).reversed().thenComparing(RaidInventoryItem::displayName)),
+        WEIGHT(2, "Weight", Comparator.comparingDouble(RaidInventoryItem::totalWeight).reversed().thenComparing(RaidInventoryItem::displayName)),
+        CATEGORY(3, "Category", Comparator.comparing((RaidInventoryItem item) -> item.category()).thenComparing(RaidInventoryItem::displayName));
 
         private final int id;
         private final String label;
-        private final Comparator<IndexedItem> comparator;
+        private final Comparator<RaidInventoryItem> itemComparator;
 
-        SortMode(int id, String label, Comparator<IndexedItem> comparator) {
+        SortMode(int id, String label, Comparator<RaidInventoryItem> itemComparator) {
             this.id = id;
             this.label = label;
-            this.comparator = comparator;
+            this.itemComparator = itemComparator;
         }
 
         private static SortMode fromId(int id) {
@@ -1198,8 +1284,5 @@ public class BaseStashMenu extends AbstractContainerMenu {
             }
             return NAME;
         }
-    }
-
-    private record IndexedItem(int index, RaidInventoryItem item) {
     }
 }
