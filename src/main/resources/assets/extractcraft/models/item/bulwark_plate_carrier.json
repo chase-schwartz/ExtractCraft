@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "extractcraft:item/bulwark_plate_carrier"
+  }
+}

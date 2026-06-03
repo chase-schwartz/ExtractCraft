@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "extractcraft:item/specter_combat_rig"
+  }
+}

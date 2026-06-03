@@ -514,7 +514,8 @@ public class RaidInventory {
         String key = (item.lookupKey() + " " + item.itemId() + " " + item.displayName()).toLowerCase(java.util.Locale.ROOT);
         return switch (slot) {
             case HELMET -> key.contains("helmet");
-            case ARMOR -> "armor".equalsIgnoreCase(item.category()) && (key.contains("chestplate") || key.contains("armor"));
+            case ARMOR -> "armor".equalsIgnoreCase(item.category())
+                    && (key.contains("chestplate") || key.contains("armor") || key.contains("plate_carrier"));
             case EQUIPPED_BACKPACK -> RaidInventoryDefinitions.backpackForItem(item).gridWidth() > 0;
             case EQUIPPED_VEST -> RaidInventoryDefinitions.vestForItem(item).gridWidth() > 0;
             case EQUIPPED_SAFE_CONTAINER -> RaidInventoryDefinitions.safeContainerForItem(item).gridWidth() > 0;

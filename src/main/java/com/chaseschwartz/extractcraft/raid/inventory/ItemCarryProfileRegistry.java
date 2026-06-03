@@ -149,7 +149,32 @@ public class ItemCarryProfileRegistry implements PreparableReloadListener {
             boolean allowInSafeBox = optionalBoolean(object, "allowInSafeBox").orElse(category != ItemCategory.GUNS && category != ItemCategory.ARMOR);
             boolean allowInVest = optionalBoolean(object, "allowInVest").orElse(category == ItemCategory.AMMO || category == ItemCategory.MAGAZINES || category == ItemCategory.MEDICAL);
             List<String> notes = optionalStringList(object, "notes");
-            return Optional.of(new ParsedProfile(lookupKey, new ItemCarryProfile(itemId, category, weight, slotCost, gridWidth, gridHeight, canRotate, allowInSafeBox, allowInVest, notes)));
+            return Optional.of(new ParsedProfile(lookupKey, new ItemCarryProfile(
+                    itemId,
+                    category,
+                    weight,
+                    slotCost,
+                    gridWidth,
+                    gridHeight,
+                    canRotate,
+                    allowInSafeBox,
+                    allowInVest,
+                    notes,
+                    optionalInt(object, "tier"),
+                    optionalString(object, "equipmentSlot"),
+                    optionalString(object, "storageGridDefinition"),
+                    optionalDouble(object, "maxCarryWeight"),
+                    optionalBoolean(object, "durabilityEnabled").orElse(false),
+                    optionalInt(object, "maxDurability"),
+                    optionalString(object, "repairCategory"),
+                    optionalInt(object, "repairAmount"),
+                    optionalString(object, "repairTargetCategory"),
+                    optionalInt(object, "armorRating"),
+                    optionalInt(object, "healAmount"),
+                    optionalInt(object, "useTimeTicks"),
+                    optionalBoolean(object, "consumable").orElse(false),
+                    optionalBoolean(object, "fixesBleed").orElse(false),
+                    optionalBoolean(object, "fixesBrokenBone").orElse(false))));
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Skipping invalid carry profile entry in {}: {}", fileId, exception.getMessage());
             return Optional.empty();

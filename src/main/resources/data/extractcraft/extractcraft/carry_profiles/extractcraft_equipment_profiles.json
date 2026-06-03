@@ -1,0 +1,610 @@
+{
+  "profiles": [
+    {
+      "item": "extractcraft:scrapline_helmet",
+      "category": "armor",
+      "weight": 2.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "helmet",
+      "durabilityEnabled": true,
+      "maxDurability": 80,
+      "repairCategory": "Helmet",
+      "armorRating": 1
+    },
+    {
+      "item": "extractcraft:ranger_ballistic_helmet",
+      "category": "armor",
+      "weight": 2.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "helmet",
+      "durabilityEnabled": true,
+      "maxDurability": 120,
+      "repairCategory": "Helmet",
+      "armorRating": 2
+    },
+    {
+      "item": "extractcraft:vector_rail_helmet",
+      "category": "armor",
+      "weight": 3.3,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "helmet",
+      "durabilityEnabled": true,
+      "maxDurability": 170,
+      "repairCategory": "Helmet",
+      "armorRating": 3
+    },
+    {
+      "item": "extractcraft:apex_assault_helmet",
+      "category": "armor",
+      "weight": 4.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 4,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "helmet",
+      "durabilityEnabled": true,
+      "maxDurability": 300,
+      "repairCategory": "Helmet",
+      "armorRating": 4
+    },
+    {
+      "item": "extractcraft:softshell_plate_carrier",
+      "category": "armor",
+      "weight": 5.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "armor",
+      "durabilityEnabled": true,
+      "maxDurability": 140,
+      "repairCategory": "Armor",
+      "armorRating": 1
+    },
+    {
+      "item": "extractcraft:bulwark_plate_carrier",
+      "category": "armor",
+      "weight": 6.6,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "armor",
+      "durabilityEnabled": true,
+      "maxDurability": 210,
+      "repairCategory": "Armor",
+      "armorRating": 2
+    },
+    {
+      "item": "extractcraft:warden_combat_armor",
+      "category": "armor",
+      "weight": 8.2,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "armor",
+      "durabilityEnabled": true,
+      "maxDurability": 300,
+      "repairCategory": "Armor",
+      "armorRating": 3
+    },
+    {
+      "item": "extractcraft:juggernaut_assault_armor",
+      "category": "armor",
+      "weight": 10.0,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 4,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "armor",
+      "durabilityEnabled": true,
+      "maxDurability": 420,
+      "repairCategory": "Armor",
+      "armorRating": 4
+    },
+    {
+      "item": "extractcraft:scout_chest_rig",
+      "category": "armor",
+      "weight": 2.4,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_vest",
+      "storageGridDefinition": "3x2",
+      "storageGridWidth": 3,
+      "storageGridHeight": 2,
+      "maxCarryWeight": 8.0,
+      "durabilityEnabled": true,
+      "maxDurability": 90,
+      "repairCategory": "Vest"
+    },
+    {
+      "item": "extractcraft:rangefinder_tactical_vest",
+      "category": "armor",
+      "weight": 3.1,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_vest",
+      "storageGridDefinition": "4x2",
+      "storageGridWidth": 4,
+      "storageGridHeight": 2,
+      "maxCarryWeight": 12.0,
+      "durabilityEnabled": true,
+      "maxDurability": 130,
+      "repairCategory": "Vest"
+    },
+    {
+      "item": "extractcraft:operator_load_bearing_vest",
+      "category": "armor",
+      "weight": 3.8,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_vest",
+      "storageGridDefinition": "4x3",
+      "storageGridWidth": 4,
+      "storageGridHeight": 3,
+      "maxCarryWeight": 16.0,
+      "durabilityEnabled": true,
+      "maxDurability": 180,
+      "repairCategory": "Vest"
+    },
+    {
+      "item": "extractcraft:specter_combat_rig",
+      "category": "armor",
+      "weight": 4.6,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 4,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_vest",
+      "storageGridDefinition": "5x3",
+      "storageGridWidth": 5,
+      "storageGridHeight": 3,
+      "maxCarryWeight": 20.0,
+      "durabilityEnabled": true,
+      "maxDurability": 240,
+      "repairCategory": "Vest"
+    },
+    {
+      "item": "extractcraft:arsenal_elite_vest",
+      "category": "armor",
+      "weight": 5.3,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 5,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_vest",
+      "storageGridDefinition": "5x4",
+      "storageGridWidth": 5,
+      "storageGridHeight": 4,
+      "maxCarryWeight": 24.0,
+      "durabilityEnabled": true,
+      "maxDurability": 310,
+      "repairCategory": "Vest"
+    },
+    {
+      "item": "extractcraft:sparrow_sling_pack",
+      "category": "tools",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "4x4",
+      "storageGridWidth": 4,
+      "storageGridHeight": 4,
+      "maxCarryWeight": 14.0,
+      "durabilityEnabled": true,
+      "maxDurability": 80,
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:fieldrunner_pack",
+      "category": "tools",
+      "weight": 1.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "5x5",
+      "storageGridWidth": 5,
+      "storageGridHeight": 5,
+      "maxCarryWeight": 22.0,
+      "durabilityEnabled": true,
+      "maxDurability": 130,
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:mule_tactical_pack",
+      "category": "tools",
+      "weight": 2.6,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "6x6",
+      "storageGridWidth": 6,
+      "storageGridHeight": 6,
+      "maxCarryWeight": 32.0,
+      "durabilityEnabled": true,
+      "maxDurability": 200,
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:atlas_raid_pack",
+      "category": "tools",
+      "weight": 3.6,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 4,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "7x7",
+      "storageGridWidth": 7,
+      "storageGridHeight": 7,
+      "maxCarryWeight": 44.0,
+      "durabilityEnabled": true,
+      "maxDurability": 280,
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:atlas_raid_pack_mk2",
+      "category": "tools",
+      "weight": 4.4,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 5,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "8x8",
+      "storageGridWidth": 8,
+      "storageGridHeight": 8,
+      "maxCarryWeight": 56.0,
+      "durabilityEnabled": true,
+      "maxDurability": 380,
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:pioneer_lockbox",
+      "category": "tools",
+      "weight": 1.5,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_safe_container",
+      "storageGridDefinition": "2x2",
+      "storageGridWidth": 2,
+      "storageGridHeight": 2,
+      "maxCarryWeight": 8.0,
+      "durabilityEnabled": true,
+      "maxDurability": 90,
+      "repairCategory": "Safe Container"
+    },
+    {
+      "item": "extractcraft:blacksite_secure_case",
+      "category": "tools",
+      "weight": 2.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_safe_container",
+      "storageGridDefinition": "3x2",
+      "storageGridWidth": 3,
+      "storageGridHeight": 2,
+      "maxCarryWeight": 10.0,
+      "durabilityEnabled": true,
+      "maxDurability": 160,
+      "repairCategory": "Safe Container"
+    },
+    {
+      "item": "extractcraft:omega_safe_container",
+      "category": "tools",
+      "weight": 3.2,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "equipmentSlot": "equipped_safe_container",
+      "storageGridDefinition": "3x3",
+      "storageGridWidth": 3,
+      "storageGridHeight": 3,
+      "maxCarryWeight": 12.0,
+      "durabilityEnabled": true,
+      "maxDurability": 260,
+      "repairCategory": "Safe Container"
+    },
+    {
+      "item": "extractcraft:quickclot_injector",
+      "category": "medical",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "healAmount": 20,
+      "useTimeTicks": 40,
+      "fixesBleed": true,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:trauma_field_pack",
+      "category": "medical",
+      "weight": 0.8,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "healAmount": 45,
+      "useTimeTicks": 80,
+      "fixesBleed": true,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:blackseal_med_case",
+      "category": "medical",
+      "weight": 1.4,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "healAmount": 80,
+      "useTimeTicks": 120,
+      "fixesBleed": true,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:field_dressing_roll",
+      "category": "medical",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "useTimeTicks": 45,
+      "fixesBleed": true,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:splint_trauma_kit",
+      "category": "medical",
+      "weight": 0.7,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "useTimeTicks": 80,
+      "fixesBrokenBone": true,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:helmet_rebuild_kit",
+      "category": "armor_parts",
+      "weight": 0.9,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "repairTargetCategory": "Helmet",
+      "repairAmount": 90,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:armor_rebuild_kit",
+      "category": "armor_parts",
+      "weight": 1.8,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "repairTargetCategory": "Armor",
+      "repairAmount": 160,
+      "consumable": true
+    },
+    {
+      "item": "extractcraft:pack_rebuild_kit",
+      "category": "tools",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "tier": 1,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+      ],
+      "repairTargetCategory": "Backpack",
+      "repairAmount": 120,
+      "consumable": true
+    }
+  ]
+}

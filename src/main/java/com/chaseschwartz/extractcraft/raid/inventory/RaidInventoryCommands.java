@@ -144,7 +144,35 @@ public class RaidInventoryCommands {
                                                 .executes(context -> debugGiveGear(
                                                         context.getSource(),
                                                         StringArgumentType.getString(context, "gear"),
-                                                        StringArgumentType.getString(context, "target")))))))
+                                                        StringArgumentType.getString(context, "target"))))))
+                        .then(Commands.literal("giveitem")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("item", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            for (String id : debugExtractCraftItemIds()) {
+                                                builder.suggest(id);
+                                            }
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("target", StringArgumentType.word())
+                                                .suggests((context, builder) -> {
+                                                    builder.suggest("stash");
+                                                    builder.suggest("backpack");
+                                                    builder.suggest("equipment");
+                                                    builder.suggest("player");
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(context -> debugGiveItem(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "item"),
+                                                        StringArgumentType.getString(context, "target"),
+                                                        1))
+                                                .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                        .executes(context -> debugGiveItem(
+                                                                context.getSource(),
+                                                                StringArgumentType.getString(context, "item"),
+                                                                StringArgumentType.getString(context, "target"),
+                                                                IntegerArgumentType.getInteger(context, "count"))))))))
                 .then(Commands.literal("dropheld")
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                         .executes(context -> dropHeld(context.getSource())))
@@ -496,15 +524,170 @@ public class RaidInventoryCommands {
         return 0;
     }
 
+    private static int debugGiveItem(CommandSourceStack source, String itemName, String targetName, int count) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ResourceLocation itemId = debugItemId(itemName);
+        if (itemId == null || !BuiltInRegistries.ITEM.containsKey(itemId)) {
+            player.sendSystemMessage(Component.literal("Unknown item '" + itemName + "'. Use an ExtractCraft item id such as atlas_raid_pack."));
+            return 0;
+        }
+
+        String target = targetName.toLowerCase(java.util.Locale.ROOT);
+        int remaining = count;
+        int movedTotal = 0;
+        while (remaining > 0) {
+            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId), Math.min(remaining, BuiltInRegistries.ITEM.get(itemId).getDefaultMaxStackSize()));
+            int moved = debugInsertItem(player, stack, target);
+            if (moved <= 0) {
+                break;
+            }
+            movedTotal += moved;
+            remaining -= moved;
+            if (target.equals("equipment")) {
+                break;
+            }
+        }
+
+        if (movedTotal <= 0) {
+            player.sendSystemMessage(Component.literal("Could not give " + itemId + " to " + target + ". Target may be full or incompatible."));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal("Debug spawned " + movedTotal + "x " + itemId + " to " + target + "."));
+        return 1;
+    }
+
+    private static int debugInsertItem(ServerPlayer player, ItemStack stack, String target) {
+        if (target.equals("player")) {
+            return player.getInventory().add(stack.copy()) ? stack.getCount() : 0;
+        }
+
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, stack).orElse(null);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal(BuiltInRegistries.ITEM.getKey(stack.getItem()) + " has no carry profile; cannot insert into ExtractCraft storage."));
+            return 0;
+        }
+
+        if (target.equals("stash")) {
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            int moved = data.stash().addPartial(item.withoutPlacement());
+            if (moved > 0) {
+                PlayerStashService.save(player, data);
+            }
+            return moved;
+        }
+
+        if (target.equals("backpack")) {
+            if (RaidManager.isInRaid(player)) {
+                RaidInventory.AddResult result = RaidInventoryManager.addStackTo(player, stack, RaidEquipmentSlot.BACKPACK);
+                player.sendSystemMessage(Component.literal("Debug giveitem raid backpack: " + result.message()));
+                return result.success() ? result.movedCount() : 0;
+            }
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            RaidInventory.AddResult result = data.baseInventory().addToBackpack(item.withoutPlacement());
+            if (result.success()) {
+                PlayerStashService.save(player, data);
+                return result.movedCount();
+            }
+            player.sendSystemMessage(Component.literal("Debug giveitem base backpack: " + result.message()));
+            return 0;
+        }
+
+        if (target.equals("equipment")) {
+            RaidEquipmentSlot slot = debugEquipmentSlotFor(item);
+            if (slot == null) {
+                player.sendSystemMessage(Component.literal(item.displayName() + " is not compatible with any equipment slot."));
+                return 0;
+            }
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            RaidInventoryItem previous = data.baseInventory().equipmentItem(slot);
+            if (previous != null && data.stash().countAddable(previous.withoutPlacement(), -1) < previous.count()) {
+                player.sendSystemMessage(Component.literal("Stash does not have room for currently equipped " + previous.displayName() + "."));
+                return 0;
+            }
+            RaidInventory.AddResult result = data.baseInventory().setEquipmentSlot(slot, item.withoutPlacement());
+            if (!result.success()) {
+                player.sendSystemMessage(Component.literal("Debug giveitem equipment: " + result.message()));
+                return 0;
+            }
+            if (previous != null) {
+                data.stash().addPartial(previous.withoutPlacement());
+            }
+            PlayerStashService.save(player, data);
+            return 1;
+        }
+
+        player.sendSystemMessage(Component.literal("Unknown target '" + target + "'. Use stash, backpack, equipment, or player."));
+        return 0;
+    }
+
+    private static RaidEquipmentSlot debugEquipmentSlotFor(RaidInventoryItem item) {
+        for (RaidEquipmentSlot slot : List.of(
+                RaidEquipmentSlot.HELMET,
+                RaidEquipmentSlot.ARMOR,
+                RaidEquipmentSlot.EQUIPPED_BACKPACK,
+                RaidEquipmentSlot.EQUIPPED_VEST,
+                RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER)) {
+            if (RaidInventory.canEquipItem(item, slot)) {
+                return slot;
+            }
+        }
+        return null;
+    }
+
+    private static ResourceLocation debugItemId(String itemName) {
+        String alias = itemName.toLowerCase(java.util.Locale.ROOT);
+        ResourceLocation mapped = debugGearItemId(alias);
+        if (mapped != null) {
+            return mapped;
+        }
+        if (alias.indexOf(':') >= 0) {
+            return ResourceLocation.parse(alias);
+        }
+        return ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, alias);
+    }
+
+    private static List<String> debugExtractCraftItemIds() {
+        return List.of(
+                "scrapline_helmet",
+                "ranger_ballistic_helmet",
+                "vector_rail_helmet",
+                "apex_assault_helmet",
+                "softshell_plate_carrier",
+                "bulwark_plate_carrier",
+                "warden_combat_armor",
+                "juggernaut_assault_armor",
+                "scout_chest_rig",
+                "rangefinder_tactical_vest",
+                "operator_load_bearing_vest",
+                "specter_combat_rig",
+                "arsenal_elite_vest",
+                "sparrow_sling_pack",
+                "fieldrunner_pack",
+                "mule_tactical_pack",
+                "atlas_raid_pack",
+                "atlas_raid_pack_mk2",
+                "pioneer_lockbox",
+                "blacksite_secure_case",
+                "omega_safe_container",
+                "quickclot_injector",
+                "trauma_field_pack",
+                "blackseal_med_case",
+                "field_dressing_roll",
+                "splint_trauma_kit",
+                "helmet_rebuild_kit",
+                "armor_rebuild_kit",
+                "pack_rebuild_kit");
+    }
+
     private static ResourceLocation debugGearItemId(String alias) {
         return switch (alias.toLowerCase(java.util.Locale.ROOT)) {
-            case "backpack_small", "small_backpack", "small" -> ResourceLocation.withDefaultNamespace("bundle");
-            case "backpack_medium", "medium_backpack", "medium" -> ResourceLocation.withDefaultNamespace("barrel");
-            case "backpack_large", "large_backpack", "large" -> ResourceLocation.withDefaultNamespace("chest");
-            case "vest_basic", "basic_vest", "vest" -> ResourceLocation.withDefaultNamespace("leather_chestplate");
-            case "safe_alpha", "alpha_safe", "safe" -> ResourceLocation.withDefaultNamespace("ender_chest");
-            case "helmet_test", "helmet" -> ResourceLocation.withDefaultNamespace("iron_helmet");
-            case "armor_test", "armor" -> ResourceLocation.withDefaultNamespace("iron_chestplate");
+            case "backpack_small", "small_backpack", "small" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "sparrow_sling_pack");
+            case "backpack_medium", "medium_backpack", "medium" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "mule_tactical_pack");
+            case "backpack_large", "large_backpack", "large" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "atlas_raid_pack");
+            case "vest_basic", "basic_vest", "vest" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "scout_chest_rig");
+            case "safe_alpha", "alpha_safe", "safe" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "pioneer_lockbox");
+            case "helmet_test", "helmet" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "scrapline_helmet");
+            case "armor_test", "armor" -> ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "softshell_plate_carrier");
             default -> null;
         };
     }

@@ -1,0 +1,265 @@
+{
+  "values": [
+    {
+      "item": "extractcraft:scrapline_helmet",
+      "category": "armor",
+      "rarity": "common",
+      "value": 95,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:ranger_ballistic_helmet",
+      "category": "armor",
+      "rarity": "uncommon",
+      "value": 150,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:vector_rail_helmet",
+      "category": "armor",
+      "rarity": "rare",
+      "value": 230,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:apex_assault_helmet",
+      "category": "armor",
+      "rarity": "epic",
+      "value": 480,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4
+    },
+    {
+      "item": "extractcraft:softshell_plate_carrier",
+      "category": "armor",
+      "rarity": "common",
+      "value": 180,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:bulwark_plate_carrier",
+      "category": "armor",
+      "rarity": "uncommon",
+      "value": 300,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:warden_combat_armor",
+      "category": "armor",
+      "rarity": "rare",
+      "value": 480,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:juggernaut_assault_armor",
+      "category": "armor",
+      "rarity": "epic",
+      "value": 700,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4
+    },
+    {
+      "item": "extractcraft:scout_chest_rig",
+      "category": "armor",
+      "rarity": "common",
+      "value": 130,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:rangefinder_tactical_vest",
+      "category": "armor",
+      "rarity": "uncommon",
+      "value": 210,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:operator_load_bearing_vest",
+      "category": "armor",
+      "rarity": "rare",
+      "value": 320,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:specter_combat_rig",
+      "category": "armor",
+      "rarity": "epic",
+      "value": 470,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4
+    },
+    {
+      "item": "extractcraft:arsenal_elite_vest",
+      "category": "armor",
+      "rarity": "epic",
+      "value": 650,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5
+    },
+    {
+      "item": "extractcraft:sparrow_sling_pack",
+      "category": "tools",
+      "rarity": "common",
+      "value": 120,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:fieldrunner_pack",
+      "category": "tools",
+      "rarity": "uncommon",
+      "value": 200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:mule_tactical_pack",
+      "category": "tools",
+      "rarity": "rare",
+      "value": 330,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:atlas_raid_pack",
+      "category": "tools",
+      "rarity": "epic",
+      "value": 520,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4
+    },
+    {
+      "item": "extractcraft:atlas_raid_pack_mk2",
+      "category": "tools",
+      "rarity": "epic",
+      "value": 760,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5
+    },
+    {
+      "item": "extractcraft:pioneer_lockbox",
+      "category": "tools",
+      "rarity": "common",
+      "value": 180,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:blacksite_secure_case",
+      "category": "tools",
+      "rarity": "uncommon",
+      "value": 320,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:omega_safe_container",
+      "category": "tools",
+      "rarity": "rare",
+      "value": 520,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:quickclot_injector",
+      "category": "medical",
+      "rarity": "common",
+      "value": 45,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:trauma_field_pack",
+      "category": "medical",
+      "rarity": "uncommon",
+      "value": 110,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:blackseal_med_case",
+      "category": "medical",
+      "rarity": "rare",
+      "value": 260,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3
+    },
+    {
+      "item": "extractcraft:field_dressing_roll",
+      "category": "medical",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:splint_trauma_kit",
+      "category": "medical",
+      "rarity": "uncommon",
+      "value": 85,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2
+    },
+    {
+      "item": "extractcraft:helmet_rebuild_kit",
+      "category": "armor_parts",
+      "rarity": "common",
+      "value": 120,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:armor_rebuild_kit",
+      "category": "armor_parts",
+      "rarity": "common",
+      "value": 220,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    },
+    {
+      "item": "extractcraft:pack_rebuild_kit",
+      "category": "tools",
+      "rarity": "common",
+      "value": 150,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1
+    }
+  ]
+}
