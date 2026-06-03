@@ -253,29 +253,6 @@
       "repairCategory": "Vest"
     },
     {
-      "item": "extractcraft:arsenal_elite_vest",
-      "category": "armor",
-      "weight": 5.3,
-      "slotCost": 6,
-      "gridWidth": 2,
-      "gridHeight": 3,
-      "canRotate": true,
-      "allowInSafeBox": false,
-      "allowInVest": false,
-      "tier": 5,
-      "notes": [
-        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
-      ],
-      "equipmentSlot": "equipped_vest",
-      "storageGridDefinition": "5x4",
-      "storageGridWidth": 5,
-      "storageGridHeight": 4,
-      "maxCarryWeight": 24.0,
-      "durabilityEnabled": true,
-      "maxDurability": 310,
-      "repairCategory": "Vest"
-    },
-    {
       "item": "extractcraft:sparrow_sling_pack",
       "category": "tools",
       "weight": 1.2,
@@ -368,29 +345,6 @@
       "repairCategory": "Backpack"
     },
     {
-      "item": "extractcraft:atlas_raid_pack_mk2",
-      "category": "tools",
-      "weight": 4.4,
-      "slotCost": 9,
-      "gridWidth": 3,
-      "gridHeight": 3,
-      "canRotate": true,
-      "allowInSafeBox": false,
-      "allowInVest": false,
-      "tier": 5,
-      "notes": [
-        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
-      ],
-      "equipmentSlot": "equipped_backpack",
-      "storageGridDefinition": "8x8",
-      "storageGridWidth": 8,
-      "storageGridHeight": 8,
-      "maxCarryWeight": 56.0,
-      "durabilityEnabled": true,
-      "maxDurability": 380,
-      "repairCategory": "Backpack"
-    },
-    {
       "item": "extractcraft:pioneer_lockbox",
       "category": "tools",
       "weight": 1.5,
@@ -460,7 +414,7 @@
       "repairCategory": "Safe Container"
     },
     {
-      "item": "extractcraft:quickclot_injector",
+      "item": "extractcraft:combat_stim_syringe",
       "category": "medical",
       "weight": 0.3,
       "slotCost": 1,
@@ -479,7 +433,7 @@
       "consumable": true
     },
     {
-      "item": "extractcraft:trauma_field_pack",
+      "item": "extractcraft:field_med_kit",
       "category": "medical",
       "weight": 0.8,
       "slotCost": 2,
@@ -498,7 +452,7 @@
       "consumable": true
     },
     {
-      "item": "extractcraft:blackseal_med_case",
+      "item": "extractcraft:trauma_response_case",
       "category": "medical",
       "weight": 1.4,
       "slotCost": 4,

@@ -18,6 +18,34 @@ DIRECT_ASSET_ITEMS = {
     "ranger_ballistic_helmet",
     "vector_rail_helmet",
     "apex_assault_helmet",
+    "softshell_plate_carrier",
+    "bulwark_plate_carrier",
+    "warden_combat_armor",
+    "juggernaut_assault_armor",
+    "scout_chest_rig",
+    "rangefinder_tactical_vest",
+    "operator_load_bearing_vest",
+    "specter_combat_rig",
+    "sparrow_sling_pack",
+    "fieldrunner_pack",
+    "mule_tactical_pack",
+    "atlas_raid_pack",
+    "pioneer_lockbox",
+    "blacksite_secure_case",
+    "omega_safe_container",
+    "combat_stim_syringe",
+    "field_med_kit",
+    "trauma_response_case",
+    "helmet_rebuild_kit",
+    "armor_rebuild_kit",
+    "pack_rebuild_kit",
+}
+INACTIVE_ITEMS = {
+    "arsenal_elite_vest",
+    "atlas_raid_pack_mk2",
+    "quickclot_injector",
+    "trauma_field_pack",
+    "blackseal_med_case",
 }
 
 
@@ -46,6 +74,9 @@ ITEMS = [
     ("pioneer_lockbox", "Pioneer Lockbox", "Safe_Box.png", 4, 4, 3, 4, "tools", 1.5, 2, 2, 1, "equipped_safe_container", 2, 2, 90, "Safe Container", 8.0, None, None, False, False, True, 180),
     ("blacksite_secure_case", "Blacksite Secure Case", "Safe_Box.png", 4, 4, 3, 2, "tools", 2.2, 2, 2, 2, "equipped_safe_container", 3, 2, 160, "Safe Container", 10.0, None, None, False, False, True, 320),
     ("omega_safe_container", "Omega Safe Container", "Safe_Box.png", 4, 4, 3, 1, "tools", 3.2, 2, 3, 3, "equipped_safe_container", 3, 3, 260, "Safe Container", 12.0, None, None, False, False, True, 520),
+    ("combat_stim_syringe", "Combat Stim Syringe", "Meds.png", 5, 4, 1, 1, "medical", 0.3, 1, 1, 1, None, None, None, None, None, None, 20, 40, True, False, True, 45),
+    ("field_med_kit", "Field Med Kit", "Meds.png", 5, 4, 1, 3, "medical", 0.8, 1, 2, 2, None, None, None, None, None, None, 45, 80, True, False, True, 110),
+    ("trauma_response_case", "Trauma Response Case", "Meds.png", 5, 4, 1, 4, "medical", 1.4, 2, 2, 3, None, None, None, None, None, None, 80, 120, True, False, True, 260),
     ("quickclot_injector", "QuickClot Injector", "Meds.png", 5, 4, 1, 1, "medical", 0.3, 1, 1, 1, None, None, None, None, None, None, 20, 40, True, False, True, 45),
     ("trauma_field_pack", "Trauma Field Pack", "Meds.png", 5, 4, 1, 3, "medical", 0.8, 1, 2, 2, None, None, None, None, None, None, 45, 80, True, False, True, 110),
     ("blackseal_med_case", "Blackseal Med Case", "Meds.png", 5, 4, 1, 4, "medical", 1.4, 2, 2, 3, None, None, None, None, None, None, 80, 120, True, False, True, 260),
@@ -102,6 +133,8 @@ def generate_assets() -> None:
     sheets = {name: Image.open(SPRITES / name).convert("RGBA") for name in {item[2] for item in ITEMS}}
     for item in ITEMS:
         item_id, _display, sheet_name, cols, rows, row, col, *_ = item
+        if item_id in INACTIVE_ITEMS:
+            continue
         if item_id in DIRECT_ASSET_ITEMS:
             continue
         image = crop_cell(sheets[sheet_name], cols, rows, row, col)
@@ -147,6 +180,8 @@ def generate_assets() -> None:
             allow_safe,
             value,
         ) = item
+        if item_id in INACTIVE_ITEMS:
+            continue
         profile = {
             "item": f"extractcraft:{item_id}",
             "category": category,
@@ -204,7 +239,8 @@ def generate_assets() -> None:
 
     PROFILES.write_text(json.dumps({"profiles": profiles}, indent=2) + "\n", encoding="utf-8")
     VALUES.write_text(json.dumps({"values": values}, indent=2) + "\n", encoding="utf-8")
-    print(f"Generated {len(ITEMS)} ExtractCraft item assets/profiles/values.")
+    active_items = len([item for item in ITEMS if item[0] not in INACTIVE_ITEMS])
+    print(f"Generated {active_items} active ExtractCraft item assets/profiles/values.")
 
 
 if __name__ == "__main__":

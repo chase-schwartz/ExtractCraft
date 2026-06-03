@@ -43,5 +43,8 @@
   "item.extractcraft.splint_trauma_kit": "Splint Trauma Kit",
   "item.extractcraft.helmet_rebuild_kit": "Helmet Rebuild Kit",
   "item.extractcraft.armor_rebuild_kit": "Armor Rebuild Kit",
-  "item.extractcraft.pack_rebuild_kit": "Pack Rebuild Kit"
+  "item.extractcraft.pack_rebuild_kit": "Pack Rebuild Kit",
+  "item.extractcraft.combat_stim_syringe": "Combat Stim Syringe",
+  "item.extractcraft.field_med_kit": "Field Med Kit",
+  "item.extractcraft.trauma_response_case": "Trauma Response Case"
 }

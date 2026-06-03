@@ -117,21 +117,24 @@ public class ExtractCraft {
     public static final DeferredItem<Item> RANGEFINDER_TACTICAL_VEST = registerProfiledItem("rangefinder_tactical_vest", vestMeta(2, "A tactical vest with enough space for a proper kit.", 3.1D, 130, 4, 2, 12.0D, 2, 2));
     public static final DeferredItem<Item> OPERATOR_LOAD_BEARING_VEST = registerProfiledItem("operator_load_bearing_vest", vestMeta(3, "A load-bearing vest with a broad combat layout.", 3.8D, 180, 4, 3, 16.0D, 2, 3));
     public static final DeferredItem<Item> SPECTER_COMBAT_RIG = registerProfiledItem("specter_combat_rig", vestMeta(4, "A high-capacity combat rig for long urban pushes.", 4.6D, 240, 5, 3, 20.0D, 2, 3));
-    public static final DeferredItem<Item> ARSENAL_ELITE_VEST = registerProfiledItem("arsenal_elite_vest", vestMeta(5, "An elite rig with dense pouches and strong retention.", 5.3D, 310, 5, 4, 24.0D, 2, 3));
+    public static final DeferredItem<Item> ARSENAL_ELITE_VEST = registerProfiledItem("arsenal_elite_vest", vestMeta(5, "An elite rig with dense pouches and strong retention.", 5.3D, 310, 5, 4, 24.0D, 2, 3), false);
 
     public static final DeferredItem<Item> SPARROW_SLING_PACK = registerProfiledItem("sparrow_sling_pack", backpackMeta(1, "A nimble sling pack for small hauls.", 1.2D, 80, 4, 4, 14.0D, 2, 2));
     public static final DeferredItem<Item> FIELDRUNNER_PACK = registerProfiledItem("fieldrunner_pack", backpackMeta(2, "A reliable field pack with room for essentials.", 1.8D, 130, 5, 5, 22.0D, 2, 2));
     public static final DeferredItem<Item> MULE_TACTICAL_PACK = registerProfiledItem("mule_tactical_pack", backpackMeta(3, "A tactical pack with a practical raid footprint.", 2.6D, 200, 6, 6, 32.0D, 2, 3));
     public static final DeferredItem<Item> ATLAS_RAID_PACK = registerProfiledItem("atlas_raid_pack", backpackMeta(4, "A large raid pack for serious extraction runs.", 3.6D, 280, 7, 7, 44.0D, 3, 3));
-    public static final DeferredItem<Item> ATLAS_RAID_PACK_MK2 = registerProfiledItem("atlas_raid_pack_mk2", backpackMeta(5, "A reinforced Atlas variant with maximum storage.", 4.4D, 380, 8, 8, 56.0D, 3, 3));
+    public static final DeferredItem<Item> ATLAS_RAID_PACK_MK2 = registerProfiledItem("atlas_raid_pack_mk2", backpackMeta(5, "A reinforced Atlas variant with maximum storage.", 4.4D, 380, 8, 8, 56.0D, 3, 3), false);
 
     public static final DeferredItem<Item> PIONEER_LOCKBOX = registerProfiledItem("pioneer_lockbox", safeMeta(1, "A small lockbox that secures the absolute essentials.", 1.5D, 90, 2, 2, 2, 2));
     public static final DeferredItem<Item> BLACKSITE_SECURE_CASE = registerProfiledItem("blacksite_secure_case", safeMeta(2, "A reinforced case with more room for high-value finds.", 2.2D, 160, 3, 2, 2, 2));
     public static final DeferredItem<Item> OMEGA_SAFE_CONTAINER = registerProfiledItem("omega_safe_container", safeMeta(3, "A premium safe container for critical extraction loot.", 3.2D, 260, 3, 3, 2, 3));
 
-    public static final DeferredItem<Item> QUICKCLOT_INJECTOR = registerProfiledItem("quickclot_injector", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40));
-    public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80));
-    public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120));
+    public static final DeferredItem<Item> COMBAT_STIM_SYRINGE = registerProfiledItem("combat_stim_syringe", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40));
+    public static final DeferredItem<Item> FIELD_MED_KIT = registerProfiledItem("field_med_kit", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80));
+    public static final DeferredItem<Item> TRAUMA_RESPONSE_CASE = registerProfiledItem("trauma_response_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120));
+    public static final DeferredItem<Item> QUICKCLOT_INJECTOR = registerProfiledItem("quickclot_injector", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40), false);
+    public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80), false);
+    public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120), false);
     public static final DeferredItem<Item> FIELD_DRESSING_ROLL = registerProfiledItem("field_dressing_roll", treatmentMeta(1, "A field dressing roll for stopping bleeds.", 0.2D, 1, 1, true, false, 45));
     public static final DeferredItem<Item> SPLINT_TRAUMA_KIT = registerProfiledItem("splint_trauma_kit", treatmentMeta(2, "A splint kit for stabilizing broken bones.", 0.7D, 1, 2, false, true, 80));
 

@@ -109,15 +109,6 @@
       "lootTier": 4
     },
     {
-      "item": "extractcraft:arsenal_elite_vest",
-      "category": "armor",
-      "rarity": "epic",
-      "value": 650,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 5
-    },
-    {
       "item": "extractcraft:sparrow_sling_pack",
       "category": "tools",
       "rarity": "common",
@@ -154,15 +145,6 @@
       "lootTier": 4
     },
     {
-      "item": "extractcraft:atlas_raid_pack_mk2",
-      "category": "tools",
-      "rarity": "epic",
-      "value": 760,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 5
-    },
-    {
       "item": "extractcraft:pioneer_lockbox",
       "category": "tools",
       "rarity": "common",
@@ -190,7 +172,7 @@
       "lootTier": 3
     },
     {
-      "item": "extractcraft:quickclot_injector",
+      "item": "extractcraft:combat_stim_syringe",
       "category": "medical",
       "rarity": "common",
       "value": 45,
@@ -199,7 +181,7 @@
       "lootTier": 1
     },
     {
-      "item": "extractcraft:trauma_field_pack",
+      "item": "extractcraft:field_med_kit",
       "category": "medical",
       "rarity": "uncommon",
       "value": 110,
@@ -208,7 +190,7 @@
       "lootTier": 2
     },
     {
-      "item": "extractcraft:blackseal_med_case",
+      "item": "extractcraft:trauma_response_case",
       "category": "medical",
       "rarity": "rare",
       "value": 260,
