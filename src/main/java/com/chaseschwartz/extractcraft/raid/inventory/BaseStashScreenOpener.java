@@ -18,6 +18,12 @@ public class BaseStashScreenOpener {
                     buffer.writeVarInt(data.stash().capacity());
                     buffer.writeVarInt(data.stashLevel());
                     buffer.writeVarInt(data.credits());
+                    buffer.writeVarInt(data.baseInventory().backpack().gridWidth());
+                    buffer.writeVarInt(data.baseInventory().backpack().gridHeight());
+                    buffer.writeVarInt(data.baseInventory().vest().gridWidth());
+                    buffer.writeVarInt(data.baseInventory().vest().gridHeight());
+                    buffer.writeVarInt(data.baseInventory().safeBox().gridWidth());
+                    buffer.writeVarInt(data.baseInventory().safeBox().gridHeight());
                 });
     }
 }

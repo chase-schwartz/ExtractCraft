@@ -29,6 +29,25 @@ public class RaidInventoryManager {
         get(player).clear();
     }
 
+    public static void prepareForRaidFromBase(ServerPlayer player) {
+        PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+        RaidInventory base = data.baseInventory();
+        RaidInventory raid = get(player);
+        raid.clear();
+        copyEquipmentSlot(base, raid, RaidEquipmentSlot.HELMET);
+        copyEquipmentSlot(base, raid, RaidEquipmentSlot.ARMOR);
+        copyEquipmentSlot(base, raid, RaidEquipmentSlot.EQUIPPED_BACKPACK);
+        copyEquipmentSlot(base, raid, RaidEquipmentSlot.EQUIPPED_VEST);
+        copyEquipmentSlot(base, raid, RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER);
+        raid.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, base.primaryWeapon() == null ? null : PlayerStashService.copyItem(base.primaryWeapon()));
+        raid.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, base.secondaryWeapon() == null ? null : PlayerStashService.copyItem(base.secondaryWeapon()));
+    }
+
+    private static void copyEquipmentSlot(RaidInventory source, RaidInventory target, RaidEquipmentSlot slot) {
+        RaidInventoryItem item = source.equipmentItem(slot);
+        target.setEquipmentSlot(slot, item == null ? null : PlayerStashService.copyItem(item));
+    }
+
     public static RaidInventory.AddResult addHeld(ServerPlayer player) {
         ItemStack stack = player.getMainHandItem();
         if (stack.isEmpty()) {
@@ -76,6 +95,7 @@ public class RaidInventoryManager {
         RaidInventory inventory = get(player);
         if (x >= 0 && y >= 0) {
             return switch (slot) {
+                case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER -> inventory.equipItem(item, slot);
                 case PRIMARY_WEAPON, SECONDARY_WEAPON -> inventory.addToWeaponSlot(item, slot);
                 case BACKPACK -> inventory.addToBackpackAt(item, x, y, rotated);
                 case VEST -> inventory.addToVestAt(item, profile, x, y, rotated);
@@ -83,6 +103,7 @@ public class RaidInventoryManager {
             };
         }
         return switch (slot) {
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER -> inventory.equipItem(item, slot);
             case PRIMARY_WEAPON, SECONDARY_WEAPON -> inventory.addToWeaponSlot(item, slot);
             case BACKPACK -> inventory.addToBackpack(item);
             case VEST -> inventory.addToVest(item, profile);

@@ -493,7 +493,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             case BACKPACK -> gridCell(localX, localY, 12, 66, 6, 6);
             case VEST -> gridCell(localX, localY, 12, 248, 4, 3);
             case SAFE_BOX -> gridCell(localX, localY, 104, 248, 3, 3);
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> -1;
+            default -> -1;
         };
     }
 
@@ -666,6 +666,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             case BACKPACK -> 2;
             case VEST -> 3;
             case SAFE_BOX -> 4;
+            default -> -1;
         };
     }
 

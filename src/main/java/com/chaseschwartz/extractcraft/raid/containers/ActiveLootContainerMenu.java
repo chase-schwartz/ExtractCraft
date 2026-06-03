@@ -360,13 +360,13 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case BACKPACK -> BACKPACK_START;
             case VEST -> VEST_START;
             case SAFE_BOX -> SAFE_BOX_START;
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
+            default -> 0;
         };
         int end = switch (slot) {
             case BACKPACK -> BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
             case VEST -> VEST_START + VEST_DISPLAY_SLOTS;
             case SAFE_BOX -> SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS;
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
+            default -> 0;
         };
         for (int index = start; index < end; index++) {
             GridDisplayMetadata.Metadata metadata = index >= 0 && index < this.slots.size()
@@ -660,9 +660,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case BACKPACK -> inventory.backpack();
             case VEST -> inventory.vest();
             case SAFE_BOX -> inventory.safeBox();
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalStateException("handled above");
+            default -> throw new IllegalStateException("handled above");
         };
-        storage.addPartial(removed);
+        storage.addPartialGridFirstFit(removed, true);
     }
 
     private void addRaidDisplaySlots() {
@@ -828,6 +828,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case BACKPACK -> "backpack";
             case VEST -> "vest";
             case SAFE_BOX -> "safe box";
+            default -> "equipment";
         };
     }
 
@@ -858,6 +859,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case BACKPACK -> 2;
             case VEST -> 3;
             case SAFE_BOX -> 4;
+            default -> -1;
         };
     }
 

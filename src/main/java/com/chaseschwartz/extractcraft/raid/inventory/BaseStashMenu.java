@@ -21,9 +21,14 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.item.ItemStack;
 
 public class BaseStashMenu extends AbstractContainerMenu {
-    public static final int PRIMARY_WEAPON_START = 0;
-    public static final int SECONDARY_WEAPON_START = 1;
-    public static final int BACKPACK_START = 2;
+    public static final int HELMET_START = 0;
+    public static final int ARMOR_START = 1;
+    public static final int EQUIPPED_BACKPACK_START = 2;
+    public static final int EQUIPPED_VEST_START = 3;
+    public static final int EQUIPPED_SAFE_CONTAINER_START = 4;
+    public static final int PRIMARY_WEAPON_START = 5;
+    public static final int SECONDARY_WEAPON_START = 6;
+    public static final int BACKPACK_START = 7;
     public static final int BACKPACK_DISPLAY_SLOTS = 64;
     public static final int VEST_START = BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
     public static final int VEST_DISPLAY_SLOTS = 12;
@@ -31,7 +36,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
     public static final int SAFE_BOX_DISPLAY_SLOTS = 9;
     public static final int BASE_DISPLAY_SLOTS = SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS;
     public static final int STASH_COLUMNS_MIN = 10;
-    private static final int STASH_SLOT_X = 274;
+    private static final int STASH_SLOT_X = 286;
     private static final int STASH_SLOT_Y = 82;
     private static final int MOVE_BASE_TO_STASH_OFFSET = 100_000;
     private static final int MOVE_STASH_TO_BASE_OFFSET = 200_000;
@@ -56,6 +61,12 @@ public class BaseStashMenu extends AbstractContainerMenu {
     private final PlayerStashService.PlayerStashData stashData;
     private final int stashCapacity;
     private final int[] displayedStashIndexes;
+    private final int backpackGridWidth;
+    private final int backpackGridHeight;
+    private final int vestGridWidth;
+    private final int vestGridHeight;
+    private final int safeGridWidth;
+    private final int safeGridHeight;
     private SortMode sortMode = SortMode.NAME;
     private final DataSlot stashUsedCapacity;
     private final DataSlot stashMaxCapacity;
@@ -64,18 +75,29 @@ public class BaseStashMenu extends AbstractContainerMenu {
     private final DataSlot totalValue;
 
     public BaseStashMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf data) {
-        this(containerId, playerInventory, null, null, data.readVarInt(), data.readVarInt(), data.readVarInt());
+        this(containerId, playerInventory, null, null, data.readVarInt(), data.readVarInt(), data.readVarInt(),
+                data.readVarInt(), data.readVarInt(), data.readVarInt(), data.readVarInt(), data.readVarInt(), data.readVarInt());
     }
 
     public BaseStashMenu(int containerId, Inventory playerInventory, ServerPlayer player, PlayerStashService.PlayerStashData stashData) {
-        this(containerId, playerInventory, player, stashData, stashData.stash().capacity(), stashData.stashLevel(), stashData.credits());
+        this(containerId, playerInventory, player, stashData, stashData.stash().capacity(), stashData.stashLevel(), stashData.credits(),
+                stashData.baseInventory().backpack().gridWidth(), stashData.baseInventory().backpack().gridHeight(),
+                stashData.baseInventory().vest().gridWidth(), stashData.baseInventory().vest().gridHeight(),
+                stashData.baseInventory().safeBox().gridWidth(), stashData.baseInventory().safeBox().gridHeight());
     }
 
-    private BaseStashMenu(int containerId, Inventory playerInventory, ServerPlayer player, PlayerStashService.PlayerStashData stashData, int stashCapacity, int initialStashLevel, int initialCredits) {
+    private BaseStashMenu(int containerId, Inventory playerInventory, ServerPlayer player, PlayerStashService.PlayerStashData stashData, int stashCapacity, int initialStashLevel, int initialCredits,
+            int backpackGridWidth, int backpackGridHeight, int vestGridWidth, int vestGridHeight, int safeGridWidth, int safeGridHeight) {
         super(ExtractCraft.BASE_STASH_MENU.get(), containerId);
         this.serverPlayer = player;
         this.stashData = stashData;
         this.stashCapacity = Math.max(1, stashCapacity);
+        this.backpackGridWidth = Math.max(0, Math.min(8, backpackGridWidth));
+        this.backpackGridHeight = Math.max(0, Math.min(8, backpackGridHeight));
+        this.vestGridWidth = Math.max(0, Math.min(4, vestGridWidth));
+        this.vestGridHeight = Math.max(0, Math.min(3, vestGridHeight));
+        this.safeGridWidth = Math.max(0, Math.min(3, safeGridWidth));
+        this.safeGridHeight = Math.max(0, Math.min(3, safeGridHeight));
         this.displayedStashIndexes = new int[this.stashCapacity];
         this.displayedBaseIndexes = new int[BASE_DISPLAY_SLOTS];
         java.util.Arrays.fill(this.displayedStashIndexes, -1);
@@ -233,6 +255,21 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     public RaidEquipmentSlot baseSlotForMenuSlot(int menuSlot) {
+        if (menuSlot == HELMET_START) {
+            return RaidEquipmentSlot.HELMET;
+        }
+        if (menuSlot == ARMOR_START) {
+            return RaidEquipmentSlot.ARMOR;
+        }
+        if (menuSlot == EQUIPPED_BACKPACK_START) {
+            return RaidEquipmentSlot.EQUIPPED_BACKPACK;
+        }
+        if (menuSlot == EQUIPPED_VEST_START) {
+            return RaidEquipmentSlot.EQUIPPED_VEST;
+        }
+        if (menuSlot == EQUIPPED_SAFE_CONTAINER_START) {
+            return RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+        }
         if (menuSlot == PRIMARY_WEAPON_START) {
             return RaidEquipmentSlot.PRIMARY_WEAPON;
         }
@@ -253,7 +290,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
 
     public int baseItemIndexForMenuSlot(int menuSlot) {
         RaidEquipmentSlot slot = baseSlotForMenuSlot(menuSlot);
-        if (slot == RaidEquipmentSlot.PRIMARY_WEAPON || slot == RaidEquipmentSlot.SECONDARY_WEAPON) {
+        if (slot == RaidEquipmentSlot.PRIMARY_WEAPON || slot == RaidEquipmentSlot.SECONDARY_WEAPON || RaidInventory.isEquipmentSlot(slot)) {
             return 0;
         }
         if (menuSlot >= 0 && menuSlot < this.slots.size()) {
@@ -269,6 +306,21 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     public int baseMenuSlotForItemIndex(RaidEquipmentSlot slot, int sourceIndex) {
+        if (slot == RaidEquipmentSlot.HELMET) {
+            return HELMET_START;
+        }
+        if (slot == RaidEquipmentSlot.ARMOR) {
+            return ARMOR_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_BACKPACK) {
+            return EQUIPPED_BACKPACK_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_VEST) {
+            return EQUIPPED_VEST_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) {
+            return EQUIPPED_SAFE_CONTAINER_START;
+        }
         if (slot == RaidEquipmentSlot.PRIMARY_WEAPON) {
             return PRIMARY_WEAPON_START;
         }
@@ -279,13 +331,13 @@ public class BaseStashMenu extends AbstractContainerMenu {
             case BACKPACK -> BACKPACK_START;
             case VEST -> VEST_START;
             case SAFE_BOX -> SAFE_BOX_START;
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
         };
         int end = switch (slot) {
             case BACKPACK -> BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
             case VEST -> VEST_START + VEST_DISPLAY_SLOTS;
             case SAFE_BOX -> SAFE_BOX_START + SAFE_BOX_DISPLAY_SLOTS;
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> 0;
         };
         for (int index = start; index < end; index++) {
             GridDisplayMetadata.Metadata metadata = index >= 0 && index < this.slots.size()
@@ -345,6 +397,30 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return totalValue.get();
     }
 
+    public int backpackGridWidth() {
+        return backpackGridWidth;
+    }
+
+    public int backpackGridHeight() {
+        return backpackGridHeight;
+    }
+
+    public int vestGridWidth() {
+        return vestGridWidth;
+    }
+
+    public int vestGridHeight() {
+        return vestGridHeight;
+    }
+
+    public int safeGridWidth() {
+        return safeGridWidth;
+    }
+
+    public int safeGridHeight() {
+        return safeGridHeight;
+    }
+
     public String sortModeName() {
         return sortMode.label;
     }
@@ -367,6 +443,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         stashData.stash().addPartial(removed);
         player.sendSystemMessage(Component.literal("Moved " + removed.displayName() + " to stash."));
+        reopenIfEquipmentMove(player, source, null);
         return true;
     }
 
@@ -405,6 +482,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
             restoreRemovedItem(stashSource, source, removed);
             return false;
         }
+        if (!stashSource) {
+            reopenIfEquipmentMove(player, source, null);
+        }
         return true;
     }
 
@@ -419,7 +499,11 @@ public class BaseStashMenu extends AbstractContainerMenu {
             player.sendSystemMessage(Component.literal("Source item is no longer available."));
             return false;
         }
-        return spawnManagedDropOrRestore(player, false, source, removed);
+        boolean dropped = spawnManagedDropOrRestore(player, false, source, removed);
+        if (dropped) {
+            reopenIfEquipmentMove(player, source, null);
+        }
+        return dropped;
     }
 
     private boolean dropStashItem(ServerPlayer player, int stashDisplayIndex) {
@@ -456,12 +540,14 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
             stashData.baseInventory().setWeaponSlot(source, removed);
+        } else if (RaidInventory.isEquipmentSlot(source)) {
+            stashData.baseInventory().setEquipmentSlot(source, removed);
         } else {
             RaidStorageContainer target = switch (source) {
                 case BACKPACK -> stashData.baseInventory().backpack();
                 case VEST -> stashData.baseInventory().vest();
                 case SAFE_BOX -> stashData.baseInventory().safeBox();
-                case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalStateException("handled above");
+                case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalStateException("handled above");
             };
             target.addPartial(removed);
         }
@@ -593,6 +679,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
 
         RaidInventoryItem copy = PlayerStashService.copyItem(item);
         RaidInventory.AddResult result;
+        if (RaidInventory.isEquipmentSlot(target)) {
+            return moveStashToEquipment(player, stashIndex, item, target);
+        }
         if (cell >= 0 && isGridSlot(target)) {
             result = baseAddToStorageAt(candidate, copy, profile, target, cellX(target, cell), cellY(target, cell), false);
         } else {
@@ -617,6 +706,41 @@ public class BaseStashMenu extends AbstractContainerMenu {
                 placed == null ? -1 : placed.gridX(),
                 placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
+        reopenIfEquipmentMove(player, null, target);
+        return true;
+    }
+
+    private boolean moveStashToEquipment(ServerPlayer player, int stashIndex, RaidInventoryItem item, RaidEquipmentSlot target) {
+        RaidInventoryItem incoming = PlayerStashService.copyItem(item).withoutPlacement();
+        if (!RaidInventory.canEquipItem(incoming, target)) {
+            player.sendSystemMessage(Component.literal(incoming.displayName() + " cannot be equipped there."));
+            return false;
+        }
+
+        RaidInventory candidate = PlayerStashService.copyInventory(stashData.baseInventory());
+        RaidInventoryItem previous = candidate.itemAt(target, 0);
+        if (previous != null && stashData.stash().countAddable(previous.withoutPlacement(), stashIndex) < previous.count()) {
+            player.sendSystemMessage(Component.literal("Stash does not have room for currently equipped " + previous.displayName() + "."));
+            return false;
+        }
+
+        RaidInventory.AddResult result = candidate.setEquipmentSlot(target, incoming);
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+            return false;
+        }
+
+        RaidInventoryItem removed = stashData.stash().removeCountAt(stashIndex, item.count());
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Stash item is no longer available."));
+            return false;
+        }
+        if (previous != null) {
+            stashData.stash().addPartial(previous.withoutPlacement());
+        }
+        PlayerStashService.replaceInventoryContents(stashData.baseInventory(), candidate);
+        player.sendSystemMessage(Component.literal(result.message()));
+        reopenIfEquipmentMove(player, null, target);
         return true;
     }
 
@@ -672,7 +796,14 @@ public class BaseStashMenu extends AbstractContainerMenu {
                 placed == null ? -1 : placed.gridX(),
                 placed == null ? -1 : placed.gridY());
         player.sendSystemMessage(Component.literal(result.message()));
+        reopenIfEquipmentMove(player, source, target);
         return true;
+    }
+
+    private static void reopenIfEquipmentMove(ServerPlayer player, RaidEquipmentSlot source, RaidEquipmentSlot target) {
+        if (RaidInventory.isEquipmentSlot(source) || RaidInventory.isEquipmentSlot(target)) {
+            BaseStashScreenOpener.open(player);
+        }
     }
 
     private RaidInventory.AddResult baseMove(RaidInventory candidate, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, ItemCarryProfile profile, int cell) {
@@ -698,6 +829,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private RaidInventory.AddResult baseAddToTarget(RaidInventory candidate, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target) {
+        if (RaidInventory.isEquipmentSlot(target)) {
+            return candidate.equipItem(item, target);
+        }
         if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
             return candidate.addToWeaponSlot(item, target);
         }
@@ -717,6 +851,9 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private RaidInventory.AddResult baseAddToStorageAt(RaidInventory candidate, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target, int x, int y, boolean rotated) {
+        if (RaidInventory.isEquipmentSlot(target)) {
+            return candidate.equipItem(item, target);
+        }
         if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
             return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
         }
@@ -733,6 +870,10 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private static void restoreToBaseCandidate(RaidInventory candidate, RaidEquipmentSlot source, RaidInventoryItem removed) {
+        if (RaidInventory.isEquipmentSlot(source)) {
+            candidate.setEquipmentSlot(source, removed);
+            return;
+        }
         if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
             candidate.setWeaponSlot(source, removed);
             return;
@@ -745,7 +886,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
             case BACKPACK -> inventory.backpack();
             case VEST -> inventory.vest();
             case SAFE_BOX -> inventory.safeBox();
-            case PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Weapon slots do not have grid storage.");
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Non-storage slots do not have grid storage.");
         };
     }
 
@@ -757,11 +898,16 @@ public class BaseStashMenu extends AbstractContainerMenu {
     }
 
     private void addBaseDisplaySlots() {
-        addSlot(new ReadOnlyDisplaySlot(baseDisplay, PRIMARY_WEAPON_START, 194, 50));
-        addSlot(new ReadOnlyDisplaySlot(baseDisplay, SECONDARY_WEAPON_START, 194, 112));
-        addDisplayGrid(baseDisplay, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 8, 12, 62);
-        addDisplayGrid(baseDisplay, VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 256);
-        addDisplayGrid(baseDisplay, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 104, 256);
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, HELMET_START, 20, 42));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, ARMOR_START, 20, 72));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, EQUIPPED_BACKPACK_START, 20, 102));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, EQUIPPED_VEST_START, 20, 132));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, EQUIPPED_SAFE_CONTAINER_START, 20, 162));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, PRIMARY_WEAPON_START, 20, 200));
+        addSlot(new ReadOnlyDisplaySlot(baseDisplay, SECONDARY_WEAPON_START, 20, 230));
+        addDisplayGrid(baseDisplay, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, backpackGridWidth, backpackGridHeight, 104, 62);
+        addDisplayGrid(baseDisplay, VEST_START, VEST_DISPLAY_SLOTS, vestGridWidth, vestGridHeight, 104, 256);
+        addDisplayGrid(baseDisplay, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, safeGridWidth, safeGridHeight, 196, 256);
     }
 
     private void addStashSlots() {
@@ -773,9 +919,14 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
     }
 
-    private void addDisplayGrid(SimpleContainer container, int start, int count, int columns, int x, int y) {
+    private void addDisplayGrid(SimpleContainer container, int start, int count, int columns, int rows, int x, int y) {
+        int visible = Math.max(0, columns) * Math.max(0, rows);
         for (int i = 0; i < count; i++) {
-            addSlot(new ReadOnlyDisplaySlot(container, start + i, x + (i % columns) * 18, y + (i / columns) * 18));
+            if (i >= visible || columns <= 0) {
+                addSlot(new ReadOnlyDisplaySlot(container, start + i, -10000, -10000));
+            } else {
+                addSlot(new ReadOnlyDisplaySlot(container, start + i, x + (i % columns) * 18, y + (i / columns) * 18));
+            }
         }
     }
 
@@ -791,6 +942,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
 
         RaidInventory baseInventory = stashData.baseInventory();
+        fillEquipmentDisplay(baseInventory);
         if (baseInventory.primaryWeapon() != null) {
             displayedBaseIndexes[PRIMARY_WEAPON_START] = 0;
             baseDisplay.setItem(PRIMARY_WEAPON_START, displayStack(baseInventory.primaryWeapon(), 0));
@@ -799,7 +951,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
             displayedBaseIndexes[SECONDARY_WEAPON_START] = 0;
             baseDisplay.setItem(SECONDARY_WEAPON_START, displayStack(baseInventory.secondaryWeapon(), 0));
         }
-        fillDisplay(baseDisplay, displayedBaseIndexes, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 8, baseInventory.backpack().items());
+        fillDisplay(baseDisplay, displayedBaseIndexes, BACKPACK_START, BACKPACK_DISPLAY_SLOTS, baseInventory.backpack().gridWidth(), baseInventory.backpack().items());
         fillDisplay(baseDisplay, displayedBaseIndexes, VEST_START, VEST_DISPLAY_SLOTS, baseInventory.vest().gridWidth(), baseInventory.vest().items());
         fillDisplay(baseDisplay, displayedBaseIndexes, SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, baseInventory.safeBox().gridWidth(), baseInventory.safeBox().items());
         ExtractCraft.LOGGER.info("BaseStash display rebuild: baseBackpack={} '{}', storageGrid={}x{}, displayGrid=8x8, storageItems={}, visibleBackpackSlots={}",
@@ -823,6 +975,22 @@ public class BaseStashMenu extends AbstractContainerMenu {
         }
         baseDisplay.setChanged();
         stashDisplay.setChanged();
+    }
+
+    private void fillEquipmentDisplay(RaidInventory inventory) {
+        setEquipmentDisplay(RaidEquipmentSlot.HELMET, HELMET_START, inventory.equipmentItem(RaidEquipmentSlot.HELMET));
+        setEquipmentDisplay(RaidEquipmentSlot.ARMOR, ARMOR_START, inventory.equipmentItem(RaidEquipmentSlot.ARMOR));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_BACKPACK, EQUIPPED_BACKPACK_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_VEST, EQUIPPED_VEST_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, EQUIPPED_SAFE_CONTAINER_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER));
+    }
+
+    private void setEquipmentDisplay(RaidEquipmentSlot slot, int menuSlot, RaidInventoryItem item) {
+        if (item == null) {
+            return;
+        }
+        displayedBaseIndexes[menuSlot] = 0;
+        baseDisplay.setItem(menuSlot, displayStack(item, 0));
     }
 
     private int visibleDisplaySlots(int start, int count) {
@@ -919,20 +1087,30 @@ public class BaseStashMenu extends AbstractContainerMenu {
 
     private static int slotId(RaidEquipmentSlot slot) {
         return switch (slot) {
-            case PRIMARY_WEAPON -> 0;
-            case SECONDARY_WEAPON -> 1;
-            case BACKPACK -> 2;
-            case VEST -> 3;
-            case SAFE_BOX -> 4;
+            case HELMET -> 0;
+            case ARMOR -> 1;
+            case EQUIPPED_BACKPACK -> 2;
+            case EQUIPPED_VEST -> 3;
+            case EQUIPPED_SAFE_CONTAINER -> 4;
+            case PRIMARY_WEAPON -> 5;
+            case SECONDARY_WEAPON -> 6;
+            case BACKPACK -> 7;
+            case VEST -> 8;
+            case SAFE_BOX -> 9;
         };
     }
 
     private static RaidEquipmentSlot slotFromId(int id) {
         return switch (id) {
-            case 0 -> RaidEquipmentSlot.PRIMARY_WEAPON;
-            case 1 -> RaidEquipmentSlot.SECONDARY_WEAPON;
-            case 3 -> RaidEquipmentSlot.VEST;
-            case 4 -> RaidEquipmentSlot.SAFE_BOX;
+            case 0 -> RaidEquipmentSlot.HELMET;
+            case 1 -> RaidEquipmentSlot.ARMOR;
+            case 2 -> RaidEquipmentSlot.EQUIPPED_BACKPACK;
+            case 3 -> RaidEquipmentSlot.EQUIPPED_VEST;
+            case 4 -> RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+            case 5 -> RaidEquipmentSlot.PRIMARY_WEAPON;
+            case 6 -> RaidEquipmentSlot.SECONDARY_WEAPON;
+            case 8 -> RaidEquipmentSlot.VEST;
+            case 9 -> RaidEquipmentSlot.SAFE_BOX;
             default -> RaidEquipmentSlot.BACKPACK;
         };
     }
@@ -941,19 +1119,20 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
     }
 
-    private static int cellX(RaidEquipmentSlot slot, int cell) {
+    private int cellX(RaidEquipmentSlot slot, int cell) {
         return cell % columnsFor(slot);
     }
 
-    private static int cellY(RaidEquipmentSlot slot, int cell) {
+    private int cellY(RaidEquipmentSlot slot, int cell) {
         return cell / columnsFor(slot);
     }
 
-    private static int columnsFor(RaidEquipmentSlot slot) {
+    private int columnsFor(RaidEquipmentSlot slot) {
         return switch (slot) {
-            case VEST -> 4;
-            case SAFE_BOX -> 3;
-            default -> 8;
+            case VEST -> Math.max(1, vestGridWidth);
+            case SAFE_BOX -> Math.max(1, safeGridWidth);
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> 1;
+            default -> Math.max(1, backpackGridWidth);
         };
     }
 

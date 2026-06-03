@@ -10,8 +10,10 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryManager;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidWeightService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 
 import net.minecraft.network.chat.Component;
@@ -50,6 +52,7 @@ public class RaidManager {
         GameType previousGameMode = player.gameMode.getGameModeForPlayer();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
                 InventorySnapshot.capture(player), previousGameMode, expiresAtGameTime, raidMap.raidDurationTicks() / 20 + 1, raidMobIds, raidMap));
+        RaidInventoryManager.prepareForRaidFromBase(player);
         preparePlayerForRaid(player);
         if (!debugKeepGameMode && previousGameMode != GameType.SURVIVAL) {
             player.setGameMode(GameType.SURVIVAL);
@@ -66,6 +69,7 @@ public class RaidManager {
     public static void clearPlayerState(UUID playerId, MinecraftServer server) {
         cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
         cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
+        clearWeightModifierIfOnline(server, playerId);
         syncRaidStateIfOnline(server, playerId, false);
     }
 
@@ -77,6 +81,9 @@ public class RaidManager {
         cleanupRaidMobs(server, activeRaid, "player state clear");
         cleanupRaidMobs(server, pendingFailedReturn, "player state clear");
         if (hadActiveRaid || hadPendingFailedReturn) {
+            clearWeightModifierIfOnline(server, playerId);
+        }
+        if (hadActiveRaid || hadPendingFailedReturn) {
             syncRaidStateIfOnline(server, playerId, false);
         }
         return hadActiveRaid || hadPendingFailedReturn;
@@ -86,6 +93,8 @@ public class RaidManager {
         int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
         ACTIVE_RAIDS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
         PENDING_FAILED_RETURNS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
+        ACTIVE_RAIDS.keySet().forEach(playerId -> clearWeightModifierIfOnline(server, playerId));
+        PENDING_FAILED_RETURNS.keySet().forEach(playerId -> clearWeightModifierIfOnline(server, playerId));
         ACTIVE_RAIDS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
         PENDING_FAILED_RETURNS.values().forEach(raidState -> cleanupRaidMobs(server, raidState, "server stop"));
         ACTIVE_RAIDS.clear();
@@ -101,6 +110,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "raid death failure");
         RaidWeaponService.syncAndClearBridge(player);
+        RaidWeightService.clear(player);
         RaidResultService.recordFailure(player, "death", raidState);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
@@ -154,6 +164,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "immediate raid failure");
         RaidWeaponService.syncAndClearBridge(player);
+        RaidWeightService.clear(player);
         RaidResultService.recordFailure(player, reason, raidState);
         restorePreviousGameMode(player, raidState);
         ExtractCraftNetwork.syncRaidState(player, false);
@@ -229,6 +240,7 @@ public class RaidManager {
 
         cleanupRaidMobs(player.server, raidState, "successful extraction");
         RaidWeaponService.syncAndClearBridge(player);
+        RaidWeightService.clear(player);
         MinecraftServer server = player.server;
         ServerLevel returnLevel = server.getLevel(raidState.returnDimension());
         if (returnLevel == null) {
@@ -328,6 +340,13 @@ public class RaidManager {
         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
         if (player != null) {
             ExtractCraftNetwork.syncRaidState(player, inRaid);
+        }
+    }
+
+    private static void clearWeightModifierIfOnline(MinecraftServer server, UUID playerId) {
+        ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+        if (player != null) {
+            RaidWeightService.clear(player);
         }
     }
 }

@@ -199,12 +199,100 @@
       "allowInVest": false
     },
     {
+      "item": "minecraft:iron_helmet",
+      "category": "armor",
+      "weight": 3.0,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false
+    },
+    {
       "item": "minecraft:iron_chestplate",
       "category": "armor",
       "weight": 8.0,
       "slotCost": 8,
+      "gridWidth": 3,
+      "gridHeight": 3,
       "allowInSafeBox": false,
       "allowInVest": false
+    },
+    {
+      "item": "minecraft:diamond_chestplate",
+      "category": "armor",
+      "weight": 8.5,
+      "slotCost": 8,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false
+    },
+    {
+      "item": "minecraft:chest",
+      "category": "tools",
+      "weight": 2.0,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for large backpack equipment"]
+    },
+    {
+      "item": "minecraft:barrel",
+      "category": "tools",
+      "weight": 1.6,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for medium backpack equipment"]
+    },
+    {
+      "item": "minecraft:bundle",
+      "category": "tools",
+      "weight": 1.0,
+      "slotCost": 2,
+      "gridWidth": 2,
+      "gridHeight": 1,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for small backpack equipment"]
+    },
+    {
+      "item": "minecraft:leather_chestplate",
+      "category": "armor",
+      "weight": 4.0,
+      "slotCost": 6,
+      "gridWidth": 3,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for basic vest equipment"]
+    },
+    {
+      "item": "minecraft:chainmail_chestplate",
+      "category": "armor",
+      "weight": 5.0,
+      "slotCost": 6,
+      "gridWidth": 3,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for basic vest equipment"]
+    },
+    {
+      "item": "minecraft:ender_chest",
+      "category": "tools",
+      "weight": 2.5,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": ["Debug stand-in for alpha safe container equipment"]
     },
     {
       "item": "minecraft:golden_apple",

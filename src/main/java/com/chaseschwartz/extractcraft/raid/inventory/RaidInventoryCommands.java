@@ -120,6 +120,30 @@ public class RaidInventoryCommands {
                                                 .executes(context -> debugGiveGun(
                                                         context.getSource(),
                                                         StringArgumentType.getString(context, "gun"),
+                                                        StringArgumentType.getString(context, "target"))))))
+                        .then(Commands.literal("givegear")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("gear", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("backpack_small");
+                                            builder.suggest("backpack_medium");
+                                            builder.suggest("backpack_large");
+                                            builder.suggest("vest_basic");
+                                            builder.suggest("safe_alpha");
+                                            builder.suggest("helmet_test");
+                                            builder.suggest("armor_test");
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("target", StringArgumentType.word())
+                                                .suggests((context, builder) -> {
+                                                    builder.suggest("stash");
+                                                    builder.suggest("backpack");
+                                                    builder.suggest("equipment");
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(context -> debugGiveGear(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "gear"),
                                                         StringArgumentType.getString(context, "target")))))))
                 .then(Commands.literal("dropheld")
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -374,6 +398,7 @@ public class RaidInventoryCommands {
                         ? new RaidInventory.AddResult(false, RaidEquipmentSlot.SAFE_BOX, item.lookupKey() + " has no carry profile.")
                         : data.baseInventory().addToSafeBox(item.withoutPlacement(), profile);
             }
+            default -> new RaidInventory.AddResult(false, targetSlot, "Unsupported debug storage target.");
         };
         if (!result.success()) {
             player.sendSystemMessage(Component.literal("Debug givegun base target " + target + ": " + result.message()));
@@ -392,6 +417,105 @@ public class RaidInventoryCommands {
             case "m95", "sniper" -> "tacz:modern_kinetic_gun#tacz:m95";
             case "rpg", "rpg7" -> "tacz:modern_kinetic_gun#tacz:rpg7";
             case "m249", "lmg" -> "tacz:modern_kinetic_gun#tacz:m249";
+            default -> null;
+        };
+    }
+
+    private static int debugGiveGear(CommandSourceStack source, String gearAlias, String targetName) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ResourceLocation itemId = debugGearItemId(gearAlias);
+        if (itemId == null) {
+            player.sendSystemMessage(Component.literal("Unknown debug gear '" + gearAlias + "'. Try backpack_small, backpack_medium, backpack_large, vest_basic, safe_alpha, helmet_test, or armor_test."));
+            return 0;
+        }
+
+        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId), 1);
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, stack).orElse(null);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal(itemId + " has no carry profile; cannot insert debug gear."));
+            return 0;
+        }
+
+        String target = targetName.toLowerCase(java.util.Locale.ROOT);
+        if (target.equals("stash")) {
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            int moved = data.stash().addPartial(item.withoutPlacement());
+            if (moved < item.count()) {
+                player.sendSystemMessage(Component.literal("Stash does not have enough capacity for " + item.displayName() + "."));
+                return 0;
+            }
+            PlayerStashService.save(player, data);
+            player.sendSystemMessage(Component.literal("Debug spawned " + item.displayName() + " into persistent stash."));
+            return 1;
+        }
+
+        if (target.equals("backpack")) {
+            if (RaidManager.isInRaid(player)) {
+                RaidInventory.AddResult raidResult = RaidInventoryManager.addStackTo(player, stack, RaidEquipmentSlot.BACKPACK);
+                player.sendSystemMessage(Component.literal("Debug givegear raid backpack: " + raidResult.message()));
+                return raidResult.success() ? 1 : 0;
+            }
+
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            RaidInventory.AddResult result = data.baseInventory().addToBackpack(item.withoutPlacement());
+            if (!result.success()) {
+                player.sendSystemMessage(Component.literal("Debug givegear base backpack: " + result.message()));
+                return 0;
+            }
+            PlayerStashService.save(player, data);
+            player.sendSystemMessage(Component.literal("Debug spawned " + item.displayName() + " into base backpack."));
+            return 1;
+        }
+
+        if (target.equals("equipment")) {
+            RaidEquipmentSlot slot = debugGearEquipmentSlot(gearAlias);
+            if (slot == null) {
+                player.sendSystemMessage(Component.literal("No equipment slot is mapped for " + gearAlias + "."));
+                return 0;
+            }
+            PlayerStashService.PlayerStashData data = PlayerStashService.load(player);
+            RaidInventoryItem previous = data.baseInventory().itemAt(slot, 0);
+            if (previous != null && data.stash().countAddable(previous.withoutPlacement(), -1) < previous.count()) {
+                player.sendSystemMessage(Component.literal("Stash does not have room for currently equipped " + previous.displayName() + "."));
+                return 0;
+            }
+            RaidInventory.AddResult result = data.baseInventory().setEquipmentSlot(slot, item.withoutPlacement());
+            if (!result.success()) {
+                player.sendSystemMessage(Component.literal("Debug givegear equipment: " + result.message()));
+                return 0;
+            }
+            if (previous != null) {
+                data.stash().addPartial(previous.withoutPlacement());
+            }
+            PlayerStashService.save(player, data);
+            player.sendSystemMessage(Component.literal("Debug equipped " + item.displayName() + " in " + slot.name().toLowerCase(java.util.Locale.ROOT) + "."));
+            return 1;
+        }
+
+        player.sendSystemMessage(Component.literal("Unknown target '" + targetName + "'. Use stash, backpack, or equipment."));
+        return 0;
+    }
+
+    private static ResourceLocation debugGearItemId(String alias) {
+        return switch (alias.toLowerCase(java.util.Locale.ROOT)) {
+            case "backpack_small", "small_backpack", "small" -> ResourceLocation.withDefaultNamespace("bundle");
+            case "backpack_medium", "medium_backpack", "medium" -> ResourceLocation.withDefaultNamespace("barrel");
+            case "backpack_large", "large_backpack", "large" -> ResourceLocation.withDefaultNamespace("chest");
+            case "vest_basic", "basic_vest", "vest" -> ResourceLocation.withDefaultNamespace("leather_chestplate");
+            case "safe_alpha", "alpha_safe", "safe" -> ResourceLocation.withDefaultNamespace("ender_chest");
+            case "helmet_test", "helmet" -> ResourceLocation.withDefaultNamespace("iron_helmet");
+            case "armor_test", "armor" -> ResourceLocation.withDefaultNamespace("iron_chestplate");
+            default -> null;
+        };
+    }
+
+    private static RaidEquipmentSlot debugGearEquipmentSlot(String alias) {
+        return switch (alias.toLowerCase(java.util.Locale.ROOT)) {
+            case "backpack_small", "small_backpack", "small", "backpack_medium", "medium_backpack", "medium", "backpack_large", "large_backpack", "large" -> RaidEquipmentSlot.EQUIPPED_BACKPACK;
+            case "vest_basic", "basic_vest", "vest" -> RaidEquipmentSlot.EQUIPPED_VEST;
+            case "safe_alpha", "alpha_safe", "safe" -> RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+            case "helmet_test", "helmet" -> RaidEquipmentSlot.HELMET;
+            case "armor_test", "armor" -> RaidEquipmentSlot.ARMOR;
             default -> null;
         };
     }
@@ -599,7 +723,13 @@ public class RaidInventoryCommands {
 
     private static int weight(CommandSourceStack source) throws CommandSyntaxException {
         RaidInventory inventory = RaidInventoryManager.get(source.getPlayerOrException());
-        source.sendSuccess(() -> Component.literal(String.format("Raid inventory weight: %.2f", inventory.totalWeight())), false);
+        RaidWeightService.WeightStatus status = RaidWeightService.status(inventory);
+        source.sendSuccess(() -> Component.literal(String.format(
+                "Raid inventory weight: %.2f/%.2f | stage=%s | movement=%.0f%%",
+                status.currentWeight(),
+                status.maxWeight(),
+                status.stage().name().toLowerCase(java.util.Locale.ROOT),
+                status.movementMultiplier() * 100.0D)), false);
         return 1;
     }
 

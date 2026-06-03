@@ -9,6 +9,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
+import com.chaseschwartz.extractcraft.raid.inventory.RaidWeightService;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,10 +33,12 @@ public class ExtractionZoneHandler {
         for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
             if (!RaidManager.isInRaid(player)) {
                 extractionTicks.remove(player.getUUID());
+                RaidWeightService.clear(player);
                 continue;
             }
 
             RaidWeaponService.enforceBridgeSlot(player);
+            RaidWeightService.tickRaidPlayer(player);
             RaidManager.suppressHungerForRaid(player);
 
             if (RaidManager.hasExpired(player, currentGameTime)) {
@@ -63,6 +66,7 @@ public class ExtractionZoneHandler {
 
         if (RaidManager.isInRaid(player)) {
             RaidWeaponService.syncAndClearBridge(player);
+            RaidWeightService.clear(player);
             RaidResultService.recordFailure(player, "logout", RaidManager.getRaidState(player).orElse(null));
             RaidManager.restorePreviousGameModeIfInRaid(player);
         }
@@ -102,6 +106,7 @@ public class ExtractionZoneHandler {
         }
 
         extractionTicks.remove(player.getUUID());
+        RaidWeightService.clear(player);
         player.getInventory().clearContent();
         player.getInventory().setChanged();
         player.containerMenu.broadcastChanges();

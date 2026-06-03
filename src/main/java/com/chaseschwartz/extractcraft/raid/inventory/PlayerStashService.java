@@ -263,6 +263,11 @@ public class PlayerStashService {
 
     static void replaceInventoryContents(RaidInventory target, RaidInventory source) {
         target.clear();
+        target.setEquipmentSlot(RaidEquipmentSlot.HELMET, source.equipmentItem(RaidEquipmentSlot.HELMET) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.HELMET)));
+        target.setEquipmentSlot(RaidEquipmentSlot.ARMOR, source.equipmentItem(RaidEquipmentSlot.ARMOR) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.ARMOR)));
+        target.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_BACKPACK, source.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK)));
+        target.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_VEST, source.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST)));
+        target.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, source.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER)));
         target.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, source.primaryWeapon() == null ? null : copyItem(source.primaryWeapon()));
         target.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, source.secondaryWeapon() == null ? null : copyItem(source.secondaryWeapon()));
         for (RaidInventoryItem item : source.backpack().items()) {
@@ -318,9 +323,38 @@ public class PlayerStashService {
 
         inventory.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, readItem(object.getAsJsonObject("primaryWeapon"), player));
         inventory.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, readItem(object.getAsJsonObject("secondaryWeapon"), player));
+        boolean hasEquipment = object.has("equipment") && object.get("equipment").isJsonObject();
+        readEquipment(object.getAsJsonObject("equipment"), inventory, player);
+        if (!hasEquipment && hasAnyStorageItems(object)) {
+            RaidInventoryDefinitions.backpack("large_backpack").ifPresent(inventory::setBackpack);
+            RaidInventoryDefinitions.vest("basic_vest").ifPresent(inventory::setVest);
+            RaidInventoryDefinitions.safeContainer("alpha_safe_box").ifPresent(inventory::setSafeBox);
+            ExtractCraft.LOGGER.info("Loaded legacy base inventory without equipment records; temporarily restored legacy storage grids so saved contents remain accessible.");
+        }
         readStorage(object.getAsJsonObject("backpack"), inventory.backpack(), player, true);
         readStorage(object.getAsJsonObject("vest"), inventory.vest(), player, true);
         readStorage(object.getAsJsonObject("safeBox"), inventory.safeBox(), player, true);
+    }
+
+    private static boolean hasAnyStorageItems(JsonObject object) {
+        return hasStorageItems(object.getAsJsonObject("backpack"))
+                || hasStorageItems(object.getAsJsonObject("vest"))
+                || hasStorageItems(object.getAsJsonObject("safeBox"));
+    }
+
+    private static boolean hasStorageItems(JsonObject object) {
+        return object != null && object.has("items") && object.get("items").isJsonArray() && object.getAsJsonArray("items").size() > 0;
+    }
+
+    private static void readEquipment(JsonObject object, RaidInventory inventory, ServerPlayer player) {
+        if (object == null) {
+            return;
+        }
+        inventory.setEquipmentSlot(RaidEquipmentSlot.HELMET, readItem(object.getAsJsonObject("helmet"), player));
+        inventory.setEquipmentSlot(RaidEquipmentSlot.ARMOR, readItem(object.getAsJsonObject("armor"), player));
+        inventory.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_BACKPACK, readItem(object.getAsJsonObject("backpack"), player));
+        inventory.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_VEST, readItem(object.getAsJsonObject("vest"), player));
+        inventory.setEquipmentSlot(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, readItem(object.getAsJsonObject("safeContainer"), player));
     }
 
     private static void readStorage(JsonObject object, RaidStorageContainer container, ServerPlayer player) {
@@ -402,11 +436,22 @@ public class PlayerStashService {
 
     private static JsonObject inventoryToJson(RaidInventory inventory, ServerPlayer player) {
         JsonObject object = new JsonObject();
+        object.add("equipment", equipmentToJson(inventory, player));
         object.add("primaryWeapon", itemToJson(inventory.primaryWeapon(), player));
         object.add("secondaryWeapon", itemToJson(inventory.secondaryWeapon(), player));
         object.add("backpack", storageToJson(inventory.backpack(), player));
         object.add("vest", storageToJson(inventory.vest(), player));
         object.add("safeBox", storageToJson(inventory.safeBox(), player));
+        return object;
+    }
+
+    private static JsonObject equipmentToJson(RaidInventory inventory, ServerPlayer player) {
+        JsonObject object = new JsonObject();
+        object.add("helmet", itemToJson(inventory.equipmentItem(RaidEquipmentSlot.HELMET), player));
+        object.add("armor", itemToJson(inventory.equipmentItem(RaidEquipmentSlot.ARMOR), player));
+        object.add("backpack", itemToJson(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK), player));
+        object.add("vest", itemToJson(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST), player));
+        object.add("safeContainer", itemToJson(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER), player));
         return object;
     }
 
@@ -561,10 +606,7 @@ public class PlayerStashService {
         }
 
         private static RaidLoadout baseLoadout() {
-            return new RaidLoadout(
-                    RaidInventoryDefinitions.backpack("large_backpack").orElse(RaidInventoryDefinitions.defaultLoadout().backpack()),
-                    RaidInventoryDefinitions.defaultLoadout().vest(),
-                    RaidInventoryDefinitions.defaultLoadout().safeBox());
+            return RaidInventoryDefinitions.defaultLoadout();
         }
 
         private void rebuildStash() {
