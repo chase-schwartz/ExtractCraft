@@ -24,6 +24,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 
 public final class ExtractCraftTooltipBuilder {
+    private static final int MAX_TEXT_WIDTH = 250;
+
     private ExtractCraftTooltipBuilder() {
     }
 
@@ -34,18 +36,19 @@ public final class ExtractCraftTooltipBuilder {
 
         Optional<ItemValueEntry> value = ItemValueRegistry.get(stack);
         Optional<ItemCarryProfile> profile = ItemCarryProfileRegistry.get(stack);
+        boolean detailed = Screen.hasShiftDown();
         if (stack.getItem() instanceof ExtractCraftProfiledItem profiledItem) {
-            return profiledTooltip(stack, profiledItem.metadata(), value, profile);
+            return profiledTooltip(stack, profiledItem.metadata(), value, profile, detailed);
         }
 
         List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(Minecraft.getInstance(), stack));
         if (value.isPresent() || profile.isPresent()) {
-            addRegistryLines(lines, stack, value, profile);
+            addRegistryLines(lines, stack, value, profile, detailed);
         }
         return lines;
     }
 
-    private static List<Component> profiledTooltip(ItemStack stack, ExtractCraftItemMetadata metadata, Optional<ItemValueEntry> value, Optional<ItemCarryProfile> profile) {
+    private static List<Component> profiledTooltip(ItemStack stack, ExtractCraftItemMetadata metadata, Optional<ItemValueEntry> value, Optional<ItemCarryProfile> profile, boolean detailed) {
         List<Component> lines = new ArrayList<>();
         ChatFormatting tierColor = rarityColor(value.map(ItemValueEntry::rarity).orElse(ItemRarity.COMMON));
         lines.add(stack.getHoverName().copy().withStyle(tierColor));
@@ -53,10 +56,14 @@ public final class ExtractCraftTooltipBuilder {
         value.ifPresent(entry -> lines.add(Component.literal("Rarity: " + label(entry.rarity().name())).withStyle(rarityColor(entry.rarity()))));
         lines.add(Component.literal("Category: " + metadata.category()).withStyle(ChatFormatting.GRAY));
         value.ifPresent(entry -> lines.add(Component.literal(valueText(entry.value(), stack.getCount())).withStyle(ChatFormatting.GREEN)));
-        lines.add(Component.literal("Weight: " + format(metadata.weight() * stack.getCount()) + " kg").withStyle(ChatFormatting.GRAY));
-        lines.add(Component.literal("Size: " + metadata.gridWidth() + "x" + metadata.gridHeight()).withStyle(ChatFormatting.GRAY));
+        if (detailed) {
+            lines.add(Component.literal("Weight: " + format(metadata.weight() * stack.getCount()) + " kg").withStyle(ChatFormatting.GRAY));
+            lines.add(Component.literal("Size: " + metadata.gridWidth() + "x" + metadata.gridHeight()).withStyle(ChatFormatting.GRAY));
+        }
 
-        metadata.equipmentSlot().ifPresent(slot -> lines.add(Component.literal("Slot: " + equipmentLabel(slot)).withStyle(ChatFormatting.YELLOW)));
+        if (detailed) {
+            metadata.equipmentSlot().ifPresent(slot -> lines.add(Component.literal("Slot: " + equipmentLabel(slot)).withStyle(ChatFormatting.YELLOW)));
+        }
         if (metadata.storageGridWidth().isPresent() && metadata.storageGridHeight().isPresent()) {
             String label = switch (metadata.equipmentSlot().orElse(RaidEquipmentSlot.BACKPACK)) {
                 case EQUIPPED_BACKPACK -> "Backpack Storage";
@@ -68,7 +75,7 @@ public final class ExtractCraftTooltipBuilder {
         }
         metadata.maxCarryWeight().ifPresent(weight -> lines.add(Component.literal("Carry Limit: +" + format(weight) + " kg").withStyle(ChatFormatting.BLUE)));
         metadata.armorRating().ifPresent(rating -> lines.add(Component.literal("Armor: " + protectionLabel(rating)).withStyle(ChatFormatting.YELLOW)));
-        if (metadata.durabilityEnabled()) {
+        if (detailed && metadata.durabilityEnabled()) {
             lines.add(Component.literal("Durability: Configured"
                     + metadata.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
@@ -83,23 +90,27 @@ public final class ExtractCraftTooltipBuilder {
         }
         metadata.repairTargetCategory().ifPresent(target -> lines.add(Component.literal("Target: " + target
                 + metadata.repairAmount().map(amount -> " | Repair: " + amount).orElse(" | Repair: Configured")).withStyle(ChatFormatting.YELLOW)));
-        if (metadata.consumable()) {
+        if (detailed && metadata.consumable()) {
             lines.add(Component.literal("Consumable").withStyle(ChatFormatting.YELLOW));
         }
         if (metadata.allowInSafeBox() || metadata.equipmentSlot().filter(slot -> slot == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER).isPresent()) {
             lines.add(Component.literal("Protected on death/failure").withStyle(ChatFormatting.AQUA));
         }
         if (!metadata.description().isBlank()) {
-            lines.add(Component.literal(metadata.description()).withStyle(ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY));
+            addWrapped(lines, metadata.description(), ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY);
         }
-        for (String line : metadata.extraTooltipLines()) {
-            lines.add(Component.literal(line).withStyle(ChatFormatting.DARK_GRAY));
+        if (detailed) {
+            for (String line : metadata.extraTooltipLines()) {
+                addWrapped(lines, line, ChatFormatting.DARK_GRAY);
+            }
+            profile.ifPresent(carry -> appendProfileNotes(lines, carry));
+        } else {
+            lines.add(Component.literal("Hold Shift for details").withStyle(ChatFormatting.DARK_GRAY));
         }
-        profile.ifPresent(carry -> appendProfileNotes(lines, carry));
         return lines;
     }
 
-    private static void addRegistryLines(List<Component> lines, ItemStack stack, Optional<ItemValueEntry> value, Optional<ItemCarryProfile> profile) {
+    private static void addRegistryLines(List<Component> lines, ItemStack stack, Optional<ItemValueEntry> value, Optional<ItemCarryProfile> profile, boolean detailed) {
         value.ifPresent(entry -> {
             lines.add(Component.literal("Rarity: " + label(entry.rarity().name())).withStyle(rarityColor(entry.rarity())));
             lines.add(Component.literal("Category: " + categoryLabel(entry.category())).withStyle(ChatFormatting.GRAY));
@@ -111,16 +122,20 @@ public final class ExtractCraftTooltipBuilder {
             if (value.isEmpty()) {
                 lines.add(Component.literal("Category: " + categoryLabel(carry.category())).withStyle(ChatFormatting.GRAY));
             }
-            lines.add(Component.literal("Weight: " + format(carry.weight() * stack.getCount()) + " kg").withStyle(ChatFormatting.GRAY));
             int width = carry.gridWidth().orElseGet(() -> gridMetadata(stack).map(GridDisplayMetadata.Metadata::footprintWidth).orElse(1));
             int height = carry.gridHeight().orElseGet(() -> gridMetadata(stack).map(GridDisplayMetadata.Metadata::footprintHeight).orElse(1));
-            lines.add(Component.literal("Size: " + width + "x" + height).withStyle(ChatFormatting.GRAY));
+            if (detailed) {
+                lines.add(Component.literal("Weight: " + format(carry.weight() * stack.getCount()) + " kg").withStyle(ChatFormatting.GRAY));
+                lines.add(Component.literal("Size: " + width + "x" + height).withStyle(ChatFormatting.GRAY));
+            }
             carry.tier().ifPresent(tier -> lines.add(Component.literal("Tier " + tier).withStyle(ChatFormatting.YELLOW)));
-            carry.equipmentSlot().ifPresent(slot -> lines.add(Component.literal("Slot: " + equipmentLabel(slot)).withStyle(ChatFormatting.YELLOW)));
+            if (detailed) {
+                carry.equipmentSlot().ifPresent(slot -> lines.add(Component.literal("Slot: " + equipmentLabel(slot)).withStyle(ChatFormatting.YELLOW)));
+            }
             carry.storageGridDefinition().ifPresent(grid -> lines.add(Component.literal("Storage: " + grid).withStyle(ChatFormatting.BLUE)));
             carry.maxCarryWeight().ifPresent(weight -> lines.add(Component.literal("Carry Limit: +" + format(weight) + " kg").withStyle(ChatFormatting.BLUE)));
             carry.armorRating().ifPresent(rating -> lines.add(Component.literal("Armor: " + protectionLabel(rating)).withStyle(ChatFormatting.YELLOW)));
-            if (carry.durabilityEnabled()) {
+            if (detailed && carry.durabilityEnabled()) {
                 lines.add(Component.literal("Durability: Configured"
                         + carry.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
             }
@@ -135,13 +150,18 @@ public final class ExtractCraftTooltipBuilder {
             }
             carry.repairTargetCategory().ifPresent(target -> lines.add(Component.literal("Target: " + target
                     + carry.repairAmount().map(amount -> " | Repair: " + amount).orElse(" | Repair: Configured")).withStyle(ChatFormatting.YELLOW)));
-            if (carry.consumable()) {
+            if (detailed && carry.consumable()) {
                 lines.add(Component.literal("Consumable").withStyle(ChatFormatting.YELLOW));
             }
             if (carry.allowInSafeBox()) {
                 lines.add(Component.literal("Safe Box allowed").withStyle(ChatFormatting.AQUA));
             }
-            appendProfileNotes(lines, carry);
+            if (detailed) {
+                appendProfileNotes(lines, carry);
+            } else {
+                firstUsefulNote(carry).ifPresent(note -> addWrapped(lines, note, ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY));
+                lines.add(Component.literal("Hold Shift for details").withStyle(ChatFormatting.DARK_GRAY));
+            }
         });
     }
 
@@ -152,10 +172,80 @@ public final class ExtractCraftTooltipBuilder {
 
     private static void appendProfileNotes(List<Component> lines, ItemCarryProfile profile) {
         for (String note : profile.notes()) {
-            if (!note.isBlank() && !note.startsWith("ExtractCraft equipment/content profile")) {
-                lines.add(Component.literal(note).withStyle(ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY));
+            if (isUsefulNote(note)) {
+                addWrapped(lines, note, ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY);
             }
         }
+    }
+
+    private static Optional<String> firstUsefulNote(ItemCarryProfile profile) {
+        return profile.notes().stream().filter(ExtractCraftTooltipBuilder::isUsefulNote).findFirst();
+    }
+
+    private static boolean isUsefulNote(String note) {
+        return !note.isBlank() && !note.startsWith("ExtractCraft equipment/content profile");
+    }
+
+    private static void addWrapped(List<Component> lines, String text, ChatFormatting... styles) {
+        for (String line : wrap(text, MAX_TEXT_WIDTH)) {
+            lines.add(Component.literal(line).withStyle(styles));
+        }
+    }
+
+    private static List<String> wrap(String text, int maxWidth) {
+        String trimmed = text.trim();
+        if (trimmed.isBlank()) {
+            return List.of();
+        }
+
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft == null || minecraft.font == null || minecraft.font.width(trimmed) <= maxWidth) {
+            return List.of(trimmed);
+        }
+
+        List<String> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String word : trimmed.split("\\s+")) {
+            String candidate = current.isEmpty() ? word : current + " " + word;
+            if (minecraft.font.width(candidate) <= maxWidth) {
+                current.setLength(0);
+                current.append(candidate);
+                continue;
+            }
+
+            if (!current.isEmpty()) {
+                lines.add(current.toString());
+                current.setLength(0);
+            }
+
+            if (minecraft.font.width(word) <= maxWidth) {
+                current.append(word);
+            } else {
+                lines.addAll(splitLongWord(word, maxWidth));
+            }
+        }
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+        return lines;
+    }
+
+    private static List<String> splitLongWord(String word, int maxWidth) {
+        Minecraft minecraft = Minecraft.getInstance();
+        List<String> lines = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < word.length(); i++) {
+            String candidate = current.toString() + word.charAt(i);
+            if (!current.isEmpty() && minecraft.font.width(candidate) > maxWidth) {
+                lines.add(current.toString());
+                current.setLength(0);
+            }
+            current.append(word.charAt(i));
+        }
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+        return lines;
     }
 
     private static String valueText(int unitValue, int count) {
