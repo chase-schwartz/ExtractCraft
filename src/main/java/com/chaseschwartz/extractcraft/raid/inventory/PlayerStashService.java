@@ -255,13 +255,13 @@ public class PlayerStashService {
         return copy;
     }
 
-    static RaidInventory copyInventory(RaidInventory source) {
+    public static RaidInventory copyInventory(RaidInventory source) {
         RaidInventory copy = new RaidInventory(source.loadout());
         replaceInventoryContents(copy, source);
         return copy;
     }
 
-    static void replaceInventoryContents(RaidInventory target, RaidInventory source) {
+    public static void replaceInventoryContents(RaidInventory target, RaidInventory source) {
         target.clear();
         target.setEquipmentSlot(RaidEquipmentSlot.HELMET, source.equipmentItem(RaidEquipmentSlot.HELMET) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.HELMET)));
         target.setEquipmentSlot(RaidEquipmentSlot.ARMOR, source.equipmentItem(RaidEquipmentSlot.ARMOR) == null ? null : copyItem(source.equipmentItem(RaidEquipmentSlot.ARMOR)));
@@ -513,7 +513,7 @@ public class PlayerStashService {
         return lower.equals("value") || lower.equals("weight") || lower.equals("category") ? lower : "name";
     }
 
-    static RaidInventoryItem copyItem(RaidInventoryItem item) {
+    public static RaidInventoryItem copyItem(RaidInventoryItem item) {
         return new RaidInventoryItem(
                 item.itemId(),
                 item.lookupKey(),

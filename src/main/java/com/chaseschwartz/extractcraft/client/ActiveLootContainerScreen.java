@@ -20,9 +20,16 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLootContainerMenu> {
-    private static final int CONTAINER_PANEL_X = 214;
+    private static final int CONTAINER_PANEL_X = 238;
     private static final int CONTAINER_PANEL_Y = 28;
     private static final int CONTAINER_PANEL_WIDTH = 130;
+    private static final int BACKPACK_GRID_X = 12;
+    private static final int BACKPACK_GRID_Y = 66;
+    private static final int VEST_GRID_X = 12;
+    private static final int VEST_GRID_Y = 248;
+    private static final int SAFE_GRID_X = 116;
+    private static final int SAFE_GRID_Y = 248;
+    private static final int WEAPON_PANEL_X = 168;
     private static final int WEAPON_BACKGROUND_SIZE = 20;
     private static final int WEAPON_INNER_SIZE = 18;
     private static final int VANILLA_BACKGROUND_SIZE = 18;
@@ -59,7 +66,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     public ActiveLootContainerScreen(ActiveLootContainerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = 352;
+        this.imageWidth = 376;
         this.imageHeight = Math.max(318, 102 + menu.containerRows() * 18);
     }
 
@@ -85,11 +92,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         border(guiGraphics, x, y, this.imageWidth, this.imageHeight, BORDER_COLOR);
 
         boolean dragging = dragSource != DragSource.NONE;
-        section(guiGraphics, x + 8, y + 24, 128, 184, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
-        section(guiGraphics, x + 8, y + 214, 82, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
-        section(guiGraphics, x + 98, y + 214, 82, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
-        weaponSection(guiGraphics, x + 144, y + 28, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
-        weaponSection(guiGraphics, x + 144, y + 92, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
+        section(guiGraphics, x + 8, y + 24, 152, 184, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
+        section(guiGraphics, x + 8, y + 214, 100, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
+        section(guiGraphics, x + 112, y + 214, 82, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
+        weaponSection(guiGraphics, x + WEAPON_PANEL_X, y + 28, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
+        weaponSection(guiGraphics, x + WEAPON_PANEL_X, y + 92, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
         if (this.menu.hasWorldContainer()) {
             section(guiGraphics, x + CONTAINER_PANEL_X, y + CONTAINER_PANEL_Y, CONTAINER_PANEL_WIDTH, this.imageHeight - 40, false);
         }
@@ -99,6 +106,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     @Override
     protected void renderSlot(GuiGraphics guiGraphics, Slot slot) {
         if (isRaidInventorySlot(slot) || isContainerSlot(slot)) {
+            if (isRaidInventorySlot(slot) && !isWeaponSlot(slot) && !isVisibleGridSlot(slot)) {
+                return;
+            }
             if (isWeaponSlot(slot)) {
                 drawWeaponSlotBackground(guiGraphics, slot.x - 1, slot.y - 1);
             } else {
@@ -151,16 +161,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.backpackUsedCapacity(), menu.backpackMaxCapacity()), 14, 42, MUTED_TEXT, false);
         guiGraphics.drawString(this.font, String.format("%.1f/%.1f wt", menu.backpackUsedWeight(), menu.backpackMaxWeight()), 14, 53, MUTED_TEXT, false);
 
-        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Primary" : "Primary Weapon", 150, 34, TEXT, false);
-        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Secondary" : "Secondary Weapon", 150, 98, TEXT, false);
-        drawWeaponName(guiGraphics, ActiveLootContainerMenu.PRIMARY_WEAPON_START, 170, 53, this.menu.hasWorldContainer() ? 5 : 24);
-        drawWeaponName(guiGraphics, ActiveLootContainerMenu.SECONDARY_WEAPON_START, 170, 115, this.menu.hasWorldContainer() ? 5 : 24);
+        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Primary" : "Primary Weapon", WEAPON_PANEL_X + 6, 34, TEXT, false);
+        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Secondary" : "Secondary Weapon", WEAPON_PANEL_X + 6, 98, TEXT, false);
+        drawWeaponName(guiGraphics, ActiveLootContainerMenu.PRIMARY_WEAPON_START, WEAPON_PANEL_X + 26, 53, this.menu.hasWorldContainer() ? 5 : 24);
+        drawWeaponName(guiGraphics, ActiveLootContainerMenu.SECONDARY_WEAPON_START, WEAPON_PANEL_X + 26, 115, this.menu.hasWorldContainer() ? 5 : 24);
 
         guiGraphics.drawString(this.font, "Vest", 14, 219, TEXT, false);
         guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.vestUsedCapacity(), menu.vestMaxCapacity()), 14, 232, MUTED_TEXT, false);
 
-        guiGraphics.drawString(this.font, "Safe Box", 104, 219, TEXT, false);
-        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.safeBoxUsedCapacity(), menu.safeBoxMaxCapacity()), 104, 232, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Safe Box", SAFE_GRID_X, 219, TEXT, false);
+        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.safeBoxUsedCapacity(), menu.safeBoxMaxCapacity()), SAFE_GRID_X, 232, MUTED_TEXT, false);
 
         int hintY = Math.min(this.imageHeight - 28, 64 + this.menu.containerRows() * 18);
         if (this.menu.hasWorldContainer()) {
@@ -516,9 +526,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
         return switch (target) {
-            case BACKPACK -> gridCell(localX, localY, 12, 66, 6, 6);
-            case VEST -> gridCell(localX, localY, 12, 248, 4, 3);
-            case SAFE_BOX -> gridCell(localX, localY, 104, 248, 3, 3);
+            case BACKPACK -> gridCell(localX, localY, BACKPACK_GRID_X, BACKPACK_GRID_Y, menu.backpackGridWidth(), menu.backpackGridHeight());
+            case VEST -> gridCell(localX, localY, VEST_GRID_X, VEST_GRID_Y, menu.vestGridWidth(), menu.vestGridHeight());
+            case SAFE_BOX -> gridCell(localX, localY, SAFE_GRID_X, SAFE_GRID_Y, menu.safeGridWidth(), menu.safeGridHeight());
             default -> -1;
         };
     }
@@ -570,6 +580,26 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return this.menu.raidSlotForMenuSlot(slot.index) != null;
     }
 
+    private boolean isVisibleGridSlot(Slot slot) {
+        RaidEquipmentSlot section = this.menu.raidSlotForMenuSlot(slot.index);
+        if (!isGridTarget(section)) {
+            return true;
+        }
+        int offset = switch (section) {
+            case BACKPACK -> slot.index - ActiveLootContainerMenu.BACKPACK_START;
+            case VEST -> slot.index - ActiveLootContainerMenu.VEST_START;
+            case SAFE_BOX -> slot.index - ActiveLootContainerMenu.SAFE_BOX_START;
+            default -> -1;
+        };
+        GridLayout layout = layoutFor(section);
+        if (layout.columns() <= 0 || layout.rows() <= 0 || offset < 0) {
+            return false;
+        }
+        int x = offset % Math.max(1, layout.columns());
+        int y = offset / Math.max(1, layout.columns());
+        return x < layout.columns() && y < layout.rows();
+    }
+
     private boolean isWeaponSlot(Slot slot) {
         return slot.index == ActiveLootContainerMenu.PRIMARY_WEAPON_START
                 || slot.index == ActiveLootContainerMenu.SECONDARY_WEAPON_START;
@@ -612,10 +642,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private RaidEquipmentSlot targetAt(int mouseX, int mouseY) {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
-        if (inside(localX, localY, 144, 28, weaponPanelWidth(), 54)) {
+        if (inside(localX, localY, WEAPON_PANEL_X, 28, weaponPanelWidth(), 54)) {
             return RaidEquipmentSlot.PRIMARY_WEAPON;
         }
-        if (inside(localX, localY, 144, 92, weaponPanelWidth(), 54)) {
+        if (inside(localX, localY, WEAPON_PANEL_X, 92, weaponPanelWidth(), 54)) {
             return RaidEquipmentSlot.SECONDARY_WEAPON;
         }
         if (insideBackpackGrid(localX, localY)) {
@@ -654,32 +684,24 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 isContainerPanel((int) mouseX, (int) mouseY));
     }
 
-    private static boolean insideBackpackGrid(int localX, int localY) {
-        return inside(localX, localY, 12, 66, 6 * SLOT_STEP, 6 * SLOT_STEP);
+    private boolean insideBackpackGrid(int localX, int localY) {
+        return inside(localX, localY, BACKPACK_GRID_X, BACKPACK_GRID_Y, menu.backpackGridWidth() * SLOT_STEP, menu.backpackGridHeight() * SLOT_STEP);
     }
 
-    private static boolean insideVestGrid(int localX, int localY) {
-        return inside(localX, localY, 12, 248, 4 * SLOT_STEP, 3 * SLOT_STEP);
+    private boolean insideVestGrid(int localX, int localY) {
+        return inside(localX, localY, VEST_GRID_X, VEST_GRID_Y, menu.vestGridWidth() * SLOT_STEP, menu.vestGridHeight() * SLOT_STEP);
     }
 
-    private static boolean insideSafeGrid(int localX, int localY) {
-        return inside(localX, localY, 104, 248, 3 * SLOT_STEP, 3 * SLOT_STEP);
+    private boolean insideSafeGrid(int localX, int localY) {
+        return inside(localX, localY, SAFE_GRID_X, SAFE_GRID_Y, menu.safeGridWidth() * SLOT_STEP, menu.safeGridHeight() * SLOT_STEP);
     }
 
-    private static int cellX(RaidEquipmentSlot target, int cell) {
-        return cell % switch (target) {
-            case VEST -> 4;
-            case SAFE_BOX -> 3;
-            default -> 6;
-        };
+    private int cellX(RaidEquipmentSlot target, int cell) {
+        return cell % Math.max(1, layoutFor(target).columns());
     }
 
-    private static int cellY(RaidEquipmentSlot target, int cell) {
-        return cell / switch (target) {
-            case VEST -> 4;
-            case SAFE_BOX -> 3;
-            default -> 6;
-        };
+    private int cellY(RaidEquipmentSlot target, int cell) {
+        return cell / Math.max(1, layoutFor(target).columns());
     }
 
     private static int slotId(RaidEquipmentSlot slot) {
@@ -1038,11 +1060,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         };
     }
 
-    private static GridLayout layoutFor(RaidEquipmentSlot slot) {
+    private GridLayout layoutFor(RaidEquipmentSlot slot) {
         return switch (slot) {
-            case VEST -> new GridLayout(12, 248, 4, 3);
-            case SAFE_BOX -> new GridLayout(104, 248, 3, 3);
-            default -> new GridLayout(12, 66, 6, 6);
+            case VEST -> new GridLayout(VEST_GRID_X, VEST_GRID_Y, menu.vestGridWidth(), menu.vestGridHeight());
+            case SAFE_BOX -> new GridLayout(SAFE_GRID_X, SAFE_GRID_Y, menu.safeGridWidth(), menu.safeGridHeight());
+            default -> new GridLayout(BACKPACK_GRID_X, BACKPACK_GRID_Y, menu.backpackGridWidth(), menu.backpackGridHeight());
         };
     }
 
@@ -1065,11 +1087,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 firstLastSlot(this.menu.containerMenuSlotStart(), this.menu.containerSlotCount()),
                 slotInfo(ActiveLootContainerMenu.PRIMARY_WEAPON_START),
                 slotInfo(ActiveLootContainerMenu.SECONDARY_WEAPON_START));
-        logSection("Primary", ActiveLootContainerMenu.PRIMARY_WEAPON_START, 1, 1, 1, 144, 28);
-        logSection("Secondary", ActiveLootContainerMenu.SECONDARY_WEAPON_START, 1, 1, 1, 144, 92);
-        logSection("Backpack", ActiveLootContainerMenu.BACKPACK_START, ActiveLootContainerMenu.BACKPACK_DISPLAY_SLOTS, 6, 6, 8, 24);
-        logSection("Vest", ActiveLootContainerMenu.VEST_START, ActiveLootContainerMenu.VEST_DISPLAY_SLOTS, 4, 3, 8, 214);
-        logSection("Safe Box", ActiveLootContainerMenu.SAFE_BOX_START, ActiveLootContainerMenu.SAFE_BOX_DISPLAY_SLOTS, 3, 3, 98, 214);
+        logSection("Primary", ActiveLootContainerMenu.PRIMARY_WEAPON_START, 1, 1, 1, WEAPON_PANEL_X, 28);
+        logSection("Secondary", ActiveLootContainerMenu.SECONDARY_WEAPON_START, 1, 1, 1, WEAPON_PANEL_X, 92);
+        logSection("Backpack", ActiveLootContainerMenu.BACKPACK_START, ActiveLootContainerMenu.BACKPACK_DISPLAY_SLOTS, menu.backpackGridWidth(), menu.backpackGridHeight(), 8, 24);
+        logSection("Vest", ActiveLootContainerMenu.VEST_START, ActiveLootContainerMenu.VEST_DISPLAY_SLOTS, menu.vestGridWidth(), menu.vestGridHeight(), 8, 214);
+        logSection("Safe Box", ActiveLootContainerMenu.SAFE_BOX_START, ActiveLootContainerMenu.SAFE_BOX_DISPLAY_SLOTS, menu.safeGridWidth(), menu.safeGridHeight(), 112, 214);
         if (this.menu.hasWorldContainer()) {
             int rows = Math.max(1, (int) Math.ceil(this.menu.containerSlotCount() / (double) ActiveLootContainerMenu.CONTAINER_COLUMNS));
             logSection("Container", this.menu.containerMenuSlotStart(), this.menu.containerSlotCount(), ActiveLootContainerMenu.CONTAINER_COLUMNS, rows, CONTAINER_PANEL_X, CONTAINER_PANEL_Y);

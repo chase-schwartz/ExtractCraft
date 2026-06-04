@@ -26,6 +26,7 @@ public class RaidInventoryScreenOpener {
                 buffer -> {
                     buffer.writeBoolean(false);
                     buffer.writeBlockPos(player.blockPosition());
+                    ActiveLootContainerMenu.writeGridDimensions(player, buffer);
                 });
     }
 }

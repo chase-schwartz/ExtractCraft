@@ -2,8 +2,13 @@ package com.chaseschwartz.extractcraft.raid.containers;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
+import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
+import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.GridMoveResult;
+import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
+import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
+import com.chaseschwartz.extractcraft.raid.inventory.PlayerStashService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventory;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryItem;
@@ -31,9 +36,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     public static final int PRIMARY_WEAPON_START = 0;
     public static final int SECONDARY_WEAPON_START = 1;
     public static final int BACKPACK_START = 2;
-    public static final int BACKPACK_DISPLAY_SLOTS = 36;
+    public static final int BACKPACK_DISPLAY_SLOTS = 64;
     public static final int VEST_START = BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
-    public static final int VEST_DISPLAY_SLOTS = 12;
+    public static final int VEST_DISPLAY_SLOTS = 20;
     public static final int SAFE_BOX_START = VEST_START + VEST_DISPLAY_SLOTS;
     public static final int SAFE_BOX_DISPLAY_SLOTS = 9;
     private static final int WEAPON_DISPLAY_SLOTS = 2;
@@ -59,6 +64,14 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     private final int containerSlotCount;
     private final boolean hasWorldContainer;
     private final ServerPlayer serverPlayer;
+    private final boolean persistentBaseMode;
+    private final PlayerStashService.PlayerStashData baseData;
+    private final int backpackGridWidth;
+    private final int backpackGridHeight;
+    private final int vestGridWidth;
+    private final int vestGridHeight;
+    private final int safeGridWidth;
+    private final int safeGridHeight;
     private final DataSlot backpackUsedCapacity;
     private final DataSlot backpackMaxCapacity;
     private final DataSlot backpackUsedWeightTenths;
@@ -81,23 +94,36 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private ActiveLootContainerMenu(int containerId, Inventory playerInventory, ClientData data) {
-        this(containerId, playerInventory, new SimpleContainer(data.containerSlotCount()), data.containerPos(), null, data.hasWorldContainer());
+        this(containerId, playerInventory, new SimpleContainer(data.containerSlotCount()), data.containerPos(), null, data.hasWorldContainer(),
+                data.backpackGridWidth(), data.backpackGridHeight(), data.vestGridWidth(), data.vestGridHeight(), data.safeGridWidth(), data.safeGridHeight());
     }
 
     public ActiveLootContainerMenu(int containerId, Inventory playerInventory, Container container, BlockPos containerPos, ServerPlayer serverPlayer) {
-        this(containerId, playerInventory, container, containerPos, serverPlayer, true);
+        this(containerId, playerInventory, container, containerPos, serverPlayer, true, -1, -1, -1, -1, -1, -1);
     }
 
     public ActiveLootContainerMenu(int containerId, Inventory playerInventory, ServerPlayer serverPlayer) {
-        this(containerId, playerInventory, new SimpleContainer(0), serverPlayer.blockPosition(), serverPlayer, false);
+        this(containerId, playerInventory, new SimpleContainer(0), serverPlayer.blockPosition(), serverPlayer, false, -1, -1, -1, -1, -1, -1);
     }
 
-    private ActiveLootContainerMenu(int containerId, Inventory playerInventory, Container container, BlockPos containerPos, ServerPlayer serverPlayer, boolean hasWorldContainer) {
+    private ActiveLootContainerMenu(int containerId, Inventory playerInventory, Container container, BlockPos containerPos, ServerPlayer serverPlayer, boolean hasWorldContainer,
+            int syncedBackpackGridWidth, int syncedBackpackGridHeight, int syncedVestGridWidth, int syncedVestGridHeight, int syncedSafeGridWidth, int syncedSafeGridHeight) {
         super(ExtractCraft.ACTIVE_LOOT_CONTAINER_MENU.get(), containerId);
         this.container = container;
         this.containerPos = containerPos;
         this.serverPlayer = serverPlayer;
         this.hasWorldContainer = hasWorldContainer;
+        this.persistentBaseMode = serverPlayer != null && RaidManager.getRaidState(serverPlayer).isEmpty();
+        this.baseData = persistentBaseMode ? PlayerStashService.load(serverPlayer) : null;
+        RaidInventory gridInventory = serverPlayer == null
+                ? null
+                : (persistentBaseMode ? baseData.baseInventory() : RaidInventoryManager.get(serverPlayer));
+        this.backpackGridWidth = clampGrid(syncedBackpackGridWidth >= 0 ? syncedBackpackGridWidth : gridInventory == null ? 0 : gridInventory.backpack().gridWidth(), 8);
+        this.backpackGridHeight = clampGrid(syncedBackpackGridHeight >= 0 ? syncedBackpackGridHeight : gridInventory == null ? 0 : gridInventory.backpack().gridHeight(), 8);
+        this.vestGridWidth = clampGrid(syncedVestGridWidth >= 0 ? syncedVestGridWidth : gridInventory == null ? 0 : gridInventory.vest().gridWidth(), 5);
+        this.vestGridHeight = clampGrid(syncedVestGridHeight >= 0 ? syncedVestGridHeight : gridInventory == null ? 0 : gridInventory.vest().gridHeight(), 4);
+        this.safeGridWidth = clampGrid(syncedSafeGridWidth >= 0 ? syncedSafeGridWidth : gridInventory == null ? 0 : gridInventory.safeBox().gridWidth(), 3);
+        this.safeGridHeight = clampGrid(syncedSafeGridHeight >= 0 ? syncedSafeGridHeight : gridInventory == null ? 0 : gridInventory.safeBox().gridHeight(), 3);
         this.containerSlotCount = container.getContainerSize();
         this.containerRows = hasWorldContainer ? Math.max(1, (int) Math.ceil(containerSlotCount / (double) CONTAINER_COLUMNS)) : 0;
         this.raidDisplay = new SimpleContainer(RAID_DISPLAY_SLOTS);
@@ -108,22 +134,22 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         addContainerSlots();
         logConstruction();
 
-        this.backpackUsedCapacity = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_USED_CAPACITY));
-        this.backpackMaxCapacity = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_MAX_CAPACITY));
-        this.backpackUsedWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_USED_WEIGHT_TENTHS));
-        this.backpackMaxWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_MAX_WEIGHT_TENTHS));
-        this.backpackValue = addDataSlot(statSlot(serverPlayer, Stat.BACKPACK_VALUE));
-        this.vestUsedCapacity = addDataSlot(statSlot(serverPlayer, Stat.VEST_USED_CAPACITY));
-        this.vestMaxCapacity = addDataSlot(statSlot(serverPlayer, Stat.VEST_MAX_CAPACITY));
-        this.vestUsedWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.VEST_USED_WEIGHT_TENTHS));
-        this.vestMaxWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.VEST_MAX_WEIGHT_TENTHS));
-        this.vestValue = addDataSlot(statSlot(serverPlayer, Stat.VEST_VALUE));
-        this.safeBoxUsedCapacity = addDataSlot(statSlot(serverPlayer, Stat.SAFE_BOX_USED_CAPACITY));
-        this.safeBoxMaxCapacity = addDataSlot(statSlot(serverPlayer, Stat.SAFE_BOX_MAX_CAPACITY));
-        this.safeBoxUsedWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.SAFE_BOX_USED_WEIGHT_TENTHS));
-        this.safeBoxMaxWeightTenths = addDataSlot(statSlot(serverPlayer, Stat.SAFE_BOX_MAX_WEIGHT_TENTHS));
-        this.safeBoxValue = addDataSlot(statSlot(serverPlayer, Stat.SAFE_BOX_VALUE));
-        this.totalValue = addDataSlot(statSlot(serverPlayer, Stat.TOTAL_VALUE));
+        this.backpackUsedCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.BACKPACK_USED_CAPACITY));
+        this.backpackMaxCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.BACKPACK_MAX_CAPACITY));
+        this.backpackUsedWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.BACKPACK_USED_WEIGHT_TENTHS));
+        this.backpackMaxWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.BACKPACK_MAX_WEIGHT_TENTHS));
+        this.backpackValue = addDataSlot(statSlot(serverPlayer, baseData, Stat.BACKPACK_VALUE));
+        this.vestUsedCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.VEST_USED_CAPACITY));
+        this.vestMaxCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.VEST_MAX_CAPACITY));
+        this.vestUsedWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.VEST_USED_WEIGHT_TENTHS));
+        this.vestMaxWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.VEST_MAX_WEIGHT_TENTHS));
+        this.vestValue = addDataSlot(statSlot(serverPlayer, baseData, Stat.VEST_VALUE));
+        this.safeBoxUsedCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.SAFE_BOX_USED_CAPACITY));
+        this.safeBoxMaxCapacity = addDataSlot(statSlot(serverPlayer, baseData, Stat.SAFE_BOX_MAX_CAPACITY));
+        this.safeBoxUsedWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.SAFE_BOX_USED_WEIGHT_TENTHS));
+        this.safeBoxMaxWeightTenths = addDataSlot(statSlot(serverPlayer, baseData, Stat.SAFE_BOX_MAX_WEIGHT_TENTHS));
+        this.safeBoxValue = addDataSlot(statSlot(serverPlayer, baseData, Stat.SAFE_BOX_VALUE));
+        this.totalValue = addDataSlot(statSlot(serverPlayer, baseData, Stat.TOTAL_VALUE));
 
         rebuildRaidDisplay();
     }
@@ -132,7 +158,25 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         boolean hasWorldContainer = buffer.readBoolean();
         int containerSlotCount = hasWorldContainer ? buffer.readVarInt() : 0;
         BlockPos containerPos = buffer.readBlockPos();
-        return new ClientData(hasWorldContainer, containerSlotCount, containerPos);
+        int backpackGridWidth = buffer.readVarInt();
+        int backpackGridHeight = buffer.readVarInt();
+        int vestGridWidth = buffer.readVarInt();
+        int vestGridHeight = buffer.readVarInt();
+        int safeGridWidth = buffer.readVarInt();
+        int safeGridHeight = buffer.readVarInt();
+        return new ClientData(hasWorldContainer, containerSlotCount, containerPos, backpackGridWidth, backpackGridHeight, vestGridWidth, vestGridHeight, safeGridWidth, safeGridHeight);
+    }
+
+    public static void writeGridDimensions(ServerPlayer player, RegistryFriendlyByteBuf buffer) {
+        RaidInventory inventory = RaidManager.getRaidState(player).isEmpty()
+                ? PlayerStashService.load(player).baseInventory()
+                : RaidInventoryManager.get(player);
+        buffer.writeVarInt(clampGrid(inventory.backpack().gridWidth(), 8));
+        buffer.writeVarInt(clampGrid(inventory.backpack().gridHeight(), 8));
+        buffer.writeVarInt(clampGrid(inventory.vest().gridWidth(), 5));
+        buffer.writeVarInt(clampGrid(inventory.vest().gridHeight(), 4));
+        buffer.writeVarInt(clampGrid(inventory.safeBox().gridWidth(), 3));
+        buffer.writeVarInt(clampGrid(inventory.safeBox().gridHeight(), 3));
     }
 
     private void logConstruction() {
@@ -166,6 +210,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     private String slotCoordinate(int slotIndex) {
         net.minecraft.world.inventory.Slot slot = this.slots.get(slotIndex);
         return slotIndex + "@(" + slot.x + "," + slot.y + ")";
+    }
+
+    private static int clampGrid(int value, int max) {
+        return Math.max(0, Math.min(max, value));
     }
 
     @Override
@@ -442,6 +490,30 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return safeBoxValue.get();
     }
 
+    public int backpackGridWidth() {
+        return backpackGridWidth;
+    }
+
+    public int backpackGridHeight() {
+        return backpackGridHeight;
+    }
+
+    public int vestGridWidth() {
+        return vestGridWidth;
+    }
+
+    public int vestGridHeight() {
+        return vestGridHeight;
+    }
+
+    public int safeGridWidth() {
+        return safeGridWidth;
+    }
+
+    public int safeGridHeight() {
+        return safeGridHeight;
+    }
+
     public int totalValue() {
         return totalValue.get();
     }
@@ -478,6 +550,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
                 copy.getCount(),
                 copy.getHoverName().getString());
+        if (persistentBaseMode) {
+            return transferContainerSlotToBase(player, containerSlot, target, cell, stack, copy);
+        }
+
         RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
                 ? RaidInventoryManager.addStackTo(player, copy, target, cellX(target, cell), cellY(target, cell), false)
                 : RaidInventoryManager.addStackTo(player, copy, target);
@@ -506,6 +582,73 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return copy;
     }
 
+    private ItemStack transferContainerSlotToBase(ServerPlayer player, int containerSlot, RaidEquipmentSlot target, int cell, ItemStack stack, ItemStack copy) {
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, copy).orElse(null);
+        if (item == null) {
+            String message = BuiltInRegistries.ITEM.getKey(copy.getItem()) + " has no carry profile.";
+            player.sendSystemMessage(Component.literal(message));
+            return ItemStack.EMPTY;
+        }
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+        if (profile == null) {
+            String message = item.lookupKey() + " has no carry profile.";
+            player.sendSystemMessage(Component.literal(message));
+            return ItemStack.EMPTY;
+        }
+
+        RaidInventory candidate = PlayerStashService.copyInventory(baseData.baseInventory());
+        int targetX = cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1;
+        int targetY = cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1;
+        RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
+                ? addToBaseStorageAt(candidate, item, profile, target, targetX, targetY, false)
+                : addToBaseTarget(candidate, item, profile, target);
+        if (result.movedCount() <= 0) {
+            RaidStorageContainer targetStorage = isGridSlot(target) ? storage(candidate, target) : null;
+            ExtractCraft.LOGGER.info("Debug loot base transfer failed: player={}, persistentBaseMode={}, activeRaid=false, debugContainer=true, source=CONTAINER#{}, target={}, targetGrid={}x{}, targetCell={}, receivedXY=({},{}), finalXY=({},{}), itemKey={}, footprint={}x{}, reason={}",
+                    player.getGameProfile().getName(),
+                    persistentBaseMode,
+                    containerSlot,
+                    target,
+                    targetStorage == null ? -1 : targetStorage.gridWidth(),
+                    targetStorage == null ? -1 : targetStorage.gridHeight(),
+                    cell,
+                    targetX,
+                    targetY,
+                    targetX,
+                    targetY,
+                    item.lookupKey(),
+                    item.gridWidth(),
+                    item.gridHeight(),
+                    result.message());
+            player.sendSystemMessage(Component.literal(result.message()));
+            return ItemStack.EMPTY;
+        }
+
+        stack.shrink(result.movedCount());
+        container.setItem(containerSlot, stack.isEmpty() ? ItemStack.EMPTY : stack);
+        container.setChanged();
+        PlayerStashService.replaceInventoryContents(baseData.baseInventory(), candidate);
+        PlayerStashService.save(player, baseData);
+        RaidInventoryItem placed = isGridSlot(target) ? storage(baseData.baseInventory(), target).itemAtCell(targetX, targetY) : null;
+        rebuildRaidDisplay();
+        ExtractCraft.LOGGER.info("Debug loot base transfer committed: player={}, persistentBaseMode={}, activeRaid=false, debugContainer=true, source=CONTAINER#{}, target={}, targetCell={}, receivedXY=({},{}), finalXY=({},{}), placedKey={}, placedGrid=({},{}), movedCount={}, sourceCleared=true, savedToPersistentBaseInventory=true",
+                player.getGameProfile().getName(),
+                persistentBaseMode,
+                containerSlot,
+                target,
+                cell,
+                targetX,
+                targetY,
+                targetX,
+                targetY,
+                placed == null ? "unknown" : placed.lookupKey(),
+                placed == null ? -1 : placed.gridX(),
+                placed == null ? -1 : placed.gridY(),
+                result.movedCount());
+        player.sendSystemMessage(Component.literal(result.message()));
+        return copy;
+    }
+
     private GridMoveResult moveStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
         return moveStoredItem(player, source, sourceIndex, target, -1);
     }
@@ -515,7 +658,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return GridMoveResult.failure("Invalid source or target.");
         }
 
-        RaidInventoryItem sourceItem = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
+        RaidInventory inventory = currentInventory(player);
+        RaidInventoryItem sourceItem = inventory.itemAt(source, sourceIndex);
         ExtractCraft.LOGGER.info("Raid grid move attempt: player={}, source={}#{}, target={}, targetCell={}, targetXY=({},{}), sourceItem={}",
                 player.getGameProfile().getName(),
                 source,
@@ -524,10 +668,12 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 cell,
                 cell >= 0 && isGridSlot(target) ? cellX(target, cell) : -1,
                 cell >= 0 && isGridSlot(target) ? cellY(target, cell) : -1,
-                sourceItemName(player, source, sourceIndex));
-        RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
-                ? RaidInventoryManager.moveBetween(player, source, sourceIndex, target, cellX(target, cell), cellY(target, cell), false)
-                : RaidInventoryManager.moveBetween(player, source, sourceIndex, target);
+                sourceItemName(inventory, source, sourceIndex));
+        RaidInventory.AddResult result = persistentBaseMode
+                ? moveBaseInventoryItem(source, sourceIndex, target, cell)
+                : cell >= 0 && isGridSlot(target)
+                        ? RaidInventoryManager.moveBetween(player, source, sourceIndex, target, cellX(target, cell), cellY(target, cell), false)
+                        : RaidInventoryManager.moveBetween(player, source, sourceIndex, target);
         if (!result.success()) {
             ExtractCraft.LOGGER.info("Raid loot cursor move failed: player={}, source={}#{}, sourceKey={}, sourceGrid=({},{}), sourceFootprint={}x{}, target={}, targetCell={}, targetXY=({},{}), sameSection={}, reason={}, movedCount={}",
                     player.getGameProfile().getName(),
@@ -549,6 +695,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return GridMoveResult.failure(result.message());
         }
 
+        if (persistentBaseMode) {
+            PlayerStashService.save(player, baseData);
+        }
         rebuildRaidDisplay();
         ExtractCraft.LOGGER.info("Raid loot cursor move committed: player={}, source={}#{}, sourceKey={}, sourceGrid=({},{}), sourceFootprint={}x{}, target={}, targetCell={}, targetXY=({},{}), sameSection={}, movedCount={}, pendingCleared=true",
                 player.getGameProfile().getName(),
@@ -569,6 +718,77 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return GridMoveResult.success(result.message());
     }
 
+    private RaidInventory.AddResult moveBaseInventoryItem(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int cell) {
+        RaidInventory candidate = PlayerStashService.copyInventory(baseData.baseInventory());
+        RaidInventoryItem item = candidate.itemAt(source, sourceIndex);
+        if (item == null) {
+            return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);
+        }
+        ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
+        if (profile == null) {
+            return new RaidInventory.AddResult(false, target, item.lookupKey() + " has no carry profile.", 0);
+        }
+
+        RaidInventoryItem removed = candidate.removeCountAt(source, sourceIndex, item.count());
+        if (removed == null) {
+            return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);
+        }
+
+        RaidInventory.AddResult result = cell >= 0 && isGridSlot(target)
+                ? addToBaseStorageAt(candidate, removed, profile, target, cellX(target, cell), cellY(target, cell), false)
+                : addToBaseTarget(candidate, removed, profile, target);
+        if (result.movedCount() < removed.count()) {
+            return result;
+        }
+
+        PlayerStashService.replaceInventoryContents(baseData.baseInventory(), candidate);
+        return result;
+    }
+
+    private RaidInventory.AddResult addToBaseTarget(RaidInventory inventory, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target) {
+        if (RaidInventory.isEquipmentSlot(target)) {
+            return inventory.equipItem(item, target);
+        }
+        if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return inventory.addToWeaponSlot(item, target);
+        }
+        if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
+            return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
+        }
+        if (target == RaidEquipmentSlot.SAFE_BOX && (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR)) {
+            return new RaidInventory.AddResult(false, target, "Item is not allowed in safe box.", 0);
+        }
+
+        RaidStorageContainer targetStorage = storage(inventory, target);
+        int moved = targetStorage.addPartialGridFirstFit(item, true);
+        if (moved > 0) {
+            return new RaidInventory.AddResult(true, target, "Moved " + moved + "x " + item.displayName() + " to " + targetStorage.name() + ".", moved);
+        }
+        return new RaidInventory.AddResult(false, target, targetStorage.name() + " has no room.", 0);
+    }
+
+    private RaidInventory.AddResult addToBaseStorageAt(RaidInventory inventory, RaidInventoryItem item, ItemCarryProfile profile, RaidEquipmentSlot target, int x, int y, boolean rotated) {
+        if (RaidInventory.isEquipmentSlot(target)) {
+            return inventory.equipItem(item, target);
+        }
+        if (target == RaidEquipmentSlot.PRIMARY_WEAPON || target == RaidEquipmentSlot.SECONDARY_WEAPON) {
+            return inventory.addToWeaponSlot(item, target);
+        }
+        if (target == RaidEquipmentSlot.VEST && profile.category() == ItemCategory.GUNS) {
+            return new RaidInventory.AddResult(false, target, "Guns must be carried in Backpack or equipped.", 0);
+        }
+        if (target == RaidEquipmentSlot.SAFE_BOX && (!profile.allowInSafeBox() || profile.category() == ItemCategory.GUNS || profile.category() == ItemCategory.ARMOR)) {
+            return new RaidInventory.AddResult(false, target, "Item is not allowed in safe box.", 0);
+        }
+
+        RaidStorageContainer targetStorage = storage(inventory, target);
+        int moved = targetStorage.addPartialAt(item, x, y, rotated, -1, true);
+        if (moved > 0) {
+            return new RaidInventory.AddResult(true, target, "Moved " + moved + "x " + item.displayName() + " to " + targetStorage.name() + ".", moved);
+        }
+        return new RaidInventory.AddResult(false, target, targetStorage.name() + " target cell is blocked.", 0);
+    }
+
     private GridMoveResult returnStoredItemToContainer(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
         if (!hasWorldContainer) {
             String message = "No container is open.";
@@ -579,7 +799,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return GridMoveResult.failure("Invalid source.");
         }
 
-        RaidInventory inventory = RaidInventoryManager.get(player);
+        RaidInventory inventory = currentInventory(player);
         RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
         if (item == null) {
             String message = "Source item is no longer available.";
@@ -610,6 +830,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         ItemStack removedStack = removed.toItemStack();
         insertIntoContainer(removedStack);
         container.setChanged();
+        if (persistentBaseMode) {
+            PlayerStashService.save(player, baseData);
+        }
         rebuildRaidDisplay();
         String message = "Returned " + removedStack.getCount() + "x " + removedStack.getHoverName().getString() + " to container.";
         player.sendSystemMessage(Component.literal(message));
@@ -621,7 +844,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return GridMoveResult.failure("Invalid source.");
         }
 
-        RaidInventory inventory = RaidInventoryManager.get(player);
+        RaidInventory inventory = currentInventory(player);
         RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
         if (item == null) {
             String message = "Source item is no longer available.";
@@ -645,6 +868,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         }
 
         com.chaseschwartz.extractcraft.raid.inventory.ManagedDropService.spawnManagedDrop(player, stack);
+        if (persistentBaseMode) {
+            PlayerStashService.save(player, baseData);
+        }
         rebuildRaidDisplay();
         String message = "Dropped " + removed.displayName() + ".";
         player.sendSystemMessage(Component.literal(message));
@@ -666,11 +892,11 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private void addRaidDisplaySlots() {
-        addSlot(new ReadOnlyContainerSlot(raidDisplay, PRIMARY_WEAPON_START, 150, 48));
-        addSlot(new ReadOnlyContainerSlot(raidDisplay, SECONDARY_WEAPON_START, 150, 110));
-        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, 6, 12, 66);
-        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, 4, 12, 248);
-        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, 3, 104, 248);
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, PRIMARY_WEAPON_START, 174, 48));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, SECONDARY_WEAPON_START, 174, 110));
+        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, Math.max(1, backpackGridWidth), 12, 66);
+        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, Math.max(1, vestGridWidth), 12, 248);
+        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, Math.max(1, safeGridWidth), 116, 248);
     }
 
     private void addDisplayGrid(int start, int count, int columns, int x, int y) {
@@ -681,7 +907,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
     private void addContainerSlots() {
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
-            int x = 226 + (slot % CONTAINER_COLUMNS) * 18;
+            int x = 250 + (slot % CONTAINER_COLUMNS) * 18;
             int y = 58 + (slot / CONTAINER_COLUMNS) * 18;
             addSlot(new ReadOnlyContainerSlot(container, slot, x, y));
         }
@@ -694,7 +920,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
         raidDisplay.clearContent();
         java.util.Arrays.fill(displayedRaidIndexes, -1);
-        RaidInventory inventory = RaidInventoryManager.get(serverPlayer);
+        RaidInventory inventory = currentInventory(serverPlayer);
         if (inventory.primaryWeapon() != null) {
             displayedRaidIndexes[PRIMARY_WEAPON_START] = 0;
             raidDisplay.setItem(PRIMARY_WEAPON_START, displayStack(inventory.primaryWeapon(), 0));
@@ -703,15 +929,30 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             displayedRaidIndexes[SECONDARY_WEAPON_START] = 0;
             raidDisplay.setItem(SECONDARY_WEAPON_START, displayStack(inventory.secondaryWeapon(), 0));
         }
-        fillDisplay(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, inventory.backpack().gridWidth(), inventory.backpack().items());
-        fillDisplay(VEST_START, VEST_DISPLAY_SLOTS, inventory.vest().gridWidth(), inventory.vest().items());
-        fillDisplay(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, inventory.safeBox().gridWidth(), inventory.safeBox().items());
+        fillDisplay(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, backpackGridWidth, inventory.backpack().items());
+        fillDisplay(VEST_START, VEST_DISPLAY_SLOTS, vestGridWidth, inventory.vest().items());
+        fillDisplay(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, safeGridWidth, inventory.safeBox().items());
     }
 
     private void fillDisplay(int start, int maxSlots, int columns, java.util.List<RaidInventoryItem> items) {
+        int rows = maxSlots / Math.max(1, columns);
         int sequentialIndex = 0;
         for (int itemIndex = 0; itemIndex < items.size(); itemIndex++) {
             RaidInventoryItem item = items.get(itemIndex);
+            if (item.isPlaced() && (item.gridX() < 0 || item.gridY() < 0
+                    || item.gridX() + footprintWidth(item) > columns
+                    || item.gridY() + footprintHeight(item) > rows)) {
+                ExtractCraft.LOGGER.info("ActiveLootContainer display skipped item outside visible grid: key={}, grid=({},{}), footprint={}x{}, visibleGrid={}x{}, persistentBaseMode={}",
+                        item.lookupKey(),
+                        item.gridX(),
+                        item.gridY(),
+                        footprintWidth(item),
+                        footprintHeight(item),
+                        columns,
+                        rows,
+                        persistentBaseMode);
+                continue;
+            }
             int displayIndex = item.isPlaced() ? item.gridY() * Math.max(1, columns) + item.gridX() : sequentialIndex++;
             if (displayIndex < 0 || displayIndex >= maxSlots) {
                 continue;
@@ -812,8 +1053,17 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return inventory.itemAt(source, sourceIndex);
     }
 
-    private static String sourceItemName(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
-        RaidInventoryItem item = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
+    private static RaidStorageContainer storage(RaidInventory inventory, RaidEquipmentSlot slot) {
+        return switch (slot) {
+            case BACKPACK -> inventory.backpack();
+            case VEST -> inventory.vest();
+            case SAFE_BOX -> inventory.safeBox();
+            case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER, PRIMARY_WEAPON, SECONDARY_WEAPON -> throw new IllegalArgumentException("Non-storage slots do not have grid storage.");
+        };
+    }
+
+    private static String sourceItemName(RaidInventory inventory, RaidEquipmentSlot source, int sourceIndex) {
+        RaidInventoryItem item = inventory.itemAt(source, sourceIndex);
         return item == null ? "none" : item.lookupKey() + " x" + item.count();
     }
 
@@ -836,19 +1086,19 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
     }
 
-    private static int cellX(RaidEquipmentSlot slot, int cell) {
+    private int cellX(RaidEquipmentSlot slot, int cell) {
         return cell % columnsFor(slot);
     }
 
-    private static int cellY(RaidEquipmentSlot slot, int cell) {
+    private int cellY(RaidEquipmentSlot slot, int cell) {
         return cell / columnsFor(slot);
     }
 
-    private static int columnsFor(RaidEquipmentSlot slot) {
+    private int columnsFor(RaidEquipmentSlot slot) {
         return switch (slot) {
-            case VEST -> 4;
-            case SAFE_BOX -> 3;
-            default -> 6;
+            case VEST -> Math.max(1, vestGridWidth);
+            case SAFE_BOX -> Math.max(1, safeGridWidth);
+            default -> Math.max(1, backpackGridWidth);
         };
     }
 
@@ -873,7 +1123,14 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         };
     }
 
-    private static DataSlot statSlot(ServerPlayer player, Stat stat) {
+    private RaidInventory currentInventory(ServerPlayer player) {
+        if (persistentBaseMode && baseData != null) {
+            return baseData.baseInventory();
+        }
+        return RaidInventoryManager.get(player);
+    }
+
+    private static DataSlot statSlot(ServerPlayer player, PlayerStashService.PlayerStashData baseData, Stat stat) {
         if (player == null) {
             return DataSlot.standalone();
         }
@@ -881,7 +1138,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return new DataSlot() {
             @Override
             public int get() {
-                RaidInventory inventory = RaidInventoryManager.get(player);
+                RaidInventory inventory = baseData == null ? RaidInventoryManager.get(player) : baseData.baseInventory();
                 return switch (stat) {
                     case BACKPACK_USED_CAPACITY -> inventory.backpack().usedCapacity();
                     case BACKPACK_MAX_CAPACITY -> inventory.backpack().capacity();
@@ -927,6 +1184,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         TOTAL_VALUE
     }
 
-    private record ClientData(boolean hasWorldContainer, int containerSlotCount, BlockPos containerPos) {
+    private record ClientData(boolean hasWorldContainer, int containerSlotCount, BlockPos containerPos,
+            int backpackGridWidth, int backpackGridHeight, int vestGridWidth, int vestGridHeight, int safeGridWidth, int safeGridHeight) {
     }
 }

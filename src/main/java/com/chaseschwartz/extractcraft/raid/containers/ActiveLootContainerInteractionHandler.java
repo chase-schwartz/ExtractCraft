@@ -35,11 +35,13 @@ public class ActiveLootContainerInteractionHandler {
         }
 
         RaidState raidState = RaidManager.getRaidState(player).orElse(null);
-        if (raidState == null) {
-            return;
+        RaidContainerLayout layout = raidState == null
+                ? RaidContainerService.load(RaidContainerService.DEBUG_LOOT_TEST_MAP_ID).orElse(null)
+                : RaidContainerService.load(raidState.raidMap().id()).orElse(null);
+        if ((layout == null || !RaidContainerService.isActiveLootContainer(layout, event.getPos()))
+                && raidState != null) {
+            layout = RaidContainerService.load(RaidContainerService.DEBUG_LOOT_TEST_MAP_ID).orElse(null);
         }
-
-        RaidContainerLayout layout = RaidContainerService.load(raidState.raidMap().id()).orElse(null);
         if (layout == null || !RaidContainerService.isActiveLootContainer(layout, event.getPos())) {
             prioritizeInteractableBlockOverGun(event, player);
             return;
@@ -59,6 +61,7 @@ public class ActiveLootContainerInteractionHandler {
             buffer.writeBoolean(true);
             buffer.writeVarInt(container.getContainerSize());
             buffer.writeBlockPos(event.getPos());
+            ActiveLootContainerMenu.writeGridDimensions(player, buffer);
         });
     }
 
