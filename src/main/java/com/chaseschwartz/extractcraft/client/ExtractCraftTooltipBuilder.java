@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import com.chaseschwartz.extractcraft.items.ExtractCraftItemMetadata;
 import com.chaseschwartz.extractcraft.items.ExtractCraftProfiledItem;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
+import com.chaseschwartz.extractcraft.itemidentity.TaczDisplayNameResolver;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
@@ -42,6 +44,7 @@ public final class ExtractCraftTooltipBuilder {
         }
 
         List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(Minecraft.getInstance(), stack));
+        replaceTaczTitle(lines, stack);
         if (value.isPresent() || profile.isPresent()) {
             addRegistryLines(lines, stack, value, profile, detailed);
         }
@@ -168,6 +171,17 @@ public final class ExtractCraftTooltipBuilder {
     private static Optional<GridDisplayMetadata.Metadata> gridMetadata(ItemStack stack) {
         GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(stack);
         return metadata.present() ? Optional.of(metadata) : Optional.empty();
+    }
+
+    private static void replaceTaczTitle(List<Component> lines, ItemStack stack) {
+        if (lines.isEmpty()) {
+            return;
+        }
+        String normalizedKey = ItemIdentityResolver.resolve(stack).normalizedKey();
+        if (!TaczDisplayNameResolver.isTaczVariantKey(normalizedKey)) {
+            return;
+        }
+        lines.set(0, Component.literal(TaczDisplayNameResolver.displayName(normalizedKey, stack.getHoverName().getString())).withStyle(ChatFormatting.WHITE));
     }
 
     private static void appendProfileNotes(List<Component> lines, ItemCarryProfile profile) {

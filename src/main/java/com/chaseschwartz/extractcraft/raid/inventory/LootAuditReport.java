@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
+import com.chaseschwartz.extractcraft.itemidentity.TaczDisplayNameResolver;
 import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
@@ -70,6 +71,9 @@ final class LootAuditReport {
         List<ItemValueEntry> equipment = spawnable.stream().filter(LootAuditReport::isEquipment).sorted(LootAuditReport::compareEntries).toList();
         List<ItemValueEntry> meds = spawnable.stream().filter(LootAuditReport::isMed).sorted(LootAuditReport::compareEntries).toList();
         List<ItemValueEntry> repair = spawnable.stream().filter(LootAuditReport::isRepair).sorted(LootAuditReport::compareEntries).toList();
+        List<TaczDiscoveredEntry> discoveredTacz = discoverTaczEntries();
+        List<ItemValueEntry> firstClassTacz = tacz.stream().filter(RaidContainerService::isFirstClassTaczLoot).toList();
+        List<ItemValueEntry> legacyOnlyTacz = tacz.stream().filter(entry -> !RaidContainerService.isFirstClassTaczLoot(entry)).toList();
         List<TaczRecipe> recipes = scanTaczRecipes();
         Set<String> spawnableLookupKeys = spawnable.stream().map(ItemValueEntry::lookupKey).collect(Collectors.toCollection(TreeSet::new));
         Set<String> spawnableBaseIds = spawnable.stream().map(entry -> entry.itemId().toString()).collect(Collectors.toCollection(TreeSet::new));
@@ -78,11 +82,12 @@ final class LootAuditReport {
         report.append("ExtractCraft Loot Ecosystem Audit\n");
         report.append("Generated from current registries and filesystem scan.\n\n");
 
-        appendSpawnSources(report, spawnable, loose, vanilla, tacz, equipment, meds, repair);
+        appendSpawnSources(report, spawnable, loose, vanilla, tacz, firstClassTacz, legacyOnlyTacz, equipment, meds, repair);
         appendContextWeights(report);
         appendLooseSummary(report);
         appendItemList(report, "Current vanilla raid-spawnable items", vanilla, false);
         appendItemList(report, "Current TaCZ raid-spawnable items", tacz, true);
+        appendDiscoveredTacz(report, discoveredTacz, firstClassTacz, legacyOnlyTacz);
         appendItemList(report, "Current equipment/med/repair raid-spawnable ExtractCraft items", Stream.of(equipment, meds, repair).flatMap(List::stream).distinct().sorted(LootAuditReport::compareEntries).toList(), false);
         appendRecipeAudit(report, recipes, spawnableLookupKeys, spawnableBaseIds);
         appendSuggestions(report, tacz, recipes, spawnableLookupKeys, spawnableBaseIds);
@@ -100,19 +105,21 @@ final class LootAuditReport {
     }
 
     private static void appendSpawnSources(StringBuilder report, List<ItemValueEntry> spawnable, List<ItemValueEntry> loose, List<ItemValueEntry> vanilla,
-            List<ItemValueEntry> tacz, List<ItemValueEntry> equipment, List<ItemValueEntry> meds, List<ItemValueEntry> repair) {
+            List<ItemValueEntry> tacz, List<ItemValueEntry> firstClassTacz, List<ItemValueEntry> legacyOnlyTacz, List<ItemValueEntry> equipment, List<ItemValueEntry> meds, List<ItemValueEntry> repair) {
         report.append("A. Current raid loot spawn sources\n");
         report.append("- Active container population: ").append("com.chaseschwartz.extractcraft.raid.containers.RaidContainerService.populate/fill\n");
         report.append("- Primary registry: ItemValueRegistry sellable entries with registered base items.\n");
         report.append("- Unsafe bare TaCZ variant bases are filtered unless lookupKey contains '#'.\n");
-        report.append("- Roll path: context loose-loot chance -> loose loot candidates -> legacy fallback candidates.\n");
+        report.append("- Roll path: context TaCZ chance -> first-class TaCZ candidates -> context loose-loot chance -> loose loot candidates -> legacy fallback candidates.\n");
         report.append("- Loose loot is first-class only for ExtractCraft items with BLUE/PURPLE/GOLD/RED rarity.\n");
-        report.append("- Current TaCZ entries are selected through legacy fallback, not first-class TaCZ category rolls.\n\n");
+        report.append("- TaCZ first-class entries must be normalized variant keys with value + carry profile data.\n\n");
         report.append("Spawnable registry counts:\n");
         report.append("- total current raid-spawnable value entries: ").append(spawnable.size()).append('\n');
         report.append("- loose_loot first-class entries: ").append(loose.size()).append('\n');
         report.append("- vanilla legacy fallback entries: ").append(vanilla.size()).append('\n');
-        report.append("- tacz legacy fallback entries: ").append(tacz.size()).append('\n');
+        report.append("- tacz total registry entries: ").append(tacz.size()).append('\n');
+        report.append("- tacz first-class entries: ").append(firstClassTacz.size()).append('\n');
+        report.append("- tacz legacy-only entries: ").append(legacyOnlyTacz.size()).append('\n');
         report.append("- equipment-tagged entries: ").append(equipment.size()).append('\n');
         report.append("- med-tagged entries: ").append(meds.size()).append('\n');
         report.append("- repair-tagged entries: ").append(repair.size()).append("\n\n");
@@ -166,7 +173,7 @@ final class LootAuditReport {
                     .append(" | category=").append(entry.category().name().toLowerCase(Locale.ROOT))
                     .append(" | rarity=").append(entry.rarity().name().toLowerCase(Locale.ROOT))
                     .append(" | value=").append(entry.value())
-                    .append(" | spawnPath=").append(isLooseLoot(entry) ? "loose_loot_first_class" : "legacy_fallback")
+                    .append(" | spawnPath=").append(spawnPath(entry))
                     .append(" | rollWeight=").append(isLooseLoot(entry) ? looseItemWeight(entry) : legacyWeight(entry));
             profile.ifPresent(itemCarryProfile -> report.append(" | weight=").append(String.format(Locale.ROOT, "%.2f", itemCarryProfile.weight()))
                     .append(" | grid=").append(itemCarryProfile.gridWidth().orElse(1)).append('x').append(itemCarryProfile.gridHeight().orElse(1))
@@ -174,9 +181,38 @@ final class LootAuditReport {
             if (taczList) {
                 report.append(" | taczType=").append(taczType(entry.lookupKey()))
                         .append(" | variant=").append(taczVariant(entry.lookupKey()).orElse("none"))
-                        .append(" | firstClassLoot=false");
+                        .append(" | firstClassLoot=").append(RaidContainerService.isFirstClassTaczLoot(entry));
             }
             report.append('\n');
+        }
+        report.append('\n');
+    }
+
+    private static void appendDiscoveredTacz(StringBuilder report, List<TaczDiscoveredEntry> discovered, List<ItemValueEntry> firstClassTacz, List<ItemValueEntry> legacyOnlyTacz) {
+        Set<String> firstClassKeys = firstClassTacz.stream().map(ItemValueEntry::lookupKey).collect(Collectors.toCollection(TreeSet::new));
+        Set<String> legacyKeys = legacyOnlyTacz.stream().map(ItemValueEntry::lookupKey).collect(Collectors.toCollection(TreeSet::new));
+        report.append("TaCZ discovered content entries (").append(discovered.size()).append(")\n");
+        if (discovered.isEmpty()) {
+            report.append("- Broader TaCZ content discovery found 0 index entries in the scanned folders. This does not disable TaCZ loot: the active first-class pool below comes from profile-backed normalized ItemValueRegistry keys.\n");
+        }
+        report.append("- first-class profile-backed keys: ").append(firstClassKeys.size()).append(" ").append(firstClassKeys).append('\n');
+        report.append("- legacy-only keys: ").append(legacyKeys.size()).append(" ").append(legacyKeys).append('\n');
+        Map<String, Long> byKind = discovered.stream().collect(Collectors.groupingBy(TaczDiscoveredEntry::kind, TreeMap::new, Collectors.counting()));
+        report.append("- discovered by kind: ").append(byKind).append('\n');
+        List<TaczDiscoveredEntry> missingProfiles = discovered.stream()
+                .filter(entry -> ItemValueRegistry.get(entry.normalizedKey()).isEmpty() || ItemCarryProfileRegistry.get(entry.normalizedKey()).isEmpty())
+                .toList();
+        report.append("- discovered missing value/profile: ").append(missingProfiles.size()).append('\n');
+        for (TaczDiscoveredEntry entry : discovered) {
+            boolean hasValue = ItemValueRegistry.get(entry.normalizedKey()).isPresent();
+            boolean hasProfile = ItemCarryProfileRegistry.get(entry.normalizedKey()).isPresent();
+            report.append("  - ").append(entry.normalizedKey())
+                    .append(" | kind=").append(entry.kind())
+                    .append(" | subtype=").append(entry.subtype().orElse("unknown"))
+                    .append(" | value=").append(hasValue ? "yes" : "no")
+                    .append(" | profile=").append(hasProfile ? "yes" : "no")
+                    .append(" | firstClass=").append(firstClassKeys.contains(entry.normalizedKey()))
+                    .append('\n');
         }
         report.append('\n');
     }
@@ -256,7 +292,8 @@ final class LootAuditReport {
         report.append("- Safe/high-value: rare attachments, restricted intel, red/gold loose loot, compact valuables.\n");
         report.append("- Industrial/toolboxes: vanilla recipe ingredients, copper/iron/gold parts, gunpowder-adjacent materials if desired.\n");
         report.append("- Medical: medical_tech loose loot, med kits, limited survival/tools.\n");
-        report.append("- Current TaCZ spawnable count is ").append(tacz.size()).append(", and all are currently legacy fallback rather than first-class rolls.\n");
+        long firstClassCount = tacz.stream().filter(RaidContainerService::isFirstClassTaczLoot).count();
+        report.append("- Current TaCZ spawnable count is ").append(tacz.size()).append("; first-class TaCZ entries now active: ").append(firstClassCount).append(".\n");
         Set<String> missingTagExamples = recipes.stream()
                 .flatMap(recipe -> recipe.tags().stream())
                 .map(COMMON_TAG_EXAMPLES::get)
@@ -295,6 +332,81 @@ final class LootAuditReport {
                 .distinct()
                 .sorted(Comparator.comparing(TaczRecipe::recipeId))
                 .toList();
+    }
+
+    private static List<TaczDiscoveredEntry> discoverTaczEntries() {
+        List<Path> roots = List.of(
+                Path.of("run", "tacz"),
+                Path.of("run", "config", "tacz"),
+                Path.of("run", "datapacks"),
+                Path.of("run", "dynamic-data-pack-cache"),
+                Path.of("src", "main", "resources", "data"));
+        List<TaczDiscoveredEntry> discovered = new ArrayList<>();
+        for (Path root : roots) {
+            if (!Files.isDirectory(root)) {
+                continue;
+            }
+            try (Stream<Path> paths = Files.walk(root)) {
+                paths.filter(Files::isRegularFile)
+                        .filter(path -> path.getFileName().toString().endsWith(".json"))
+                        .filter(LootAuditReport::looksLikeTaczIndexPath)
+                        .forEach(path -> parseTaczIndex(root, path).ifPresent(discovered::add));
+            } catch (Exception exception) {
+                ExtractCraft.LOGGER.warn("Failed to scan TaCZ content index root {}", root, exception);
+            }
+        }
+        return discovered.stream()
+                .distinct()
+                .sorted(Comparator.comparing(TaczDiscoveredEntry::kind).thenComparing(TaczDiscoveredEntry::normalizedKey))
+                .toList();
+    }
+
+    private static boolean looksLikeTaczIndexPath(Path path) {
+        String text = path.toString().replace('\\', '/').toLowerCase(Locale.ROOT);
+        return text.contains("/data/") && text.contains("/index/")
+                && (text.contains("/index/guns/") || text.contains("/index/ammo/") || text.contains("/index/attachments/") || text.contains("/index/modifiers/") || text.contains("/index/parts/"));
+    }
+
+    private static Optional<TaczDiscoveredEntry> parseTaczIndex(Path root, Path path) {
+        String normalizedPath = path.toString().replace('\\', '/');
+        String[] parts = normalizedPath.split("/");
+        int dataIndex = -1;
+        int indexIndex = -1;
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].equals("data")) {
+                dataIndex = i;
+            }
+            if (parts[i].equals("index")) {
+                indexIndex = i;
+                break;
+            }
+        }
+        if (dataIndex < 0 || indexIndex < 0 || dataIndex + 1 >= parts.length || indexIndex + 1 >= parts.length) {
+            return Optional.empty();
+        }
+
+        String namespace = parts[dataIndex + 1];
+        String kind = parts[indexIndex + 1];
+        String idPath = path.getFileName().toString();
+        idPath = idPath.substring(0, idPath.length() - ".json".length());
+        String variant = namespace + ":" + idPath;
+        String normalizedKey = switch (kind) {
+            case "guns" -> "tacz:modern_kinetic_gun#" + variant;
+            case "ammo" -> "tacz:ammo#" + variant;
+            case "attachments" -> "tacz:attachment#" + variant;
+            default -> "tacz:" + kind + "#" + variant;
+        };
+
+        Optional<String> subtype = Optional.empty();
+        try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            JsonElement element = JsonParser.parseReader(reader);
+            if (element.isJsonObject()) {
+                subtype = optionalString(element.getAsJsonObject(), "type");
+            }
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to parse TaCZ index candidate {}", path, exception);
+        }
+        return Optional.of(new TaczDiscoveredEntry(normalizedKey, kind, subtype, root.relativize(path).toString().replace('\\', '/')));
     }
 
     private static boolean looksLikeRecipePath(Path path) {
@@ -411,6 +523,16 @@ final class LootAuditReport {
         return entry.itemId().getNamespace().equals("tacz") || entry.lookupKey().startsWith("tacz:");
     }
 
+    private static String spawnPath(ItemValueEntry entry) {
+        if (isLooseLoot(entry)) {
+            return "loose_loot_first_class";
+        }
+        if (RaidContainerService.isFirstClassTaczLoot(entry)) {
+            return "tacz_first_class_and_legacy_fallback";
+        }
+        return "legacy_fallback";
+    }
+
     private static boolean isEquipment(ItemValueEntry entry) {
         Optional<ItemCarryProfile> profile = ItemCarryProfileRegistry.get(entry.lookupKey()).or(() -> ItemCarryProfileRegistry.get(entry.itemId()));
         return profile.flatMap(ItemCarryProfile::equipmentSlot).isPresent()
@@ -433,7 +555,7 @@ final class LootAuditReport {
     }
 
     private static String displayName(ItemValueEntry entry) {
-        return BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString();
+        return TaczDisplayNameResolver.displayName(entry.lookupKey(), BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString());
     }
 
     private static String taczType(String lookupKey) {
@@ -487,5 +609,8 @@ final class LootAuditReport {
     }
 
     private record TaczRecipe(String recipeId, String recipeType, String outputKey, int outputCount, List<Ingredient> ingredients, List<String> tags) {
+    }
+
+    private record TaczDiscoveredEntry(String normalizedKey, String kind, Optional<String> subtype, String sourcePath) {
     }
 }

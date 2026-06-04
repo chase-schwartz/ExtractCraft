@@ -27,7 +27,8 @@ public class ItemIdentityResolver {
         ResourceLocation baseItemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
         Optional<ResourceLocation> variantId = resolveVariant(baseItemId, stack);
         String normalizedKey = variantId.map(variant -> baseItemId + "#" + variant).orElse(baseItemId.toString());
-        return new ItemIdentity(baseItemId, variantId, normalizedKey, stack.getHoverName().getString(), categoryHint(baseItemId));
+        String displayName = TaczDisplayNameResolver.displayName(normalizedKey, stack.getHoverName().getString());
+        return new ItemIdentity(baseItemId, variantId, normalizedKey, displayName, categoryHint(baseItemId));
     }
 
     private static Optional<ResourceLocation> resolveVariant(ResourceLocation baseItemId, ItemStack stack) {

@@ -26,6 +26,7 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -33,11 +34,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -54,6 +58,8 @@ public class RaidContainerService {
     private static final int AMBIENT_LIGHT_LEVEL = 5;
     private static final int AMBIENT_GRID_XZ = 10;
     private static final int AMBIENT_GRID_Y = 5;
+    public static final String DEBUG_LOOT_TEST_MAP_ID = "__debug_loot_test";
+    private static final List<String> DEBUG_LOOT_CONTEXTS = List.of("generic", "safe", "military", "medical", "office", "industrial");
     private static final List<ResourceLocation> DENYLIST = List.of(
             ResourceLocation.withDefaultNamespace("hopper"),
             ResourceLocation.withDefaultNamespace("furnace"),
@@ -306,6 +312,124 @@ public class RaidContainerService {
         return Path.of("run", "extractcraft", "raid_maps", mapId + "_containers.json");
     }
 
+    public static SpawnLootTestResult spawnLootTest(ServerPlayer player, int countPerContext) throws IOException {
+        int count = Math.max(1, Math.min(12, countPerContext));
+        ServerLevel level = player.serverLevel();
+        Direction forward = player.getDirection();
+        Direction right = forward.getClockWise();
+        BlockPos origin = player.blockPosition().relative(forward, 4).relative(right, -Math.max(0, count - 1));
+        Random random = new Random(System.nanoTime() ^ level.getGameTime() ^ player.getUUID().hashCode());
+        List<ItemValueEntry> pool = lootPool();
+        List<RaidContainerEntry> entries = new ArrayList<>();
+        Map<String, BlockPos> rowStarts = new LinkedHashMap<>();
+        int spawned = 0;
+        int blocked = 0;
+
+        for (int row = 0; row < DEBUG_LOOT_CONTEXTS.size(); row++) {
+            String context = DEBUG_LOOT_CONTEXTS.get(row);
+            BlockPos rowStart = null;
+            for (int col = 0; col < count; col++) {
+                BlockPos target = origin.relative(forward, row * 3).relative(right, col * 2);
+                BlockPos placePos = firstAvailableAir(level, target).orElse(null);
+                if (placePos == null) {
+                    blocked++;
+                    continue;
+                }
+                if (rowStart == null) {
+                    rowStart = placePos;
+                }
+
+                Block block = debugLootBlock(context);
+                level.setBlock(placePos, block.defaultBlockState(), 3);
+                BlockEntity blockEntity = level.getBlockEntity(placePos);
+                if (!(blockEntity instanceof Container)) {
+                    level.setBlock(placePos, Blocks.BARREL.defaultBlockState(), 3);
+                    blockEntity = level.getBlockEntity(placePos);
+                }
+                if (!(blockEntity instanceof Container container)) {
+                    blocked++;
+                    continue;
+                }
+
+                RaidContainerEntry entry = new RaidContainerEntry(
+                        level.dimension().location(),
+                        placePos,
+                        BuiltInRegistries.BLOCK.getKey(level.getBlockState(placePos).getBlock()),
+                        "debug_loot_test_" + context,
+                        Optional.of("debug_" + context),
+                        true,
+                        Optional.of("extractcraft:debug/" + context),
+                        Optional.of(debugLootTier(context)),
+                        Map.of("debugLootTest", "true", "context", context));
+                clear(container);
+                fill(container, pool, entry, random);
+                container.setChanged();
+                entries.add(entry);
+                spawned++;
+            }
+            if (rowStart != null) {
+                rowStarts.put(context, rowStart);
+            }
+        }
+
+        save(new RaidContainerLayout(DEBUG_LOOT_TEST_MAP_ID, origin, entries));
+        return new SpawnLootTestResult(spawned, blocked, count, rowStarts, layoutPath(DEBUG_LOOT_TEST_MAP_ID));
+    }
+
+    public static ClearLootTestResult clearLootTest(ServerLevel level) throws IOException {
+        RaidContainerLayout layout = load(DEBUG_LOOT_TEST_MAP_ID).orElse(null);
+        if (layout == null) {
+            return new ClearLootTestResult(0, 0);
+        }
+
+        int removed = 0;
+        int skipped = 0;
+        for (RaidContainerEntry entry : layout.containers()) {
+            if (!entry.dimensionId().equals(level.dimension().location())) {
+                skipped++;
+                continue;
+            }
+            BlockEntity blockEntity = level.getBlockEntity(entry.pos());
+            if (blockEntity instanceof Container) {
+                level.setBlock(entry.pos(), Blocks.AIR.defaultBlockState(), 3);
+                removed++;
+            } else {
+                skipped++;
+            }
+        }
+        clearSaved(DEBUG_LOOT_TEST_MAP_ID);
+        return new ClearLootTestResult(removed, skipped);
+    }
+
+    private static Optional<BlockPos> firstAvailableAir(ServerLevel level, BlockPos target) {
+        for (int dy = 0; dy <= 8; dy++) {
+            BlockPos candidate = target.above(dy);
+            if (level.getBlockState(candidate).isAir()) {
+                return Optional.of(candidate);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Block debugLootBlock(String context) {
+        return switch (context) {
+            case "safe" -> Blocks.TRAPPED_CHEST;
+            case "military" -> Blocks.GREEN_SHULKER_BOX;
+            case "medical" -> Blocks.WHITE_SHULKER_BOX;
+            case "office" -> Blocks.LIGHT_BLUE_SHULKER_BOX;
+            case "industrial" -> Blocks.BARREL;
+            default -> Blocks.CHEST;
+        };
+    }
+
+    private static int debugLootTier(String context) {
+        return switch (context) {
+            case "safe", "military" -> 4;
+            case "office", "industrial" -> 3;
+            default -> 2;
+        };
+    }
+
     public static List<String> savedMapIds() {
         Path directory = Path.of("run", "extractcraft", "raid_maps");
         if (!Files.isDirectory(directory)) {
@@ -506,6 +630,16 @@ public class RaidContainerService {
         return samples;
     }
 
+    public static List<LootSample> sampleLootRolls(String contextName, int count, Random random) {
+        LootContext context = LootContext.fromName(contextName);
+        List<ItemValueEntry> pool = lootPool();
+        List<LootSample> samples = new ArrayList<>();
+        for (int i = 0; i < Math.max(0, count); i++) {
+            samples.add(choose(pool, context, Math.max(4, context.minimumTier()), random));
+        }
+        return samples;
+    }
+
     public static List<String> sampleLootContexts() {
         return List.of("generic", "safe", "military", "medical", "office", "industrial");
     }
@@ -518,6 +652,10 @@ public class RaidContainerService {
                 LootContext.MEDICAL.reportLine("medical"),
                 LootContext.OFFICE.reportLine("office"),
                 LootContext.INDUSTRIAL.reportLine("industrial"));
+    }
+
+    public static String lootContextExpectationLine(String contextName) {
+        return LootContext.fromName(contextName).expectationLine(contextName);
     }
 
     private static List<ItemValueEntry> lootPool() {
@@ -541,7 +679,7 @@ public class RaidContainerService {
         for (int i = 0; i < itemCount && !slots.isEmpty(); i++) {
             int slotIndex = random.nextInt(slots.size());
             int slot = slots.remove(slotIndex);
-            ItemValueEntry entry = choose(pool, context, lootTier, random);
+            ItemValueEntry entry = choose(pool, context, lootTier, random).entry();
             int count = countFor(entry, random);
             ItemStack stack = ItemStackVariantFactory.create(entry.lookupKey(), count)
                     .orElseGet(() -> new ItemStack(BuiltInRegistries.ITEM.get(entry.itemId()), count));
@@ -549,14 +687,54 @@ public class RaidContainerService {
         }
     }
 
-    private static ItemValueEntry choose(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
+    private static LootSample choose(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
+        if (random.nextInt(100) < context.taczLootChance()) {
+            Optional<ItemValueEntry> taczLoot = chooseTaczLoot(pool, context, lootTier, random);
+            if (taczLoot.isPresent()) {
+                return new LootSample(taczLoot.get(), LootSource.TACZ_FIRST_CLASS);
+            }
+        }
         if (random.nextInt(100) < context.looseLootChance()) {
             Optional<ItemValueEntry> looseLoot = chooseLooseLoot(pool, context, lootTier, random);
             if (looseLoot.isPresent()) {
-                return looseLoot.get();
+                return new LootSample(looseLoot.get(), LootSource.LOOSE_LOOT);
             }
         }
-        return chooseLegacy(pool, lootTier, random);
+        return new LootSample(chooseLegacy(pool, lootTier, random), LootSource.LEGACY_FALLBACK);
+    }
+
+    private static Optional<ItemValueEntry> chooseTaczLoot(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
+        TaczLootKind kind = context.rollTaczKind(random);
+        List<ItemValueEntry> candidates = taczLootCandidates(pool, kind, context, lootTier);
+        if (candidates.isEmpty()) {
+            candidates = pool.stream()
+                    .filter(RaidContainerService::isFirstClassTaczLoot)
+                    .filter(entry -> entry.lootTier().orElse(1) <= Math.max(context.minimumTier(), lootTier + 2))
+                    .filter(entry -> context.taczKindWeights().containsKey(taczKind(entry)))
+                    .toList();
+        }
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int totalWeight = candidates.stream().mapToInt(RaidContainerService::taczItemWeight).sum();
+        int roll = random.nextInt(Math.max(1, totalWeight));
+        for (ItemValueEntry entry : candidates) {
+            roll -= taczItemWeight(entry);
+            if (roll < 0) {
+                return Optional.of(entry);
+            }
+        }
+        return Optional.of(candidates.getLast());
+    }
+
+    private static List<ItemValueEntry> taczLootCandidates(List<ItemValueEntry> pool, TaczLootKind kind, LootContext context, int lootTier) {
+        int maxTier = Math.max(context.minimumTier(), lootTier + 2);
+        return pool.stream()
+                .filter(RaidContainerService::isFirstClassTaczLoot)
+                .filter(entry -> taczKind(entry) == kind)
+                .filter(entry -> entry.lootTier().orElse(1) <= maxTier)
+                .toList();
     }
 
     private static ItemValueEntry chooseLegacy(List<ItemValueEntry> pool, int lootTier, Random random) {
@@ -631,6 +809,16 @@ public class RaidContainerService {
         };
     }
 
+    public static boolean isFirstClassTaczLoot(ItemValueEntry entry) {
+        return isTaczLoot(entry)
+                && entry.lookupKey().contains("#")
+                && ItemCarryProfileRegistry.get(entry.lookupKey()).isPresent();
+    }
+
+    public static boolean isTaczLoot(ItemValueEntry entry) {
+        return entry.itemId().getNamespace().equals("tacz") || entry.lookupKey().startsWith("tacz:");
+    }
+
     private static int looseItemWeight(ItemValueEntry entry) {
         int valuePenalty = Math.max(1, entry.value() / 2_500);
         int footprintPenalty = switch (entry.category()) {
@@ -638,6 +826,39 @@ public class RaidContainerService {
             default -> 1;
         };
         return Math.max(1, 100 / valuePenalty / footprintPenalty);
+    }
+
+    private static int taczItemWeight(ItemValueEntry entry) {
+        int rarityWeight = switch (entry.rarity()) {
+            case COMMON -> 80;
+            case UNCOMMON -> 45;
+            case RARE, BLUE -> 20;
+            case EPIC, PURPLE -> 6;
+            case LEGENDARY, GOLD, RED -> 2;
+            case QUEST -> 0;
+        };
+        int kindPenalty = switch (taczKind(entry)) {
+            case AMMO -> 2;
+            case ATTACHMENT -> 1;
+            case GUN -> 2;
+            case PART -> 1;
+        };
+        int valuePenalty = Math.max(1, entry.value() / 6_000);
+        return Math.max(1, rarityWeight / kindPenalty / valuePenalty);
+    }
+
+    public static TaczLootKind taczKind(ItemValueEntry entry) {
+        String key = entry.lookupKey();
+        if (key.startsWith("tacz:modern_kinetic_gun#")) {
+            return TaczLootKind.GUN;
+        }
+        if (key.startsWith("tacz:ammo#")) {
+            return TaczLootKind.AMMO;
+        }
+        if (key.startsWith("tacz:attachment#")) {
+            return TaczLootKind.ATTACHMENT;
+        }
+        return TaczLootKind.PART;
     }
 
     private static int weight(ItemValueEntry entry) {
@@ -665,44 +886,60 @@ public class RaidContainerService {
     private enum LootContext {
         GENERIC(
                 60,
+                5,
                 2,
                 Map.of(ItemRarity.BLUE, 70, ItemRarity.PURPLE, 22, ItemRarity.GOLD, 7, ItemRarity.RED, 1),
+                Map.of(TaczLootKind.AMMO, 80, TaczLootKind.ATTACHMENT, 20),
                 List.of()),
         HIGH_VALUE(
                 70,
+                10,
                 4,
                 Map.of(ItemRarity.BLUE, 35, ItemRarity.PURPLE, 35, ItemRarity.GOLD, 24, ItemRarity.RED, 6),
+                Map.of(TaczLootKind.ATTACHMENT, 70, TaczLootKind.GUN, 15, TaczLootKind.PART, 15),
                 List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.TROPHY, ItemCategory.SECURITY, ItemCategory.ACCESS)),
         MILITARY(
                 65,
+                25,
                 3,
                 Map.of(ItemRarity.BLUE, 55, ItemRarity.PURPLE, 30, ItemRarity.GOLD, 13, ItemRarity.RED, 2),
+                Map.of(TaczLootKind.AMMO, 45, TaczLootKind.ATTACHMENT, 30, TaczLootKind.GUN, 20, TaczLootKind.PART, 5),
                 List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS)),
         MEDICAL(
                 55,
+                0,
                 2,
                 Map.of(ItemRarity.BLUE, 70, ItemRarity.PURPLE, 25, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
+                Map.of(),
                 List.of(ItemCategory.MEDICAL_TECH, ItemCategory.SURVIVAL, ItemCategory.TOOLS)),
         OFFICE(
                 60,
+                0,
                 2,
                 Map.of(ItemRarity.BLUE, 65, ItemRarity.PURPLE, 27, ItemRarity.GOLD, 7, ItemRarity.RED, 1),
+                Map.of(),
                 List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY)),
         INDUSTRIAL(
                 55,
+                5,
                 2,
                 Map.of(ItemRarity.BLUE, 75, ItemRarity.PURPLE, 20, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
+                Map.of(TaczLootKind.AMMO, 50, TaczLootKind.ATTACHMENT, 20, TaczLootKind.PART, 30),
                 List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.ELECTRONICS, ItemCategory.POWER));
 
         private final int looseLootChance;
+        private final int taczLootChance;
         private final int minimumTier;
         private final Map<ItemRarity, Integer> rarityWeights;
+        private final Map<TaczLootKind, Integer> taczKindWeights;
         private final List<ItemCategory> categoryBias;
 
-        LootContext(int looseLootChance, int minimumTier, Map<ItemRarity, Integer> rarityWeights, List<ItemCategory> categoryBias) {
+        LootContext(int looseLootChance, int taczLootChance, int minimumTier, Map<ItemRarity, Integer> rarityWeights, Map<TaczLootKind, Integer> taczKindWeights, List<ItemCategory> categoryBias) {
             this.looseLootChance = looseLootChance;
+            this.taczLootChance = taczLootChance;
             this.minimumTier = minimumTier;
             this.rarityWeights = rarityWeights;
+            this.taczKindWeights = taczKindWeights;
             this.categoryBias = List.copyOf(categoryBias);
         }
 
@@ -710,8 +947,16 @@ public class RaidContainerService {
             return looseLootChance;
         }
 
+        private int taczLootChance() {
+            return taczLootChance;
+        }
+
         private int minimumTier() {
             return minimumTier;
+        }
+
+        private Map<TaczLootKind, Integer> taczKindWeights() {
+            return taczKindWeights;
         }
 
         private List<ItemCategory> categoryBias() {
@@ -730,6 +975,21 @@ public class RaidContainerService {
             return ItemRarity.BLUE;
         }
 
+        private TaczLootKind rollTaczKind(Random random) {
+            int total = taczKindWeights.values().stream().mapToInt(Integer::intValue).sum();
+            if (total <= 0) {
+                return TaczLootKind.PART;
+            }
+            int roll = random.nextInt(total);
+            for (Map.Entry<TaczLootKind, Integer> entry : taczKindWeights.entrySet()) {
+                roll -= entry.getValue();
+                if (roll < 0) {
+                    return entry.getKey();
+                }
+            }
+            return TaczLootKind.PART;
+        }
+
         private String reportLine(String name) {
             String rarityText = rarityWeights.entrySet().stream()
                     .sorted(Map.Entry.comparingByKey())
@@ -738,11 +998,32 @@ public class RaidContainerService {
             String categoryText = categoryBias.isEmpty()
                     ? "any"
                     : categoryBias.stream().map(category -> category.name().toLowerCase(Locale.ROOT)).collect(Collectors.joining(", "));
+            String taczText = taczKindWeights.isEmpty()
+                    ? "none"
+                    : taczKindWeights.entrySet().stream()
+                            .sorted(Map.Entry.comparingByKey())
+                            .map(entry -> entry.getKey().name().toLowerCase(Locale.ROOT) + "=" + entry.getValue())
+                            .collect(Collectors.joining(", "));
             return name
                     + " | looseLootChance=" + looseLootChance + "%"
+                    + " | taczLootChance=" + taczLootChance + "%"
                     + " | minimumTier=" + minimumTier
                     + " | rarityWeights={" + rarityText + "}"
+                    + " | taczKindWeights={" + taczText + "}"
                     + " | categoryBias=[" + categoryText + "]";
+        }
+
+        private String expectationLine(String name) {
+            double taczExpected = taczLootChance;
+            double looseExpected = (100.0D - taczLootChance) * looseLootChance / 100.0D;
+            double fallbackExpected = 100.0D - taczExpected - looseExpected;
+            return String.format(Locale.ROOT,
+                    "Configured [%s]: tacz=%.1f%%, loose=%.1f%% after non-TaCZ (expected %.1f%%), fallback expected %.1f%%",
+                    name,
+                    taczExpected,
+                    (double) looseLootChance,
+                    looseExpected,
+                    fallbackExpected);
         }
 
         private static LootContext fromContainer(RaidContainerEntry entry) {
@@ -882,6 +1163,31 @@ public class RaidContainerService {
     }
 
     public record LightPassResult(int placedCount, int removedCount, int skippedCount) {
+    }
+
+    public record SpawnLootTestResult(int spawnedCount, int blockedCount, int countPerContext, Map<String, BlockPos> rowStarts, Path layoutPath) {
+        public SpawnLootTestResult {
+            rowStarts = Map.copyOf(rowStarts);
+        }
+    }
+
+    public record ClearLootTestResult(int removedCount, int skippedCount) {
+    }
+
+    public record LootSample(ItemValueEntry entry, LootSource source) {
+    }
+
+    public enum LootSource {
+        TACZ_FIRST_CLASS,
+        LOOSE_LOOT,
+        LEGACY_FALLBACK
+    }
+
+    public enum TaczLootKind {
+        AMMO,
+        ATTACHMENT,
+        GUN,
+        PART
     }
 
     private record CellKey(int x, int z) {

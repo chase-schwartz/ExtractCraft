@@ -13,6 +13,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
+import com.chaseschwartz.extractcraft.itemidentity.TaczDisplayNameResolver;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
@@ -187,6 +188,16 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("lootreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugLootReport(context.getSource())))
+                        .then(Commands.literal("spawnloottest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugSpawnLootTest(context.getSource(), 2))
+                                .then(Commands.argument("countPerContext", IntegerArgumentType.integer(1, 12))
+                                        .executes(context -> debugSpawnLootTest(
+                                                context.getSource(),
+                                                IntegerArgumentType.getInteger(context, "countPerContext")))))
+                        .then(Commands.literal("clearloottest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugClearLootTest(context.getSource())))
                         .then(Commands.literal("giveloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("rarity", StringArgumentType.word())
@@ -725,6 +736,42 @@ public class RaidInventoryCommands {
         }
     }
 
+    private static int debugSpawnLootTest(CommandSourceStack source, int countPerContext) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            RaidContainerService.SpawnLootTestResult result = RaidContainerService.spawnLootTest(player, countPerContext);
+            player.sendSystemMessage(Component.literal("Spawned " + result.spawnedCount()
+                    + " ExtractCraft loot test container(s), " + result.countPerContext()
+                    + " per context. Blocked/skipped: " + result.blockedCount() + "."));
+            for (Map.Entry<String, BlockPos> entry : result.rowStarts().entrySet()) {
+                BlockPos pos = entry.getValue();
+                player.sendSystemMessage(Component.literal(entry.getKey().toUpperCase(Locale.ROOT)
+                        + " row starts at " + pos.getX() + " " + pos.getY() + " " + pos.getZ()));
+            }
+            player.sendSystemMessage(Component.literal("Right-click these containers to open the ExtractCraft loot UI. Placeholder loose-loot icons are expected for now."));
+            player.sendSystemMessage(Component.literal("Debug layout saved at " + result.layoutPath().toAbsolutePath() + ". Use /extractcraft debug clearloottest to remove the last layout."));
+            return result.spawnedCount() > 0 ? 1 : 0;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to spawn ExtractCraft loot test containers", exception);
+            player.sendSystemMessage(Component.literal("Failed to spawn loot test containers: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int debugClearLootTest(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            RaidContainerService.ClearLootTestResult result = RaidContainerService.clearLootTest(player.serverLevel());
+            player.sendSystemMessage(Component.literal("Cleared " + result.removedCount()
+                    + " loot test container(s). Skipped: " + result.skippedCount() + "."));
+            return result.removedCount() > 0 ? 1 : 0;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to clear ExtractCraft loot test containers", exception);
+            player.sendSystemMessage(Component.literal("Failed to clear loot test containers: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
     private static int debugSampleLoot(CommandSourceStack source, String contextName, int count) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         String normalizedContext = contextName.toLowerCase(Locale.ROOT);
@@ -740,9 +787,10 @@ public class RaidInventoryCommands {
     }
 
     private static int debugSampleLootContext(ServerPlayer player, String contextName, int count) {
-        List<ItemValueEntry> samples = RaidContainerService.sampleLooseLoot(contextName, count, new Random(System.nanoTime() ^ player.getUUID().hashCode() ^ contextName.hashCode()));
+        List<RaidContainerService.LootSample> rolls = RaidContainerService.sampleLootRolls(contextName, count, new Random(System.nanoTime() ^ player.getUUID().hashCode() ^ contextName.hashCode()));
+        List<ItemValueEntry> samples = rolls.stream().map(RaidContainerService.LootSample::entry).toList();
         if (samples.isEmpty()) {
-            player.sendSystemMessage(Component.literal("No loose loot samples available for context '" + contextName + "'."));
+            player.sendSystemMessage(Component.literal("No loot samples available for context '" + contextName + "'."));
             return 0;
         }
 
@@ -761,6 +809,12 @@ public class RaidInventoryCommands {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left, LinkedHashMap::new));
         Map<String, Long> commonCounts = samples.stream()
                 .collect(Collectors.groupingBy(RaidInventoryCommands::lootSampleName, LinkedHashMap::new, Collectors.counting()));
+        Map<String, Long> sourceCounts = rolls.stream()
+                .collect(Collectors.groupingBy(roll -> roll.source().name().toLowerCase(Locale.ROOT), LinkedHashMap::new, Collectors.counting()));
+        Map<String, Long> taczKindCounts = rolls.stream()
+                .filter(roll -> roll.source() == RaidContainerService.LootSource.TACZ_FIRST_CLASS)
+                .map(RaidContainerService.LootSample::entry)
+                .collect(Collectors.groupingBy(entry -> RaidContainerService.taczKind(entry).name().toLowerCase(Locale.ROOT), LinkedHashMap::new, Collectors.counting()));
         String highest = samples.stream()
                 .sorted(Comparator.comparingInt(ItemValueEntry::value).reversed().thenComparing(RaidInventoryCommands::lootSampleName))
                 .limit(5)
@@ -772,8 +826,11 @@ public class RaidInventoryCommands {
                 .map(entry -> entry.getKey() + " x" + entry.getValue())
                 .collect(Collectors.joining(", "));
 
-        player.sendSystemMessage(Component.literal("Loose loot sample [" + contextName + "] rolls=" + count + " produced=" + samples.size()
+        player.sendSystemMessage(Component.literal("Loot sample [" + contextName + "] rolls=" + count + " produced=" + samples.size()
                 + " | value total=" + totalValue + " avg=" + Math.round(averageValue) + " min=" + minValue + " max=" + maxValue));
+        player.sendSystemMessage(Component.literal(RaidContainerService.lootContextExpectationLine(contextName)));
+        player.sendSystemMessage(Component.literal("Sources: " + formatCountsWithPercent(sourceCounts, samples.size())
+                + (taczKindCounts.isEmpty() ? "" : " | TaCZ: " + formatCounts(taczKindCounts, 8))));
         player.sendSystemMessage(Component.literal("Rarity: " + formatCountsWithPercent(rarityCounts, samples.size())));
         player.sendSystemMessage(Component.literal("Categories: " + formatCounts(categoryCounts, 8)));
         player.sendSystemMessage(Component.literal("Top value: " + highest));
@@ -864,7 +921,7 @@ public class RaidInventoryCommands {
     }
 
     private static String lootSampleName(ItemValueEntry entry) {
-        return BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString();
+        return TaczDisplayNameResolver.displayName(entry.lookupKey(), BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString());
     }
 
     private static int debugInsertItem(ServerPlayer player, ItemStack stack, String target) {
