@@ -1,0 +1,1504 @@
+{
+  "profiles": [
+    {
+      "item": "extractcraft:sealed_cable_bundle",
+      "category": "electronics",
+      "weight": 0.6,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A sealed bundle of military-grade cable used in field repairs."
+      ]
+    },
+    {
+      "item": "extractcraft:field_radio_battery",
+      "category": "electronics",
+      "weight": 0.9,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A rugged battery pulled from a field radio pack."
+      ]
+    },
+    {
+      "item": "extractcraft:cracked_rangefinder_lens",
+      "category": "optics",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A damaged optic lens still useful for calibration parts."
+      ]
+    },
+    {
+      "item": "extractcraft:broken_red_dot_housing",
+      "category": "optics",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A cracked sight shell with salvageable mounting hardware."
+      ]
+    },
+    {
+      "item": "extractcraft:tactical_flashlight_core",
+      "category": "electronics",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A compact light emitter core from a weapon-mounted flashlight."
+      ]
+    },
+    {
+      "item": "extractcraft:spent_data_tape",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "Old magnetic tape with fragments of overwritten patrol logs."
+      ]
+    },
+    {
+      "item": "extractcraft:maintenance_key_fob",
+      "category": "access",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A worn access fob for maintenance corridors and service doors."
+      ]
+    },
+    {
+      "item": "extractcraft:rusted_dog_tags",
+      "category": "trophy",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "Corroded identification tags from an unknown combatant."
+      ]
+    },
+    {
+      "item": "extractcraft:combat_tourniquet_pack",
+      "category": "medical_tech",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A sealed pack of emergency tourniquets for field trauma."
+      ]
+    },
+    {
+      "item": "extractcraft:sterile_gauze_brick",
+      "category": "medical_tech",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "Compressed sterile gauze wrapped for rapid medical restock."
+      ]
+    },
+    {
+      "item": "extractcraft:empty_morphine_case",
+      "category": "medical_tech",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "An empty injector case with controlled-substance markings."
+      ]
+    },
+    {
+      "item": "extractcraft:antibiotic_strip",
+      "category": "medical_tech",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A sealed strip of antibiotics prized by field medics."
+      ]
+    },
+    {
+      "item": "extractcraft:water_purifier_cartridge",
+      "category": "survival",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A filter cartridge for portable purifier systems."
+      ]
+    },
+    {
+      "item": "extractcraft:mre_flavor_pack",
+      "category": "survival",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A morale-saving packet of ration flavoring and salts."
+      ]
+    },
+    {
+      "item": "extractcraft:compressed_fuel_tab",
+      "category": "industrial",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A dense fuel tab for emergency burners and field stoves."
+      ]
+    },
+    {
+      "item": "extractcraft:spark_plug_set",
+      "category": "industrial",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A matched set of plugs scavenged from motor pool stock."
+      ]
+    },
+    {
+      "item": "extractcraft:worn_tool_roll",
+      "category": "tools",
+      "weight": 1.0,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A canvas roll containing battered but usable field tools."
+      ]
+    },
+    {
+      "item": "extractcraft:duct_tape_stack",
+      "category": "tools",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "Multiple tape rolls flattened for pack storage."
+      ]
+    },
+    {
+      "item": "extractcraft:brass_screw_tin",
+      "category": "tools",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A rattling tin of small brass fasteners."
+      ]
+    },
+    {
+      "item": "extractcraft:electrical_relay",
+      "category": "electronics",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A boxed relay module used in security and power panels."
+      ]
+    },
+    {
+      "item": "extractcraft:ceramic_fuse",
+      "category": "electronics",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A heat-resistant fuse for older industrial circuits."
+      ]
+    },
+    {
+      "item": "extractcraft:signal_flare_tube",
+      "category": "survival",
+      "weight": 0.6,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A sealed flare tube used to mark extraction or distress points."
+      ]
+    },
+    {
+      "item": "extractcraft:training_ammo_voucher",
+      "category": "intel",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A stamped voucher redeemable at a restricted training armory."
+      ]
+    },
+    {
+      "item": "extractcraft:laminated_zone_map",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A weatherproof map marked with old patrol routes."
+      ]
+    },
+    {
+      "item": "extractcraft:bent_weapon_rail",
+      "category": "weapon_parts",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A damaged rail section that can still be milled for parts."
+      ]
+    },
+    {
+      "item": "extractcraft:cracked_polymer_grip",
+      "category": "weapon_parts",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A split grip with intact screws and texture panels."
+      ]
+    },
+    {
+      "item": "extractcraft:oily_cleaning_cloth",
+      "category": "tools",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A treated cloth used for weapon and tool maintenance."
+      ]
+    },
+    {
+      "item": "extractcraft:pocket_multimeter",
+      "category": "electronics",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A compact meter for diagnosing circuits under fire."
+      ]
+    },
+    {
+      "item": "extractcraft:stripped_circuit_board",
+      "category": "electronics",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A salvage board with a few valuable chips still attached."
+      ]
+    },
+    {
+      "item": "extractcraft:damaged_keypad_panel",
+      "category": "security",
+      "weight": 0.7,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A battered keypad panel from a locked facility door."
+      ]
+    },
+    {
+      "item": "extractcraft:cheap_optic_mount",
+      "category": "optics",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A low-grade optic mount with serviceable clamp hardware."
+      ]
+    },
+    {
+      "item": "extractcraft:field_notebook",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A pocket notebook filled with partial grid references."
+      ]
+    },
+    {
+      "item": "extractcraft:ration_coupon_stack",
+      "category": "survival",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A bundle of ration coupons still recognized by some traders."
+      ]
+    },
+    {
+      "item": "extractcraft:plastic_med_vials",
+      "category": "medical_tech",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "Clean plastic vials useful for field sample storage."
+      ]
+    },
+    {
+      "item": "extractcraft:hydraulic_valve",
+      "category": "industrial",
+      "weight": 1.1,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A heavy valve from a vehicle or loading system."
+      ]
+    },
+    {
+      "item": "extractcraft:copper_wire_spool",
+      "category": "electronics",
+      "weight": 0.6,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A compact spool of insulated copper wire."
+      ]
+    },
+    {
+      "item": "extractcraft:cracked_phone_screen",
+      "category": "electronics",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A cracked display panel with recoverable touch layers."
+      ]
+    },
+    {
+      "item": "extractcraft:folded_evacuate_notice",
+      "category": "intel",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "An evacuation notice with handwritten route changes."
+      ]
+    },
+    {
+      "item": "extractcraft:security_badge_blank",
+      "category": "access",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A blank badge ready for encoding or forgery."
+      ]
+    },
+    {
+      "item": "extractcraft:low_grade_lubricant",
+      "category": "tools",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 2,
+      "notes": [
+        "A cheap lubricant tube useful for locks and worn machinery."
+      ]
+    },
+    {
+      "item": "extractcraft:encrypted_usb_token",
+      "category": "electronics",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A locked token containing encrypted facility credentials."
+      ]
+    },
+    {
+      "item": "extractcraft:drone_flight_controller",
+      "category": "electronics",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A compact controller board for small reconnaissance drones."
+      ]
+    },
+    {
+      "item": "extractcraft:thermal_lens_module",
+      "category": "optics",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A sensitive lens module used in thermal imaging devices."
+      ]
+    },
+    {
+      "item": "extractcraft:night_vision_tube",
+      "category": "optics",
+      "weight": 0.3,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A fragile intensifier tube for night vision assemblies."
+      ]
+    },
+    {
+      "item": "extractcraft:ballistic_fiber_roll",
+      "category": "armor_materials",
+      "weight": 1.1,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A roll of woven ballistic fiber for armor repair."
+      ]
+    },
+    {
+      "item": "extractcraft:ceramic_plate_insert",
+      "category": "armor_materials",
+      "weight": 2.3,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A dense ceramic insert cut for plate carrier systems."
+      ]
+    },
+    {
+      "item": "extractcraft:composite_helmet_shell",
+      "category": "armor_materials",
+      "weight": 1.6,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A shaped helmet shell awaiting liner and hardware."
+      ]
+    },
+    {
+      "item": "extractcraft:kevlar_stitch_kit",
+      "category": "armor_materials",
+      "weight": 0.7,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A reinforced stitching kit for torn combat textiles."
+      ]
+    },
+    {
+      "item": "extractcraft:suppressor_baffle_stack",
+      "category": "weapon_parts",
+      "weight": 0.6,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A machined stack of baffles for suppressor rebuilds."
+      ]
+    },
+    {
+      "item": "extractcraft:precision_trigger_group",
+      "category": "weapon_parts",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A tuned trigger group wrapped in oil paper."
+      ]
+    },
+    {
+      "item": "extractcraft:carbon_handguard",
+      "category": "weapon_parts",
+      "weight": 0.7,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A light carbon handguard for modern rifle builds."
+      ]
+    },
+    {
+      "item": "extractcraft:smart_magazine_sensor",
+      "category": "weapon_parts",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A tiny sensor pack for round-counting magazines."
+      ]
+    },
+    {
+      "item": "extractcraft:tactical_tablet",
+      "category": "electronics",
+      "weight": 0.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A hardened tablet with cracked but readable tactical overlays."
+      ]
+    },
+    {
+      "item": "extractcraft:satellite_phone",
+      "category": "electronics",
+      "weight": 0.7,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A satellite handset with a restricted network profile."
+      ]
+    },
+    {
+      "item": "extractcraft:secure_radio_module",
+      "category": "electronics",
+      "weight": 0.6,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "An encrypted module used in secure squad radios."
+      ]
+    },
+    {
+      "item": "extractcraft:biometric_scanner",
+      "category": "security",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A palm scanner pulled from a checkpoint access post."
+      ]
+    },
+    {
+      "item": "extractcraft:lab_sample_cooler",
+      "category": "medical_tech",
+      "weight": 1.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "An insulated cooler for transporting volatile medical samples."
+      ]
+    },
+    {
+      "item": "extractcraft:surgical_stapler_kit",
+      "category": "medical_tech",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A sealed kit for fast wound closure in the field."
+      ]
+    },
+    {
+      "item": "extractcraft:hemostatic_injector_pack",
+      "category": "medical_tech",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A pack of injector cartridges for severe bleeding control."
+      ]
+    },
+    {
+      "item": "extractcraft:prototype_splint_brace",
+      "category": "medical_tech",
+      "weight": 0.9,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A collapsible brace used by combat trauma teams."
+      ]
+    },
+    {
+      "item": "extractcraft:blacksite_access_badge",
+      "category": "access",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A restricted badge tied to blacksite facility access."
+      ]
+    },
+    {
+      "item": "extractcraft:armory_maintenance_card",
+      "category": "access",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A maintenance card for secured armory service panels."
+      ]
+    },
+    {
+      "item": "extractcraft:redacted_patrol_orders",
+      "category": "intel",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "Orders with heavy redactions and a few useful route timings."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_evidence_pouch",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A tamper-marked pouch containing chain-of-custody fragments."
+      ]
+    },
+    {
+      "item": "extractcraft:military_crypto_ledger",
+      "category": "intel",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A paper ledger of rotating military crypto references."
+      ]
+    },
+    {
+      "item": "extractcraft:hardened_drive_caddy",
+      "category": "electronics",
+      "weight": 0.6,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A shockproof drive carrier from a command workstation."
+      ]
+    },
+    {
+      "item": "extractcraft:optic_calibration_tool",
+      "category": "optics",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A precise tool for aligning advanced sight modules."
+      ]
+    },
+    {
+      "item": "extractcraft:compact_signal_jammer",
+      "category": "security",
+      "weight": 0.9,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A compact jammer used to blind short-range sensors."
+      ]
+    },
+    {
+      "item": "extractcraft:reinforced_cable_harness",
+      "category": "industrial",
+      "weight": 1.4,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A rugged harness from a military generator bay."
+      ]
+    },
+    {
+      "item": "extractcraft:restricted_medical_manifest",
+      "category": "intel",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 3,
+      "notes": [
+        "A manifest listing controlled medical shipments and routing."
+      ]
+    },
+    {
+      "item": "extractcraft:quantum_signal_chip",
+      "category": "electronics",
+      "weight": 0.1,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A rare signal chip built for hardened encrypted relays."
+      ]
+    },
+    {
+      "item": "extractcraft:classified_ssd_array",
+      "category": "electronics",
+      "weight": 0.5,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A compact SSD array marked for classified systems only."
+      ]
+    },
+    {
+      "item": "extractcraft:prototype_drone_brain",
+      "category": "electronics",
+      "weight": 0.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A prototype processor cluster from an autonomous drone."
+      ]
+    },
+    {
+      "item": "extractcraft:thermal_imaging_core",
+      "category": "optics",
+      "weight": 0.6,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "The core sensor package from a military thermal optic."
+      ]
+    },
+    {
+      "item": "extractcraft:advanced_nvg_assembly",
+      "category": "optics",
+      "weight": 0.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A complete night vision assembly with intact tubes."
+      ]
+    },
+    {
+      "item": "extractcraft:smart_ballistic_plate",
+      "category": "armor_materials",
+      "weight": 3.0,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A smart plate with embedded impact telemetry layers."
+      ]
+    },
+    {
+      "item": "extractcraft:reactive_armor_tile",
+      "category": "armor_materials",
+      "weight": 3.6,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A sealed reactive tile from an experimental armor kit."
+      ]
+    },
+    {
+      "item": "extractcraft:exo_fiber_harness",
+      "category": "armor_materials",
+      "weight": 2.2,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A woven harness designed to anchor powered exo components."
+      ]
+    },
+    {
+      "item": "extractcraft:precision_gyro_stabilizer",
+      "category": "weapon_parts",
+      "weight": 0.7,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A stabilizer module used in precision weapon platforms."
+      ]
+    },
+    {
+      "item": "extractcraft:match_grade_bolt_carrier",
+      "category": "weapon_parts",
+      "weight": 0.8,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A match-grade carrier machined to tight tolerances."
+      ]
+    },
+    {
+      "item": "extractcraft:adaptive_suppressor_core",
+      "category": "weapon_parts",
+      "weight": 0.8,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A suppressor core with adjustable gas-flow chambers."
+      ]
+    },
+    {
+      "item": "extractcraft:prototype_ammo_feed_unit",
+      "category": "weapon_parts",
+      "weight": 1.4,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A prototype feed unit for high-rate ammunition systems."
+      ]
+    },
+    {
+      "item": "extractcraft:secure_ops_laptop",
+      "category": "electronics",
+      "weight": 2.4,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A hardened operations laptop with secure boot hardware."
+      ]
+    },
+    {
+      "item": "extractcraft:commanders_encrypted_drive",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A restricted drive containing encrypted command data."
+      ]
+    },
+    {
+      "item": "extractcraft:black_budget_payroll",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A payroll ledger tied to off-books battlefield contractors."
+      ]
+    },
+    {
+      "item": "extractcraft:diplomatic_courier_pouch",
+      "category": "contraband",
+      "weight": 0.7,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A sealed courier pouch with diplomatic chain markings."
+      ]
+    },
+    {
+      "item": "extractcraft:lab_grade_stimulant_case",
+      "category": "medical_tech",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A locked case of high-grade stimulant compounds."
+      ]
+    },
+    {
+      "item": "extractcraft:portable_blood_analyzer",
+      "category": "medical_tech",
+      "weight": 0.9,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A portable analyzer used by trauma teams and field labs."
+      ]
+    },
+    {
+      "item": "extractcraft:military_antidote_injector",
+      "category": "medical_tech",
+      "weight": 0.3,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A restricted injector for battlefield toxin exposure."
+      ]
+    },
+    {
+      "item": "extractcraft:nano_suture_cartridge",
+      "category": "medical_tech",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 4,
+      "notes": [
+        "A tiny cartridge of experimental wound-closure filament."
+      ]
+    },
+    {
+      "item": "extractcraft:heart_of_the_dam",
+      "category": "trophy",
+      "weight": 4.5,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A legendary industrial core pulled from the dam control complex."
+      ]
+    },
+    {
+      "item": "extractcraft:blacksite_master_ledger",
+      "category": "intel",
+      "weight": 0.7,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A master ledger linking blacksite operations, accounts, and handlers."
+      ]
+    },
+    {
+      "item": "extractcraft:prototype_exo_core",
+      "category": "armor_materials",
+      "weight": 5.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A rare powered exo core with intact control architecture."
+      ]
+    },
+    {
+      "item": "extractcraft:quantum_encryption_vault",
+      "category": "electronics",
+      "weight": 2.8,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A hardened quantum vault containing unbroken encryption hardware."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_tactical_pack_frame",
+      "category": "armor_materials",
+      "weight": 3.4,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A gold-anodized frame from an elite tactical pack prototype."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_ballistic_helmet_core",
+      "category": "armor_materials",
+      "weight": 2.6,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A rare helmet core with dense premium ballistic layers."
+      ]
+    },
+    {
+      "item": "extractcraft:command_ai_processor",
+      "category": "electronics",
+      "weight": 1.3,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A rare command processor pulled from a hardened battlefield AI unit."
+      ]
+    },
+    {
+      "item": "extractcraft:satellite_uplink_beacon",
+      "category": "security",
+      "weight": 2.1,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A military uplink beacon capable of reaching restricted satellites."
+      ]
+    },
+    {
+      "item": "extractcraft:classified_warhead_circuit",
+      "category": "contraband",
+      "weight": 0.9,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A classified firing circuit from a banned warhead program."
+      ]
+    },
+    {
+      "item": "extractcraft:omega_protocol_drive",
+      "category": "intel",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "canRotate": true,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "tier": 5,
+      "notes": [
+        "A restricted drive carrying fragments of Omega Protocol orders."
+      ]
+    }
+  ]
+}

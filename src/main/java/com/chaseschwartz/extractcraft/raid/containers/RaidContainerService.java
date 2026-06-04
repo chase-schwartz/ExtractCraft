@@ -23,6 +23,7 @@ import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
 import com.google.gson.Gson;
@@ -166,7 +167,7 @@ public class RaidContainerService {
             }
 
             clear(container);
-            fill(container, pool, entry.lootTier().orElse(1), random);
+            fill(container, pool, entry, random);
             container.setChanged();
             populated++;
         }
@@ -495,7 +496,31 @@ public class RaidContainerService {
         }
     }
 
-    private static void fill(Container container, List<ItemValueEntry> pool, int lootTier, Random random) {
+    public static List<ItemValueEntry> sampleLooseLoot(String contextName, int count, Random random) {
+        LootContext context = LootContext.fromName(contextName);
+        List<ItemValueEntry> pool = lootPool();
+        List<ItemValueEntry> samples = new ArrayList<>();
+        for (int i = 0; i < Math.max(0, count); i++) {
+            chooseLooseLoot(pool, context, Math.max(4, context.minimumTier()), random).ifPresent(samples::add);
+        }
+        return samples;
+    }
+
+    public static List<String> sampleLootContexts() {
+        return List.of("generic", "safe", "military", "medical", "office", "industrial");
+    }
+
+    private static List<ItemValueEntry> lootPool() {
+        return ItemValueRegistry.entries().stream()
+                .filter(ItemValueEntry::sellable)
+                .filter(entry -> BuiltInRegistries.ITEM.containsKey(entry.itemId()))
+                .filter(entry -> !ItemStackVariantFactory.isUnsafeBareVariantBase(entry.itemId()) || entry.lookupKey().contains("#"))
+                .toList();
+    }
+
+    private static void fill(Container container, List<ItemValueEntry> pool, RaidContainerEntry containerEntry, Random random) {
+        int lootTier = containerEntry.lootTier().orElse(1);
+        LootContext context = LootContext.fromContainer(containerEntry);
         int slotCount = container.getContainerSize();
         int itemCount = Math.min(MAX_CONTAINER_SLOTS_TO_FILL, Math.max(1, 1 + random.nextInt(Math.min(4, Math.max(1, lootTier + 1)))));
         List<Integer> slots = new ArrayList<>();
@@ -506,7 +531,7 @@ public class RaidContainerService {
         for (int i = 0; i < itemCount && !slots.isEmpty(); i++) {
             int slotIndex = random.nextInt(slots.size());
             int slot = slots.remove(slotIndex);
-            ItemValueEntry entry = choose(pool, lootTier, random);
+            ItemValueEntry entry = choose(pool, context, lootTier, random);
             int count = countFor(entry, random);
             ItemStack stack = ItemStackVariantFactory.create(entry.lookupKey(), count)
                     .orElseGet(() -> new ItemStack(BuiltInRegistries.ITEM.get(entry.itemId()), count));
@@ -514,13 +539,27 @@ public class RaidContainerService {
         }
     }
 
-    private static ItemValueEntry choose(List<ItemValueEntry> pool, int lootTier, Random random) {
+    private static ItemValueEntry choose(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
+        if (random.nextInt(100) < context.looseLootChance()) {
+            Optional<ItemValueEntry> looseLoot = chooseLooseLoot(pool, context, lootTier, random);
+            if (looseLoot.isPresent()) {
+                return looseLoot.get();
+            }
+        }
+        return chooseLegacy(pool, lootTier, random);
+    }
+
+    private static ItemValueEntry chooseLegacy(List<ItemValueEntry> pool, int lootTier, Random random) {
         List<ItemValueEntry> filtered = pool.stream()
                 .filter(entry -> entry.lootTier().orElse(1) <= Math.max(1, lootTier + 1))
                 .filter(entry -> entry.category() != ItemCategory.GUNS || lootTier >= 3)
+                .filter(entry -> !isLooseLoot(entry))
                 .toList();
         if (filtered.isEmpty()) {
-            filtered = pool;
+            filtered = pool.stream()
+                    .filter(entry -> entry.lootTier().orElse(1) <= Math.max(1, lootTier + 1))
+                    .filter(entry -> entry.category() != ItemCategory.GUNS || lootTier >= 3)
+                    .toList();
         }
 
         int totalWeight = filtered.stream().mapToInt(RaidContainerService::weight).sum();
@@ -534,23 +573,192 @@ public class RaidContainerService {
         return filtered.getLast();
     }
 
+    private static Optional<ItemValueEntry> chooseLooseLoot(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
+        ItemRarity rarity = context.rollRarity(random);
+        List<ItemValueEntry> candidates = looseLootCandidates(pool, rarity, context, lootTier);
+        if (candidates.isEmpty()) {
+            candidates = pool.stream()
+                    .filter(RaidContainerService::isLooseLoot)
+                    .filter(entry -> entry.rarity() == rarity)
+                    .filter(entry -> entry.lootTier().orElse(1) <= Math.max(context.minimumTier(), lootTier + 2))
+                    .toList();
+        }
+        if (candidates.isEmpty()) {
+            candidates = pool.stream()
+                    .filter(RaidContainerService::isLooseLoot)
+                    .filter(entry -> entry.lootTier().orElse(1) <= Math.max(context.minimumTier(), lootTier + 2))
+                    .toList();
+        }
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int totalWeight = candidates.stream().mapToInt(RaidContainerService::looseItemWeight).sum();
+        int roll = random.nextInt(Math.max(1, totalWeight));
+        for (ItemValueEntry entry : candidates) {
+            roll -= looseItemWeight(entry);
+            if (roll < 0) {
+                return Optional.of(entry);
+            }
+        }
+        return Optional.of(candidates.getLast());
+    }
+
+    private static List<ItemValueEntry> looseLootCandidates(List<ItemValueEntry> pool, ItemRarity rarity, LootContext context, int lootTier) {
+        int maxTier = Math.max(context.minimumTier(), lootTier + 2);
+        return pool.stream()
+                .filter(RaidContainerService::isLooseLoot)
+                .filter(entry -> entry.rarity() == rarity)
+                .filter(entry -> entry.lootTier().orElse(1) <= maxTier)
+                .filter(entry -> context.categoryBias().isEmpty() || context.categoryBias().contains(entry.category()))
+                .toList();
+    }
+
+    private static boolean isLooseLoot(ItemValueEntry entry) {
+        return switch (entry.rarity()) {
+            case BLUE, PURPLE, GOLD, RED -> entry.itemId().getNamespace().equals(ExtractCraft.MODID);
+            default -> false;
+        };
+    }
+
+    private static int looseItemWeight(ItemValueEntry entry) {
+        int valuePenalty = Math.max(1, entry.value() / 2_500);
+        int footprintPenalty = switch (entry.category()) {
+            case INDUSTRIAL, ARMOR_MATERIALS -> 2;
+            default -> 1;
+        };
+        return Math.max(1, 100 / valuePenalty / footprintPenalty);
+    }
+
     private static int weight(ItemValueEntry entry) {
         return switch (entry.rarity()) {
             case COMMON -> 60;
             case UNCOMMON -> 30;
-            case RARE -> 10;
-            case EPIC -> 3;
-            case LEGENDARY -> 1;
+            case RARE, BLUE -> 10;
+            case EPIC, PURPLE -> 3;
+            case LEGENDARY, GOLD, RED -> 1;
             case QUEST -> 0;
         };
     }
 
     private static int countFor(ItemValueEntry entry, Random random) {
+        if (isLooseLoot(entry)) {
+            return 1;
+        }
         return switch (entry.category()) {
             case AMMO -> 4 + random.nextInt(13);
             case FOOD, JUNK, SCRAP_METAL -> 1 + random.nextInt(4);
             default -> 1;
         };
+    }
+
+    private enum LootContext {
+        GENERIC(
+                60,
+                2,
+                Map.of(ItemRarity.BLUE, 70, ItemRarity.PURPLE, 22, ItemRarity.GOLD, 7, ItemRarity.RED, 1),
+                List.of()),
+        HIGH_VALUE(
+                70,
+                4,
+                Map.of(ItemRarity.BLUE, 35, ItemRarity.PURPLE, 35, ItemRarity.GOLD, 24, ItemRarity.RED, 6),
+                List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.TROPHY, ItemCategory.SECURITY, ItemCategory.ACCESS)),
+        MILITARY(
+                65,
+                3,
+                Map.of(ItemRarity.BLUE, 55, ItemRarity.PURPLE, 30, ItemRarity.GOLD, 13, ItemRarity.RED, 2),
+                List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS)),
+        MEDICAL(
+                55,
+                2,
+                Map.of(ItemRarity.BLUE, 70, ItemRarity.PURPLE, 25, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
+                List.of(ItemCategory.MEDICAL_TECH, ItemCategory.SURVIVAL, ItemCategory.TOOLS)),
+        OFFICE(
+                60,
+                2,
+                Map.of(ItemRarity.BLUE, 65, ItemRarity.PURPLE, 27, ItemRarity.GOLD, 7, ItemRarity.RED, 1),
+                List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY)),
+        INDUSTRIAL(
+                55,
+                2,
+                Map.of(ItemRarity.BLUE, 75, ItemRarity.PURPLE, 20, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
+                List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.ELECTRONICS, ItemCategory.POWER));
+
+        private final int looseLootChance;
+        private final int minimumTier;
+        private final Map<ItemRarity, Integer> rarityWeights;
+        private final List<ItemCategory> categoryBias;
+
+        LootContext(int looseLootChance, int minimumTier, Map<ItemRarity, Integer> rarityWeights, List<ItemCategory> categoryBias) {
+            this.looseLootChance = looseLootChance;
+            this.minimumTier = minimumTier;
+            this.rarityWeights = rarityWeights;
+            this.categoryBias = List.copyOf(categoryBias);
+        }
+
+        private int looseLootChance() {
+            return looseLootChance;
+        }
+
+        private int minimumTier() {
+            return minimumTier;
+        }
+
+        private List<ItemCategory> categoryBias() {
+            return categoryBias;
+        }
+
+        private ItemRarity rollRarity(Random random) {
+            int total = rarityWeights.values().stream().mapToInt(Integer::intValue).sum();
+            int roll = random.nextInt(Math.max(1, total));
+            for (Map.Entry<ItemRarity, Integer> entry : rarityWeights.entrySet()) {
+                roll -= entry.getValue();
+                if (roll < 0) {
+                    return entry.getKey();
+                }
+            }
+            return ItemRarity.BLUE;
+        }
+
+        private static LootContext fromContainer(RaidContainerEntry entry) {
+            String text = (entry.blockId() + " " + entry.sourceType() + " " + entry.lootTableId().orElse("") + " " + entry.metadata()).toLowerCase(Locale.ROOT);
+            if (containsAny(text, "safe", "vault", "lock", "secure", "strongbox", "cash", "valuable")) {
+                return HIGH_VALUE;
+            }
+            if (containsAny(text, "weapon", "gun", "ammo", "military", "armory", "locker")) {
+                return MILITARY;
+            }
+            if (containsAny(text, "medical", "med", "clinic", "first_aid", "hospital")) {
+                return MEDICAL;
+            }
+            if (containsAny(text, "filing", "cabinet", "desk", "office", "bookshelf", "mail")) {
+                return OFFICE;
+            }
+            if (containsAny(text, "tool", "industrial", "garage", "workbench", "crate", "barrel")) {
+                return INDUSTRIAL;
+            }
+            return GENERIC;
+        }
+
+        private static LootContext fromName(String name) {
+            return switch (name.toLowerCase(Locale.ROOT)) {
+                case "safe", "vault", "high_value", "highvalue" -> HIGH_VALUE;
+                case "military", "weapon", "weapons" -> MILITARY;
+                case "medical", "med" -> MEDICAL;
+                case "office", "filing", "filing_cabinet" -> OFFICE;
+                case "industrial", "tool", "tools" -> INDUSTRIAL;
+                default -> GENERIC;
+            };
+        }
+
+        private static boolean containsAny(String text, String... needles) {
+            for (String needle : needles) {
+                if (text.contains(needle)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     private static boolean matches(ItemIdentity identity, String normalizedQuery) {

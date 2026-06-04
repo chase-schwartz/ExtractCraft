@@ -9,6 +9,7 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.ExtractCraftItemMetadata;
 import com.chaseschwartz.extractcraft.items.ExtractCraftProfiledItem;
+import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.raid.ExtractionZoneHandler;
@@ -135,12 +136,13 @@ public class ExtractCraft {
     public static final DeferredItem<Item> QUICKCLOT_INJECTOR = registerProfiledItem("quickclot_injector", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40), false);
     public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80), false);
     public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120), false);
-    public static final DeferredItem<Item> FIELD_DRESSING_ROLL = registerProfiledItem("field_dressing_roll", treatmentMeta(1, "A field dressing roll for stopping bleeds.", 0.2D, 1, 1, true, false, 45));
+    public static final DeferredItem<Item> FIELD_DRESSING_ROLL = registerProfiledItem("field_dressing_roll", treatmentMeta(1, "A field dressing roll for stopping bleeds.", 0.2D, 1, 1, true, false, 45), false);
     public static final DeferredItem<Item> SPLINT_TRAUMA_KIT = registerProfiledItem("splint_trauma_kit", treatmentMeta(2, "A splint kit for stabilizing broken bones.", 0.7D, 1, 2, false, true, 80));
 
     public static final DeferredItem<Item> HELMET_REBUILD_KIT = registerProfiledItem("helmet_rebuild_kit", repairMeta("Helmet", "A compact kit for future helmet durability repairs.", 0.9D, 2, 2, 90));
     public static final DeferredItem<Item> ARMOR_REBUILD_KIT = registerProfiledItem("armor_rebuild_kit", repairMeta("Armor", "A heavy kit for future armor plate rebuilds.", 1.8D, 2, 3, 160));
     public static final DeferredItem<Item> PACK_REBUILD_KIT = registerProfiledItem("pack_rebuild_kit", repairMeta("Backpack", "A repair bundle for future pack and strap damage.", 1.2D, 2, 2, 120));
+    public static final List<DeferredItem<Item>> LOOSE_LOOT_ITEMS = registerLooseLootItems();
 
     // Creates a creative tab with the id "extractcraft:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
@@ -246,6 +248,41 @@ public class ExtractCraft {
                 .repairKit(target, repairAmount)
                 .tooltip("Repair behavior is configured for a later pass.")
                 .build();
+    }
+
+    private static List<DeferredItem<Item>> registerLooseLootItems() {
+        List<DeferredItem<Item>> items = new ArrayList<>();
+        for (LooseLootDefinition definition : LooseLootDefinition.DEFINITIONS) {
+            items.add(registerProfiledItem(definition.id(), looseLootMeta(definition)));
+        }
+        return List.copyOf(items);
+    }
+
+    private static ExtractCraftItemMetadata looseLootMeta(LooseLootDefinition definition) {
+        return ExtractCraftItemMetadata.builder(
+                definition.tier(),
+                looseLootCategoryLabel(definition.category()),
+                definition.description(),
+                definition.weight(),
+                definition.gridWidth(),
+                definition.gridHeight())
+                .tooltip("Loose loot barter item.")
+                .build();
+    }
+
+    private static String looseLootCategoryLabel(String category) {
+        String[] words = category.replace('-', '_').split("_");
+        StringBuilder builder = new StringBuilder();
+        for (String word : words) {
+            if (word.isBlank()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+        }
+        return builder.toString();
     }
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.

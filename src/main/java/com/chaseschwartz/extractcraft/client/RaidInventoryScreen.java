@@ -29,6 +29,18 @@ public class RaidInventoryScreen extends AbstractContainerScreen<RaidInventoryMe
     }
 
     @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        ItemSnapshot hovered = hoveredItem(mouseX, mouseY);
+        if (hovered != null) {
+            ItemStack stack = displayStack(hovered);
+            if (!stack.isEmpty()) {
+                guiGraphics.renderComponentTooltip(this.font, ExtractCraftTooltipBuilder.build(stack), mouseX, mouseY, stack);
+            }
+        }
+    }
+
+    @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
         int x = this.leftPos;
         int y = this.topPos;
@@ -89,6 +101,33 @@ public class RaidInventoryScreen extends AbstractContainerScreen<RaidInventoryMe
                 x + 20, y + 9, MUTED_TEXT, false);
     }
 
+    private ItemSnapshot hoveredItem(int mouseX, int mouseY) {
+        int localX = mouseX - this.leftPos;
+        int localY = mouseY - this.topPos;
+        RaidInventoryMenu.RaidInventorySnapshot snapshot = this.menu.snapshot();
+        ItemSnapshot item = hoveredStorageItem(localX, localY, snapshot.backpack(), 14, 56, 6, 308);
+        if (item != null) {
+            return item;
+        }
+        item = hoveredStorageItem(localX, localY, snapshot.vest(), 14, 166, 3, 143);
+        if (item != null) {
+            return item;
+        }
+        return hoveredStorageItem(localX, localY, snapshot.safeBox(), 179, 166, 3, 143);
+    }
+
+    private static ItemSnapshot hoveredStorageItem(int localX, int localY, StorageSnapshot storage, int x, int rowY, int maxRows, int width) {
+        List<ItemSnapshot> items = storage.items();
+        int visible = Math.min(maxRows, items.size());
+        for (int i = 0; i < visible; i++) {
+            int y = rowY + i * 18;
+            if (inside(localX, localY, x, y, width, 18)) {
+                return items.get(i);
+            }
+        }
+        return null;
+    }
+
     private static ItemStack displayStack(ItemSnapshot item) {
         return ItemStackVariantFactory.create(item.lookupKey(), item.count())
                 .orElseGet(() -> {
@@ -113,5 +152,9 @@ public class RaidInventoryScreen extends AbstractContainerScreen<RaidInventoryMe
             return text;
         }
         return text.substring(0, Math.max(0, maxLength - 3)) + "...";
+    }
+
+    private static boolean inside(int x, int y, int rectX, int rectY, int width, int height) {
+        return x >= rectX && x < rectX + width && y >= rectY && y < rectY + height;
     }
 }

@@ -247,7 +247,7 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
             guiGraphics.renderTooltip(this.font, Component.literal(hovered.item().displayName()), mouseX, mouseY);
             return;
         }
-        guiGraphics.renderTooltip(this.font, stack, mouseX, mouseY);
+        guiGraphics.renderComponentTooltip(this.font, ExtractCraftTooltipBuilder.build(stack), mouseX, mouseY, stack);
     }
 
     private HoveredItem hoveredItem(int mouseX, int mouseY) {

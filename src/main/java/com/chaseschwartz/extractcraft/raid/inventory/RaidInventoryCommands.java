@@ -2,6 +2,9 @@ package com.chaseschwartz.extractcraft.raid.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
@@ -9,6 +12,7 @@ import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
 import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
@@ -173,6 +177,34 @@ public class RaidInventoryCommands {
                                                                 StringArgumentType.getString(context, "item"),
                                                                 StringArgumentType.getString(context, "target"),
                                                                 IntegerArgumentType.getInteger(context, "count"))))))))
+                        .then(Commands.literal("giveloottest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("rarity", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("blue");
+                                            builder.suggest("purple");
+                                            builder.suggest("gold");
+                                            builder.suggest("red");
+                                            builder.suggest("all");
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> debugGiveLootTest(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "rarity")))))
+                        .then(Commands.literal("sampleloot")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("context", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            for (String sampleContext : RaidContainerService.sampleLootContexts()) {
+                                                builder.suggest(sampleContext);
+                                            }
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 100))
+                                                .executes(context -> debugSampleLoot(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "context"),
+                                                        IntegerArgumentType.getInteger(context, "count"))))))
                 .then(Commands.literal("dropheld")
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                         .executes(context -> dropHeld(context.getSource())))
@@ -556,6 +588,56 @@ public class RaidInventoryCommands {
         return 1;
     }
 
+    private static int debugGiveLootTest(CommandSourceStack source, String rarityName) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        String rarity = rarityName.toLowerCase(java.util.Locale.ROOT);
+        if (!rarity.equals("blue") && !rarity.equals("purple") && !rarity.equals("gold") && !rarity.equals("red") && !rarity.equals("all")) {
+            player.sendSystemMessage(Component.literal("Unknown loot rarity '" + rarityName + "'. Use blue, purple, gold, red, or all."));
+            return 0;
+        }
+
+        int attempted = 0;
+        int moved = 0;
+        for (LooseLootDefinition definition : LooseLootDefinition.DEFINITIONS) {
+            if (!rarity.equals("all") && !definition.rarity().equals(rarity)) {
+                continue;
+            }
+            attempted++;
+            ResourceLocation itemId = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, definition.id());
+            if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
+                continue;
+            }
+            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId));
+            moved += debugInsertItem(player, stack, "stash");
+        }
+
+        player.sendSystemMessage(Component.literal("Debug spawned " + moved + "/" + attempted + " " + rarity + " loose loot item(s) to stash."));
+        return moved > 0 ? 1 : 0;
+    }
+
+    private static int debugSampleLoot(CommandSourceStack source, String contextName, int count) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        List<ItemValueEntry> samples = RaidContainerService.sampleLooseLoot(contextName, count, new Random(System.nanoTime() ^ player.getUUID().hashCode()));
+        if (samples.isEmpty()) {
+            player.sendSystemMessage(Component.literal("No loose loot samples available for context '" + contextName + "'."));
+            return 0;
+        }
+
+        Map<String, Long> rarityCounts = samples.stream()
+                .collect(Collectors.groupingBy(entry -> entry.rarity().name().toLowerCase(java.util.Locale.ROOT), java.util.LinkedHashMap::new, Collectors.counting()));
+        Map<String, Long> categoryCounts = samples.stream()
+                .collect(Collectors.groupingBy(entry -> entry.category().name().toLowerCase(java.util.Locale.ROOT), java.util.LinkedHashMap::new, Collectors.counting()));
+        String sampleNames = samples.stream()
+                .limit(8)
+                .map(entry -> BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString())
+                .collect(Collectors.joining(", "));
+        player.sendSystemMessage(Component.literal("Loose loot sample [" + contextName + "] x" + samples.size()
+                + " | rarity=" + rarityCounts
+                + " | categories=" + categoryCounts));
+        player.sendSystemMessage(Component.literal("Examples: " + sampleNames + (samples.size() > 8 ? ", ..." : "")));
+        return 1;
+    }
+
     private static int debugInsertItem(ServerPlayer player, ItemStack stack, String target) {
         if (target.equals("player")) {
             return player.getInventory().add(stack.copy()) ? stack.getCount() : 0;
@@ -647,7 +729,7 @@ public class RaidInventoryCommands {
     }
 
     private static List<String> debugExtractCraftItemIds() {
-        return List.of(
+        List<String> ids = new ArrayList<>(List.of(
                 "scrapline_helmet",
                 "ranger_ballistic_helmet",
                 "vector_rail_helmet",
@@ -670,11 +752,12 @@ public class RaidInventoryCommands {
                 "combat_stim_syringe",
                 "field_med_kit",
                 "trauma_response_case",
-                "field_dressing_roll",
                 "splint_trauma_kit",
                 "helmet_rebuild_kit",
                 "armor_rebuild_kit",
-                "pack_rebuild_kit");
+                "pack_rebuild_kit"));
+        LooseLootDefinition.DEFINITIONS.stream().map(LooseLootDefinition::id).forEach(ids::add);
+        return List.copyOf(ids);
     }
 
     private static ResourceLocation debugGearItemId(String alias) {

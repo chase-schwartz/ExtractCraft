@@ -6,6 +6,10 @@ public enum ItemRarity {
     RARE,
     EPIC,
     LEGENDARY,
+    BLUE,
+    PURPLE,
+    GOLD,
+    RED,
     QUEST;
 
     public static ItemRarity fromJson(String value) {

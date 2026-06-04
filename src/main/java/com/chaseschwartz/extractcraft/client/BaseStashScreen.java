@@ -85,6 +85,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
         renderContextMenu(guiGraphics, mouseX, mouseY);
+        renderCustomTooltip(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
 
@@ -145,6 +146,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     @Override
     protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
         if (contextMenu != null) {
+            return;
+        }
+        if (customTooltipSlot(x, y) != null) {
             return;
         }
         super.renderTooltip(guiGraphics, x, y);
@@ -633,6 +637,25 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             }
         }
         return null;
+    }
+
+    private void renderCustomTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        Slot slot = customTooltipSlot(mouseX, mouseY);
+        if (slot == null || !slot.hasItem()) {
+            return;
+        }
+        guiGraphics.renderComponentTooltip(this.font, ExtractCraftTooltipBuilder.build(slot.getItem()), mouseX, mouseY, slot.getItem());
+    }
+
+    private Slot customTooltipSlot(int mouseX, int mouseY) {
+        if (contextMenu != null || dragSource != DragSource.NONE || !draggedStack.isEmpty()) {
+            return null;
+        }
+        Slot slot = slotAt(mouseX, mouseY);
+        if (slot == null || !slot.hasItem() || isDragSourceSlot(slot)) {
+            return null;
+        }
+        return isManagedGridSlot(slot) ? ownerSlotForManagedGrid(slot) : slot;
     }
 
     private int targetCellAt(RaidEquipmentSlot target, int mouseX, int mouseY) {

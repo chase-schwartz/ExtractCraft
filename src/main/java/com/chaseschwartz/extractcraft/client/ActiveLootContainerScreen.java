@@ -73,6 +73,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
         renderContextMenu(guiGraphics, mouseX, mouseY);
+        renderCustomTooltip(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
 
@@ -130,6 +131,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     @Override
     protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
         if (contextMenu != null) {
+            return;
+        }
+        if (customTooltipSlot(x, y) != null) {
             return;
         }
         super.renderTooltip(guiGraphics, x, y);
@@ -426,6 +430,28 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             }
         }
         return null;
+    }
+
+    private void renderCustomTooltip(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        Slot slot = customTooltipSlot(mouseX, mouseY);
+        if (slot == null || !slot.hasItem()) {
+            return;
+        }
+        guiGraphics.renderComponentTooltip(this.font, ExtractCraftTooltipBuilder.build(slot.getItem()), mouseX, mouseY, slot.getItem());
+    }
+
+    private Slot customTooltipSlot(int mouseX, int mouseY) {
+        if (contextMenu != null || dragSource != DragSource.NONE || !draggedStack.isEmpty()) {
+            return null;
+        }
+        Slot slot = slotAt(mouseX, mouseY);
+        if (slot == null || !slot.hasItem() || isDragSourceSlot(slot)) {
+            return null;
+        }
+        if (isRaidInventorySlot(slot) && !isWeaponSlot(slot)) {
+            return ownerSlotFor(slot, this.menu.raidSlotForMenuSlot(slot.index), this.menu.raidItemIndexForMenuSlot(slot.index));
+        }
+        return slot;
     }
 
     private boolean handleContextMenuClick(double mouseX, double mouseY) {
