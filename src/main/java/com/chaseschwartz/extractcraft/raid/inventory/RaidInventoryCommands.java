@@ -1,5 +1,6 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -188,6 +189,9 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("lootreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugLootReport(context.getSource())))
+                        .then(Commands.literal("lootcatalog")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugLootCatalog(context.getSource())))
                         .then(Commands.literal("taczreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugTaczReport(context.getSource())))
@@ -741,6 +745,19 @@ public class RaidInventoryCommands {
         }
     }
 
+    private static int debugLootCatalog(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            Path path = LootCatalogReport.write();
+            player.sendSystemMessage(Component.literal("Wrote ExtractCraft loot catalog: " + path.toAbsolutePath()));
+            return 1;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to write ExtractCraft loot catalog", exception);
+            player.sendSystemMessage(Component.literal("Failed to write loot catalog: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
     private static int debugTaczReport(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         try {
@@ -833,6 +850,12 @@ public class RaidInventoryCommands {
                 .filter(roll -> roll.source() == RaidContainerService.LootSource.TACZ_FIRST_CLASS)
                 .map(RaidContainerService.LootSample::entry)
                 .collect(Collectors.groupingBy(entry -> RaidContainerService.taczKind(entry).name().toLowerCase(Locale.ROOT), LinkedHashMap::new, Collectors.counting()));
+        Map<String, Long> countRangeCounts = samples.stream()
+                .collect(Collectors.groupingBy(entry -> RaidContainerService.countRange(entry).describe(), LinkedHashMap::new, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()).thenComparing(Map.Entry.comparingByKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left, LinkedHashMap::new));
         String highest = samples.stream()
                 .sorted(Comparator.comparingInt(ItemValueEntry::value).reversed().thenComparing(RaidInventoryCommands::lootSampleName))
                 .limit(5)
@@ -851,6 +874,7 @@ public class RaidInventoryCommands {
                 + (taczKindCounts.isEmpty() ? "" : " | TaCZ: " + formatCounts(taczKindCounts, 8))));
         player.sendSystemMessage(Component.literal("Rarity: " + formatCountsWithPercent(rarityCounts, samples.size())));
         player.sendSystemMessage(Component.literal("Categories: " + formatCounts(categoryCounts, 8)));
+        player.sendSystemMessage(Component.literal("Spawn counts: " + formatCounts(countRangeCounts, 8)));
         player.sendSystemMessage(Component.literal("Top value: " + highest));
         player.sendSystemMessage(Component.literal("Most common: " + common));
         return 1;

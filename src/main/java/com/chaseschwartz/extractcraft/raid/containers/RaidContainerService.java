@@ -874,13 +874,53 @@ public class RaidContainerService {
     }
 
     private static int countFor(ItemValueEntry entry, Random random) {
-        if (isLooseLoot(entry)) {
-            return 1;
+        CountRange range = countRange(entry);
+        return range.min() + random.nextInt(range.max() - range.min() + 1);
+    }
+
+    public static CountRange countRange(ItemValueEntry entry) {
+        if (isLooseLoot(entry)
+                || entry.category() == ItemCategory.GUNS
+                || entry.category() == ItemCategory.ATTACHMENTS
+                || entry.category() == ItemCategory.MAGAZINES
+                || entry.category() == ItemCategory.ARMOR
+                || entry.category() == ItemCategory.ARMOR_PARTS
+                || entry.category() == ItemCategory.MEDICAL
+                || entry.category() == ItemCategory.MEDICAL_TECH) {
+            return CountRange.ONE;
         }
+
+        CountRange itemRange = itemSpecificCountRange(entry.lookupKey()).orElseGet(() -> itemSpecificCountRange(entry.itemId().toString()).orElse(null));
+        if (itemRange != null) {
+            return itemRange;
+        }
+
+        if (isFirstClassTaczLoot(entry) && taczKind(entry) == TaczLootKind.AMMO) {
+            return switch (entry.rarity()) {
+                case RARE, BLUE -> new CountRange(10, 30);
+                case EPIC, LEGENDARY, PURPLE, GOLD, RED -> new CountRange(5, 20);
+                default -> new CountRange(20, 60);
+            };
+        }
+
         return switch (entry.category()) {
-            case AMMO -> 4 + random.nextInt(13);
-            case FOOD, JUNK, SCRAP_METAL -> 1 + random.nextInt(4);
-            default -> 1;
+            case AMMO -> new CountRange(20, 60);
+            case FOOD, JUNK, SCRAP_METAL -> new CountRange(1, 4);
+            default -> CountRange.ONE;
+        };
+    }
+
+    private static Optional<CountRange> itemSpecificCountRange(String key) {
+        return switch (key) {
+            case "minecraft:gunpowder", "minecraft:redstone" -> Optional.of(new CountRange(4, 16));
+            case "minecraft:glowstone_dust", "minecraft:lapis_lazuli", "minecraft:glass", "minecraft:oak_log" -> Optional.of(new CountRange(2, 8));
+            case "minecraft:copper_ingot", "minecraft:iron_ingot", "minecraft:amethyst_shard", "minecraft:quartz", "minecraft:leather" -> Optional.of(new CountRange(1, 6));
+            case "minecraft:gold_ingot", "minecraft:white_wool", "minecraft:blaze_rod", "minecraft:fire_charge" -> Optional.of(new CountRange(1, 4));
+            case "minecraft:iron_nugget", "minecraft:gold_nugget" -> Optional.of(new CountRange(4, 24));
+            case "minecraft:crying_obsidian", "minecraft:emerald" -> Optional.of(new CountRange(1, 3));
+            case "minecraft:ender_pearl" -> Optional.of(new CountRange(1, 2));
+            case "minecraft:end_crystal", "minecraft:netherite_scrap", "minecraft:diamond" -> Optional.of(CountRange.ONE);
+            default -> Optional.empty();
         };
     }
 
@@ -1176,6 +1216,19 @@ public class RaidContainerService {
     }
 
     public record LootSample(ItemValueEntry entry, LootSource source) {
+    }
+
+    public record CountRange(int min, int max) {
+        public static final CountRange ONE = new CountRange(1, 1);
+
+        public CountRange {
+            min = Math.max(1, min);
+            max = Math.max(min, max);
+        }
+
+        public String describe() {
+            return min == max ? Integer.toString(min) : min + "-" + max;
+        }
     }
 
     public enum LootSource {
