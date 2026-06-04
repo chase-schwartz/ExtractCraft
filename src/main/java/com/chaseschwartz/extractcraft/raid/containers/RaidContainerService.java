@@ -810,7 +810,8 @@ public class RaidContainerService {
     }
 
     public static boolean isFirstClassTaczLoot(ItemValueEntry entry) {
-        return isTaczLoot(entry)
+        return entry.sellable()
+                && isTaczLoot(entry)
                 && entry.lookupKey().contains("#")
                 && ItemCarryProfileRegistry.get(entry.lookupKey()).isPresent();
     }

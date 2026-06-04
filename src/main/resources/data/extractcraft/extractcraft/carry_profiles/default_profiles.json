@@ -237,7 +237,9 @@
       "gridHeight": 2,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for large backpack equipment"]
+      "notes": [
+        "Debug stand-in for large backpack equipment"
+      ]
     },
     {
       "item": "minecraft:barrel",
@@ -248,7 +250,9 @@
       "gridHeight": 2,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for medium backpack equipment"]
+      "notes": [
+        "Debug stand-in for medium backpack equipment"
+      ]
     },
     {
       "item": "minecraft:bundle",
@@ -259,7 +263,9 @@
       "gridHeight": 1,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for small backpack equipment"]
+      "notes": [
+        "Debug stand-in for small backpack equipment"
+      ]
     },
     {
       "item": "minecraft:leather_chestplate",
@@ -270,7 +276,9 @@
       "gridHeight": 2,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for basic vest equipment"]
+      "notes": [
+        "Debug stand-in for basic vest equipment"
+      ]
     },
     {
       "item": "minecraft:chainmail_chestplate",
@@ -281,7 +289,9 @@
       "gridHeight": 2,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for basic vest equipment"]
+      "notes": [
+        "Debug stand-in for basic vest equipment"
+      ]
     },
     {
       "item": "minecraft:ender_chest",
@@ -292,7 +302,9 @@
       "gridHeight": 2,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": ["Debug stand-in for alpha safe container equipment"]
+      "notes": [
+        "Debug stand-in for alpha safe container equipment"
+      ]
     },
     {
       "item": "minecraft:golden_apple",
@@ -309,6 +321,175 @@
       "slotCost": 2,
       "allowInSafeBox": true,
       "allowInVest": true
+    },
+    {
+      "item": "minecraft:crying_obsidian",
+      "category": "industrial",
+      "weight": 1.6,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:end_crystal",
+      "category": "valuables",
+      "weight": 1.0,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:fire_charge",
+      "category": "weapon_parts",
+      "weight": 0.15,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:blaze_rod",
+      "category": "power",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:glowstone_dust",
+      "category": "electronics",
+      "weight": 0.03,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:amethyst_shard",
+      "category": "valuables",
+      "weight": 0.04,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:quartz",
+      "category": "industrial",
+      "weight": 0.08,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:glass",
+      "category": "industrial",
+      "weight": 0.25,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:leather",
+      "category": "survival",
+      "weight": 0.12,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:netherite_scrap",
+      "category": "valuables",
+      "weight": 0.4,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:stick",
+      "category": "junk",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:oak_log",
+      "category": "industrial",
+      "weight": 0.8,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
+    },
+    {
+      "item": "minecraft:white_wool",
+      "category": "survival",
+      "weight": 0.25,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ recipe support carry profile"
+      ]
     }
   ]
 }

@@ -1,31 +1,26 @@
 {
   "values": [
     {
-      "item": "tacz:ammo#tacz:9mm",
-      "category": "ammo",
-      "rarity": "common",
-      "value": 22,
-      "sellable": true,
-      "lootTier": 2,
-      "notes": "Prototype TaCZ variant value"
-    },
-    {
-      "item": "tacz:ammo#tacz:57x28",
-      "category": "ammo",
-      "rarity": "uncommon",
-      "value": 30,
-      "sellable": true,
-      "lootTier": 2,
-      "notes": "Prototype TaCZ variant value"
-    },
-    {
-      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "item": "tacz:modern_kinetic_gun#tacz:aa12",
       "category": "guns",
-      "rarity": "uncommon",
-      "value": 1800,
+      "rarity": "rare",
+      "value": 5200,
       "sellable": true,
-      "lootTier": 2,
-      "notes": "Prototype TaCZ variant value"
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: AA12 Shotgun"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ai_awp",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 12500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: Accuracy International AWM"
+      ]
     },
     {
       "item": "tacz:modern_kinetic_gun#tacz:ak47",
@@ -34,25 +29,251 @@
       "value": 5200,
       "sellable": true,
       "lootTier": 3,
-      "notes": "Prototype TaCZ variant value"
+      "notes": [
+        "Generated from TaCZ audit: AKM"
+      ]
     },
     {
-      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "item": "tacz:modern_kinetic_gun#tacz:aug",
       "category": "guns",
-      "rarity": "epic",
-      "value": 12500,
+      "rarity": "rare",
+      "value": 6500,
       "sellable": true,
-      "lootTier": 4,
-      "notes": "Prototype TaCZ variant value"
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: AUG"
+      ]
     },
     {
-      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "item": "tacz:modern_kinetic_gun#tacz:b93r",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: B93R"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:cz75",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: CZ 75"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:db_long",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: DB-4 Ursus"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:db_short",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: DB-2 Durin"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:deagle",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Deagle 50"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:deagle_golden",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Golden Deagle 357"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:fn_evolys",
       "category": "guns",
       "rarity": "epic",
-      "value": 15000,
+      "value": 9800,
       "sellable": true,
       "lootTier": 4,
-      "notes": "Prototype TaCZ variant value"
+      "notes": [
+        "Generated from TaCZ audit: FN EVOLYS Machine Gun"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:fn_fal",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: FN FAL Battle Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:g36k",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: G36K"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1800,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Glock 17"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk416d",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 8200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: HK-416A5"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_g3",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: HK G3 Battle rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_mk23",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: MK23 Offensive Pistol"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_mp5a5",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 4200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: HK-MP5A5"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:kar98",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 10500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: Mauser Kar98k Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:lonetrail",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: .30-06 Lonetrail Hand Cannon"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m1014",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: M1014 Battle Shotgun"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m107",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 13500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: M107 Sniper Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m16a1",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: M16A1 Service Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m16a4",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: M16A4 Service Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m1911",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: M1911"
+      ]
     },
     {
       "item": "tacz:modern_kinetic_gun#tacz:m249",
@@ -61,16 +282,680 @@
       "value": 11000,
       "sellable": true,
       "lootTier": 4,
-      "notes": "Prototype TaCZ variant value"
+      "notes": [
+        "Generated from TaCZ audit: M249 Machine Gun"
+      ]
     },
     {
-      "item": "tacz:attachment#tacz:laser_peq6",
-      "category": "attachments",
+      "item": "tacz:modern_kinetic_gun#tacz:m320",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 0,
+      "sellable": false,
+      "lootTier": 5,
+      "notes": [
+        "BANNED from ExtractCraft loot pools: launcher/minigun class weapon."
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m4a1",
+      "category": "guns",
       "rarity": "rare",
-      "value": 1400,
+      "value": 7600,
       "sellable": true,
       "lootTier": 3,
-      "notes": "Prototype TaCZ variant value"
+      "notes": [
+        "Generated from TaCZ audit: M4A1 Carbine"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m700",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 10500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: M700 Sniper Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m870",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: M870"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 14500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: M95 .50 Cal Antimaterial"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m9a4",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: M9A4"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:minigun",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 0,
+      "sellable": false,
+      "lootTier": 5,
+      "notes": [
+        "BANNED from ExtractCraft loot pools: launcher/minigun class weapon."
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:mk14",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: MK14 EBR"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:p320",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: P320"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:p90",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 4200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: P90 PDW"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:qbz_191",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: QBZ-191 Assault Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:qbz_95",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: QBZ-95 \"Longbow\""
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rhino357",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: .357 Rhino Revolver"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 0,
+      "sellable": false,
+      "lootTier": 5,
+      "notes": [
+        "BANNED from ExtractCraft loot pools: launcher/minigun class weapon."
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpk",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 9800,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: RPK"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:scar_h",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 8800,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: SCAR-H Battle Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:scar_l",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: SCAR-L Assault Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:sks_tactical",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Sks Tactical Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:spas_12",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 5200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: SPAS-12 Multi-purpose Shotgun"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:spr15hb",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: SPR-15 HB \"Sagittarius\""
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:springfield1873",
+      "category": "guns",
+      "rarity": "epic",
+      "value": 10500,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: Springfield 1873 Trapdoor Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:taurus500",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Taurus \"Raging Hunter\" Hand Cannon"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:taurus943",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: .22 Modle 943 Revolver"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:timeless50",
+      "category": "guns",
+      "rarity": "uncommon",
+      "value": 1600,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Timeless .50 Z-Type"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:type_81",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 6500,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Type 81-1 Service Rifle"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ump45",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 4200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: UMP45 SMG"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:uzi",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 4200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: UZI"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:vector45",
+      "category": "guns",
+      "rarity": "rare",
+      "value": 4200,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Vector SMG"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:12g",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 42,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 12 Gauge Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:22wmr",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: .22 Winchester Magnum"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:308",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 90,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .308 Winchester Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:30_06",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 95,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .30-06 Springfield Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:338",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 130,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .338 Lapua Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:357mag",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: .357 Magnum"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:40mm",
+      "category": "ammo",
+      "rarity": "epic",
+      "value": 0,
+      "sellable": false,
+      "lootTier": 5,
+      "notes": [
+        "BANNED from ExtractCraft loot pools: launcher ammunition."
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:45_70",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 95,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .45-70 Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:45acp",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: .45 ACP Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:46x30",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: 4.6mm AP Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:500mag",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 90,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .500 Magnum"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:50ae",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 85,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .50 AE"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:50bmg",
+      "category": "ammo",
+      "rarity": "epic",
+      "value": 180,
+      "sellable": true,
+      "lootTier": 4,
+      "notes": [
+        "Generated from TaCZ audit: .50 BMG"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:545x39",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 5.45x39mm Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:556x45",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 5.56x45mm Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:57x28",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 5.7x28mm AP Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:58x42",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 5.8mm DBP87 Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:68x51fury",
+      "category": "ammo",
+      "rarity": "rare",
+      "value": 110,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: 6.8\u00d751mm Fury Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x25",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 28,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: 7.62x25mm Tokarev Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x39",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 7.62x39mm Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x54",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 7.62x54mm Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:792x57",
+      "category": "ammo",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: 8mm Mauser Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:9mm",
+      "category": "ammo",
+      "rarity": "common",
+      "value": 22,
+      "sellable": true,
+      "lootTier": 1,
+      "notes": [
+        "Generated from TaCZ audit: 9mm Bullet"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:rpg_rocket",
+      "category": "ammo",
+      "rarity": "epic",
+      "value": 0,
+      "sellable": false,
+      "lootTier": 5,
+      "notes": [
+        "BANNED from ExtractCraft loot pools: launcher ammunition."
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_fmj",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Full Metal Jacket Ammo"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_he",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: High Explosive Ammo"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_hp",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Hollow-Point Ammo"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_i",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Incendiary Ammo"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_slug",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Shotgun Slug"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:bayonet_6h3",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: 6H3 Bayonet"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:bayonet_m9",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: M9 Bayonet"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:deagle_golden_long_barrel",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: .357 Golden Deagle Long Barrel"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_1",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Heavy Ammo Extended Mag"
+      ]
     },
     {
       "item": "tacz:attachment#tacz:extended_mag_2",
@@ -79,7 +964,988 @@
       "value": 900,
       "sellable": true,
       "lootTier": 2,
-      "notes": "Prototype TaCZ variant value"
+      "notes": [
+        "Generated from TaCZ audit: Heavy Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_3",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Heavy Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_cobra",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: SI Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_cqr",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Hera Arms CQR Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_magpul_afg_2",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Talon AFG1 Handstop"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_osovets_black",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: P-2 Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk0",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: RK-0 Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk1_b25u",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: RK-1 B25U Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk6",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: RK-6 Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_se_5",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: SE-5 Express Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_td",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: TD Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_military",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Nagoma Military Standard Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_ranger",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Koch Ranger Heavy Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_talon",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 520,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Talon SG2 Grip"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_compact",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 950,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Militech Compact Laser"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_lopro",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 950,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Lopro Tactical Laser"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_nightstick",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 950,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Nightstick Compact laser"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq15",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1400,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Laser PEQ15"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq6",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1400,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: PEQ6 ILLM"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_1",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Light Ammo Extended mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_2",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Light Ammo Extended mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_3",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Light Ammo Extended mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_cthulhu",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Cthulhu K7 Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_cyclone_d2",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Cyclone D2 Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_mastiff_sg",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Mastiff Shotgun Muzzle Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_pioneer",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Pioneer A3 Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_timeless50",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Timeless .50 Cal Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_trex",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: T-Rex Heavy Brake"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_choke_sg",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Shotgun Choke"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_compensator_trident",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Tempest Trident Compensator"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_knight_qd",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Knight QD Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_mirage",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Mirage Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_phantom_s1",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Phantom S1 Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_ptilopsis",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: PO-2 \"Ptilopsis\" Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_sg",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: 12 Gauge Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_ursus",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Ursus Military Standard Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_vulture",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Vulture .50 Cal Suppressor"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_wraith",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1050,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Wraith Silencer"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_heavy",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Factory Issued Heavy Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_light",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Factory Issued light Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_tactical",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Factory Issued Tactical Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_1873_6x",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Vintage Springfield Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_98k",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Mauser 4x Light Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_acog_ta31",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: TA31 2x ACOG"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_aug_default",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: AUG Builtin Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_contender",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Contender 4x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_elcan_4x",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Elcan 4x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_hamr",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: HAMR 3x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_lpvo_1_6",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: LPVO 1-6x Scope "
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_mk5hd",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Mark 5 HD 5-25x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_qmk152",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: QMK-152 3x White Light Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_retro_2x",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Retro 3x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_standard_8x",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Scout 4-10x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_vudu",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Vudu 1-6x Scope"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_1",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Shotgun Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_2",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Shotgun Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_3",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Shotgun Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_552",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Militech 552 HCOG"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_acro_pistol",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Aimpoint ACRO P-1 Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_acro_rifle",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Aimpoint ACRO P-1 Sight Rised"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_coyote",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Coyote Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_deltapoint_pistol",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: DeltaPoint Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_deltapoint_rifle",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: DeltaPoint Sight Rised"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_exp3",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: EXP3 HCOG"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_fastfire_pistol",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: FastFire Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_fastfire_rifle",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: FastFire Sight Rised"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_okp7",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: OKP-7 Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_p90",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Sight P90"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_pk06_pistol",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: PK06 Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_pk06_rifle",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: PK06 Sight Rised"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_rmr_dot",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: RMR Mini Red Dot"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_sro_dot",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: SRO Mini Red Dot"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_srs_02",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: Trijicon SRS-02 Reflex Sight"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_t1",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: T1 red dot"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_t2",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: T2 red dot"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_uh1",
+      "category": "attachments",
+      "rarity": "rare",
+      "value": 1350,
+      "sellable": true,
+      "lootTier": 3,
+      "notes": [
+        "Generated from TaCZ audit: UH-1 HCOG"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_1",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Sniper Ammo Extended mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_2",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Sniper Ammo Extended mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_3",
+      "category": "magazines",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Sniper Ammo Extended Mag"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_ak12",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: AK-12 Regular Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_carbon_bone_c5",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Carbon bone C5 Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_heavy_spas_12",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Franchi Heavy Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_hk_slim_line",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: HK Slim Line Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_m4ss",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: M4SS Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_militech_b5",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Militech B5 Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_moe",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Magpul MOE Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_ripstock",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: CMMG RipStock Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_sba3",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: SBA3 Stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_tactical_ar",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 850,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Magpul CTR stock"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_tactical_spas_12",
+      "category": "attachments",
+      "rarity": "uncommon",
+      "value": 700,
+      "sellable": true,
+      "lootTier": 2,
+      "notes": [
+        "Generated from TaCZ audit: Franchi Tactical Stock"
+      ]
     }
   ]
 }

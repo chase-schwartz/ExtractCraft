@@ -1,33 +1,30 @@
 {
   "profiles": [
     {
-      "item": "tacz:ammo#tacz:9mm",
-      "category": "ammo",
-      "weight": 0.02,
-      "slotCost": 1,
-      "allowInSafeBox": true,
-      "allowInVest": true,
-      "notes": "Prototype TaCZ variant carry profile"
-    },
-    {
-      "item": "tacz:ammo#tacz:57x28",
-      "category": "ammo",
-      "weight": 0.02,
-      "slotCost": 1,
-      "allowInSafeBox": true,
-      "allowInVest": true,
-      "notes": "Prototype TaCZ variant carry profile"
-    },
-    {
-      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "item": "tacz:modern_kinetic_gun#tacz:aa12",
       "category": "guns",
-      "weight": 0.9,
-      "slotCost": 4,
+      "weight": 5.0,
+      "slotCost": 8,
       "gridWidth": 2,
-      "gridHeight": 2,
+      "gridHeight": 4,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ai_awp",
+      "category": "guns",
+      "weight": 6.5,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
     },
     {
       "item": "tacz:modern_kinetic_gun#tacz:ak47",
@@ -38,29 +35,295 @@
       "gridHeight": 4,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
     },
     {
-      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "item": "tacz:modern_kinetic_gun#tacz:aug",
       "category": "guns",
-      "weight": 11.0,
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:b93r",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:cz75",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:db_long",
+      "category": "guns",
+      "weight": 4.3,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:db_short",
+      "category": "guns",
+      "weight": 4.3,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:deagle",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:deagle_golden",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:fn_evolys",
+      "category": "guns",
+      "weight": 7.4,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:fn_fal",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:g36k",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:glock_17",
+      "category": "guns",
+      "weight": 0.9,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk416d",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_g3",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_mk23",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:hk_mp5a5",
+      "category": "guns",
+      "weight": 3.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:kar98",
+      "category": "guns",
+      "weight": 6.0,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:lonetrail",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m1014",
+      "category": "guns",
+      "weight": 4.3,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m107",
+      "category": "guns",
+      "weight": 10.5,
       "slotCost": 12,
       "gridWidth": 2,
       "gridHeight": 6,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
     },
     {
-      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "item": "tacz:modern_kinetic_gun#tacz:m16a1",
       "category": "guns",
-      "weight": 7.5,
-      "slotCost": 12,
+      "weight": 4.0,
+      "slotCost": 8,
       "gridWidth": 2,
-      "gridHeight": 6,
+      "gridHeight": 4,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m16a4",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m1911",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
     },
     {
       "item": "tacz:modern_kinetic_gun#tacz:m249",
@@ -71,25 +334,1972 @@
       "gridHeight": 5,
       "allowInSafeBox": false,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
     },
     {
-      "item": "tacz:attachment#tacz:laser_peq6",
-      "category": "attachments",
-      "weight": 0.2,
+      "item": "tacz:modern_kinetic_gun#tacz:m320",
+      "category": "guns",
+      "weight": 4.9,
+      "slotCost": 12,
+      "gridWidth": 2,
+      "gridHeight": 6,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m4a1",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m700",
+      "category": "guns",
+      "weight": 6.0,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m870",
+      "category": "guns",
+      "weight": 4.3,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m95",
+      "category": "guns",
+      "weight": 11.0,
+      "slotCost": 12,
+      "gridWidth": 2,
+      "gridHeight": 6,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:m9a4",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:minigun",
+      "category": "guns",
+      "weight": 18.0,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:mk14",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:p320",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:p90",
+      "category": "guns",
+      "weight": 3.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:qbz_191",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:qbz_95",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rhino357",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpg7",
+      "category": "guns",
+      "weight": 7.5,
+      "slotCost": 12,
+      "gridWidth": 2,
+      "gridHeight": 6,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:rpk",
+      "category": "guns",
+      "weight": 7.4,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:scar_h",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:scar_l",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:sks_tactical",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:spas_12",
+      "category": "guns",
+      "weight": 4.3,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:spr15hb",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:springfield1873",
+      "category": "guns",
+      "weight": 6.0,
+      "slotCost": 10,
+      "gridWidth": 2,
+      "gridHeight": 5,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:taurus500",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:taurus943",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:timeless50",
+      "category": "guns",
+      "weight": 1.2,
+      "slotCost": 4,
+      "gridWidth": 2,
+      "gridHeight": 2,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:type_81",
+      "category": "guns",
+      "weight": 4.0,
+      "slotCost": 8,
+      "gridWidth": 2,
+      "gridHeight": 4,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:ump45",
+      "category": "guns",
+      "weight": 3.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:uzi",
+      "category": "guns",
+      "weight": 3.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:modern_kinetic_gun#tacz:vector45",
+      "category": "guns",
+      "weight": 3.0,
+      "slotCost": 6,
+      "gridWidth": 2,
+      "gridHeight": 3,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ weapon footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:12g",
+      "category": "ammo",
+      "weight": 0.05,
       "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:22wmr",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:308",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:30_06",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:338",
+      "category": "ammo",
+      "weight": 0.06,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:357mag",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:40mm",
+      "category": "ammo",
+      "weight": 0.35,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:45_70",
+      "category": "ammo",
+      "weight": 0.05,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:45acp",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:46x30",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:500mag",
+      "category": "ammo",
+      "weight": 0.04,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:50ae",
+      "category": "ammo",
+      "weight": 0.04,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:50bmg",
+      "category": "ammo",
+      "weight": 0.08,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:545x39",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:556x45",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:57x28",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:58x42",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:68x51fury",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x25",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x39",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:762x54",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:792x57",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:9mm",
+      "category": "ammo",
+      "weight": 0.02,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:ammo#tacz:rpg_rocket",
+      "category": "ammo",
+      "weight": 1.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ ammo stack profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_fmj",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_he",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_hp",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_i",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:ammo_mod_slug",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:bayonet_6h3",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
       "allowInSafeBox": true,
       "allowInVest": false,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:bayonet_m9",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:deagle_golden_long_barrel",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_1",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
     },
     {
       "item": "tacz:attachment#tacz:extended_mag_2",
       "category": "magazines",
       "weight": 0.35,
       "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
       "allowInSafeBox": true,
       "allowInVest": true,
-      "notes": "Prototype TaCZ variant carry profile"
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:extended_mag_3",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_cobra",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_cqr",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_magpul_afg_2",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_osovets_black",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk0",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk1_b25u",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_rk6",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_se_5",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_td",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_military",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_ranger",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:grip_vertical_talon",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_compact",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_lopro",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_nightstick",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq15",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:laser_peq6",
+      "category": "attachments",
+      "weight": 0.2,
+      "slotCost": 1,
+      "gridWidth": 1,
+      "gridHeight": 1,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_1",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_2",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:light_extended_mag_3",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_cthulhu",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_cyclone_d2",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_mastiff_sg",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_pioneer",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_timeless50",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_brake_trex",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_choke_sg",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_compensator_trident",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_knight_qd",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_mirage",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_phantom_s1",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_ptilopsis",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_sg",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_ursus",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_vulture",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:muzzle_silencer_wraith",
+      "category": "attachments",
+      "weight": 0.5,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_heavy",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_light",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:oem_stock_tactical",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_1873_6x",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_98k",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_acog_ta31",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_aug_default",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_contender",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_elcan_4x",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_hamr",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_lpvo_1_6",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_mk5hd",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_qmk152",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_retro_2x",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_standard_8x",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:scope_vudu",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_1",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_2",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:shotgun_extended_mag_3",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_552",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_acro_pistol",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_acro_rifle",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_coyote",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_deltapoint_pistol",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_deltapoint_rifle",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_exp3",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_fastfire_pistol",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_fastfire_rifle",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_okp7",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_p90",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_pk06_pistol",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_pk06_rifle",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_rmr_dot",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_sro_dot",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_srs_02",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_t1",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_t2",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sight_uh1",
+      "category": "attachments",
+      "weight": 0.45,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_1",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_2",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:sniper_extended_mag_3",
+      "category": "magazines",
+      "weight": 0.35,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": true,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_ak12",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_carbon_bone_c5",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_heavy_spas_12",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_hk_slim_line",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_m4ss",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_militech_b5",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_moe",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_ripstock",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_sba3",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_tactical_ar",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
+    },
+    {
+      "item": "tacz:attachment#tacz:stock_tactical_spas_12",
+      "category": "attachments",
+      "weight": 0.65,
+      "slotCost": 2,
+      "gridWidth": 1,
+      "gridHeight": 2,
+      "allowInSafeBox": true,
+      "allowInVest": false,
+      "notes": [
+        "TaCZ attachment footprint profile"
+      ]
     }
   ]
 }

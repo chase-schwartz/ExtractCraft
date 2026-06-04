@@ -682,7 +682,7 @@ final class TaczAuditReport {
                     .append(" | hasValue=").append(hasValue ? "yes" : "no")
                     .append(" | hasProfile=").append(hasProfile ? "yes" : "no")
                     .append(" | firstClassLoot=").append(value.filter(RaidContainerService::isFirstClassTaczLoot).isPresent() ? "yes" : "no")
-                    .append(" | legacyFallback=").append(value.isPresent() && !RaidContainerService.isFirstClassTaczLoot(value.get()) ? "yes" : "no");
+                    .append(" | legacyFallback=").append(value.filter(ItemValueEntry::sellable).isPresent() && !RaidContainerService.isFirstClassTaczLoot(value.get()) ? "yes" : "no");
             if (!entry.metadata().isBlank()) {
                 report.append(" | ").append(entry.metadata());
             }

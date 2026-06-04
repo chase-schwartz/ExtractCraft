@@ -7,7 +7,9 @@
       "value": 4,
       "sellable": true,
       "questItem": false,
-      "notes": ["Paper scrap"]
+      "notes": [
+        "Paper scrap"
+      ]
     },
     {
       "item": "minecraft:string",
@@ -294,7 +296,9 @@
       "questItem": true,
       "traderType": "collector",
       "lootTier": 3,
-      "notes": ["Example quest turn-in item"]
+      "notes": [
+        "Example quest turn-in item"
+      ]
     },
     {
       "item": "tacz:modern_kinetic_gun",
@@ -305,7 +309,9 @@
       "questItem": false,
       "traderType": "armorer",
       "lootTier": 4,
-      "notes": ["TaCZ generic gun item; exact weapon identity is stored in item data"]
+      "notes": [
+        "TaCZ generic gun item; exact weapon identity is stored in item data"
+      ]
     },
     {
       "item": "tacz:ammo",
@@ -316,7 +322,9 @@
       "questItem": false,
       "traderType": "armorer",
       "lootTier": 2,
-      "notes": ["TaCZ generic ammo item; caliber is stored in item data"]
+      "notes": [
+        "TaCZ generic ammo item; caliber is stored in item data"
+      ]
     },
     {
       "item": "tacz:attachment",
@@ -327,7 +335,9 @@
       "questItem": false,
       "traderType": "armorer",
       "lootTier": 3,
-      "notes": ["TaCZ generic attachment item; attachment type is stored in item data"]
+      "notes": [
+        "TaCZ generic attachment item; attachment type is stored in item data"
+      ]
     },
     {
       "item": "tacz:ammo_box",
@@ -348,6 +358,174 @@
       "questItem": false,
       "traderType": "armorer",
       "lootTier": 4
+    },
+    {
+      "item": "minecraft:crying_obsidian",
+      "category": "industrial",
+      "rarity": "rare",
+      "value": 220,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 3,
+      "notes": [
+        "TaCZ recipe support material"
+      ]
+    },
+    {
+      "item": "minecraft:end_crystal",
+      "category": "valuables",
+      "rarity": "epic",
+      "value": 900,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 4,
+      "notes": [
+        "TaCZ recipe support material"
+      ]
+    },
+    {
+      "item": "minecraft:fire_charge",
+      "category": "weapon_parts",
+      "rarity": "uncommon",
+      "value": 45,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "armorer",
+      "lootTier": 2,
+      "notes": [
+        "TaCZ recipe support material"
+      ]
+    },
+    {
+      "item": "minecraft:blaze_rod",
+      "category": "power",
+      "rarity": "rare",
+      "value": 140,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 3,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:glowstone_dust",
+      "category": "electronics",
+      "rarity": "uncommon",
+      "value": 35,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "technician",
+      "lootTier": 2,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:amethyst_shard",
+      "category": "valuables",
+      "rarity": "uncommon",
+      "value": 60,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 2,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:quartz",
+      "category": "industrial",
+      "rarity": "uncommon",
+      "value": 55,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 2,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:glass",
+      "category": "industrial",
+      "rarity": "common",
+      "value": 12,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:leather",
+      "category": "survival",
+      "rarity": "common",
+      "value": 18,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 1,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:netherite_scrap",
+      "category": "valuables",
+      "rarity": "epic",
+      "value": 950,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 4,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:stick",
+      "category": "junk",
+      "rarity": "common",
+      "value": 2,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 1,
+      "notes": [
+        "Representative tag-backed TaCZ ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:oak_log",
+      "category": "industrial",
+      "rarity": "common",
+      "value": 12,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "mechanic",
+      "lootTier": 1,
+      "notes": [
+        "Representative log tag ingredient"
+      ]
+    },
+    {
+      "item": "minecraft:white_wool",
+      "category": "survival",
+      "rarity": "common",
+      "value": 16,
+      "sellable": true,
+      "questItem": false,
+      "traderType": "fence",
+      "lootTier": 1,
+      "notes": [
+        "Representative wool tag ingredient"
+      ]
     }
   ]
 }
