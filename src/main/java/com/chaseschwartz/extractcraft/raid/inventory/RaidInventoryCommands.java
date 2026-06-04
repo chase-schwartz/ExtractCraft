@@ -188,6 +188,9 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("lootreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugLootReport(context.getSource())))
+                        .then(Commands.literal("taczreport")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugTaczReport(context.getSource())))
                         .then(Commands.literal("spawnloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugSpawnLootTest(context.getSource(), 2))
@@ -727,11 +730,26 @@ public class RaidInventoryCommands {
         ServerPlayer player = source.getPlayerOrException();
         try {
             java.nio.file.Path path = LootAuditReport.write();
+            java.nio.file.Path taczPath = TaczAuditReport.write();
             player.sendSystemMessage(Component.literal("Wrote ExtractCraft loot report: " + path.toAbsolutePath()));
+            player.sendSystemMessage(Component.literal("Wrote ExtractCraft TaCZ report: " + taczPath.toAbsolutePath()));
             return 1;
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Failed to write ExtractCraft loot report", exception);
             player.sendSystemMessage(Component.literal("Failed to write loot report: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int debugTaczReport(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            java.nio.file.Path path = TaczAuditReport.write();
+            player.sendSystemMessage(Component.literal("Wrote ExtractCraft TaCZ report: " + path.toAbsolutePath()));
+            return 1;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to write ExtractCraft TaCZ report", exception);
+            player.sendSystemMessage(Component.literal("Failed to write TaCZ report: " + exception.getMessage()));
             return 0;
         }
     }
