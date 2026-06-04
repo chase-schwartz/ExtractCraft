@@ -1,7 +1,10 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -195,16 +198,52 @@ public class RaidInventoryCommands {
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("context", StringArgumentType.word())
                                         .suggests((context, builder) -> {
+                                            builder.suggest("all");
                                             for (String sampleContext : RaidContainerService.sampleLootContexts()) {
                                                 builder.suggest(sampleContext);
                                             }
                                             return builder.buildFuture();
                                         })
-                                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 100))
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 10000))
                                                 .executes(context -> debugSampleLoot(
                                                         context.getSource(),
                                                         StringArgumentType.getString(context, "context"),
                                                         IntegerArgumentType.getInteger(context, "count"))))))
+                        .then(Commands.literal("lootstats")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.argument("context", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("all");
+                                            for (String sampleContext : RaidContainerService.sampleLootContexts()) {
+                                                builder.suggest(sampleContext);
+                                            }
+                                            return builder.buildFuture();
+                                        })
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 10000))
+                                                .executes(context -> debugSampleLoot(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "context"),
+                                                        IntegerArgumentType.getInteger(context, "count"))))))
+                        .then(Commands.literal("listloot")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugListLoot(context.getSource(), "all"))
+                                .then(Commands.argument("filter", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            builder.suggest("all");
+                                            builder.suggest("blue");
+                                            builder.suggest("purple");
+                                            builder.suggest("gold");
+                                            builder.suggest("red");
+                                            LooseLootDefinition.DEFINITIONS.stream()
+                                                    .map(LooseLootDefinition::category)
+                                                    .distinct()
+                                                    .sorted()
+                                                    .forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> debugListLoot(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "filter")))))
                 .then(Commands.literal("dropheld")
                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                         .executes(context -> dropHeld(context.getSource())))
@@ -617,25 +656,144 @@ public class RaidInventoryCommands {
 
     private static int debugSampleLoot(CommandSourceStack source, String contextName, int count) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        List<ItemValueEntry> samples = RaidContainerService.sampleLooseLoot(contextName, count, new Random(System.nanoTime() ^ player.getUUID().hashCode()));
+        String normalizedContext = contextName.toLowerCase(Locale.ROOT);
+        if (normalizedContext.equals("all")) {
+            int successful = 0;
+            for (String sampleContext : RaidContainerService.sampleLootContexts()) {
+                successful += debugSampleLootContext(player, sampleContext, count);
+            }
+            return successful > 0 ? 1 : 0;
+        }
+
+        return debugSampleLootContext(player, normalizedContext, count) > 0 ? 1 : 0;
+    }
+
+    private static int debugSampleLootContext(ServerPlayer player, String contextName, int count) {
+        List<ItemValueEntry> samples = RaidContainerService.sampleLooseLoot(contextName, count, new Random(System.nanoTime() ^ player.getUUID().hashCode() ^ contextName.hashCode()));
         if (samples.isEmpty()) {
             player.sendSystemMessage(Component.literal("No loose loot samples available for context '" + contextName + "'."));
             return 0;
         }
 
-        Map<String, Long> rarityCounts = samples.stream()
-                .collect(Collectors.groupingBy(entry -> entry.rarity().name().toLowerCase(java.util.Locale.ROOT), java.util.LinkedHashMap::new, Collectors.counting()));
+        int totalValue = samples.stream().mapToInt(ItemValueEntry::value).sum();
+        double averageValue = samples.isEmpty() ? 0.0D : totalValue / (double) samples.size();
+        int minValue = samples.stream().mapToInt(ItemValueEntry::value).min().orElse(0);
+        int maxValue = samples.stream().mapToInt(ItemValueEntry::value).max().orElse(0);
+        Map<String, Long> rarityCounts = orderedCounts(samples.stream()
+                .collect(Collectors.groupingBy(entry -> entry.rarity().name().toLowerCase(Locale.ROOT), LinkedHashMap::new, Collectors.counting())),
+                List.of("blue", "purple", "gold", "red"));
         Map<String, Long> categoryCounts = samples.stream()
-                .collect(Collectors.groupingBy(entry -> entry.category().name().toLowerCase(java.util.Locale.ROOT), java.util.LinkedHashMap::new, Collectors.counting()));
-        String sampleNames = samples.stream()
-                .limit(8)
-                .map(entry -> BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString())
+                .collect(Collectors.groupingBy(entry -> entry.category().name().toLowerCase(Locale.ROOT), LinkedHashMap::new, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()).thenComparing(Map.Entry.comparingByKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left, LinkedHashMap::new));
+        Map<String, Long> commonCounts = samples.stream()
+                .collect(Collectors.groupingBy(RaidInventoryCommands::lootSampleName, LinkedHashMap::new, Collectors.counting()));
+        String highest = samples.stream()
+                .sorted(Comparator.comparingInt(ItemValueEntry::value).reversed().thenComparing(RaidInventoryCommands::lootSampleName))
+                .limit(5)
+                .map(entry -> lootSampleName(entry) + " (" + entry.value() + " cr)")
                 .collect(Collectors.joining(", "));
-        player.sendSystemMessage(Component.literal("Loose loot sample [" + contextName + "] x" + samples.size()
-                + " | rarity=" + rarityCounts
-                + " | categories=" + categoryCounts));
-        player.sendSystemMessage(Component.literal("Examples: " + sampleNames + (samples.size() > 8 ? ", ..." : "")));
+        String common = commonCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()).thenComparing(Map.Entry.comparingByKey()))
+                .limit(5)
+                .map(entry -> entry.getKey() + " x" + entry.getValue())
+                .collect(Collectors.joining(", "));
+
+        player.sendSystemMessage(Component.literal("Loose loot sample [" + contextName + "] rolls=" + count + " produced=" + samples.size()
+                + " | value total=" + totalValue + " avg=" + Math.round(averageValue) + " min=" + minValue + " max=" + maxValue));
+        player.sendSystemMessage(Component.literal("Rarity: " + formatCountsWithPercent(rarityCounts, samples.size())));
+        player.sendSystemMessage(Component.literal("Categories: " + formatCounts(categoryCounts, 8)));
+        player.sendSystemMessage(Component.literal("Top value: " + highest));
+        player.sendSystemMessage(Component.literal("Most common: " + common));
         return 1;
+    }
+
+    private static int debugListLoot(CommandSourceStack source, String filterName) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        String filter = filterName.toLowerCase(Locale.ROOT);
+        List<LooseLootDefinition> matches = LooseLootDefinition.DEFINITIONS.stream()
+                .filter(definition -> filter.equals("all")
+                        || definition.rarity().equals(filter)
+                        || definition.category().equals(filter)
+                        || definition.id().contains(filter))
+                .sorted(Comparator.comparing(LooseLootDefinition::rarity)
+                        .thenComparing(LooseLootDefinition::category)
+                        .thenComparing(LooseLootDefinition::id))
+                .toList();
+        if (matches.isEmpty()) {
+            player.sendSystemMessage(Component.literal("No loose loot definitions matched '" + filterName + "'. Try all, blue, purple, gold, red, or a category."));
+            return 0;
+        }
+
+        long registered = matches.stream()
+                .filter(definition -> BuiltInRegistries.ITEM.containsKey(ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, definition.id())))
+                .count();
+        Map<String, Long> rarityCounts = orderedCounts(matches.stream()
+                .collect(Collectors.groupingBy(LooseLootDefinition::rarity, LinkedHashMap::new, Collectors.counting())),
+                List.of("blue", "purple", "gold", "red"));
+        Map<String, Long> categoryCounts = matches.stream()
+                .collect(Collectors.groupingBy(LooseLootDefinition::category, LinkedHashMap::new, Collectors.counting()))
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()).thenComparing(Map.Entry.comparingByKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (left, right) -> left, LinkedHashMap::new));
+
+        player.sendSystemMessage(Component.literal("Loose loot definitions [" + filter + "]: " + matches.size()
+                + " matched, " + registered + "/" + matches.size() + " registered."));
+        player.sendSystemMessage(Component.literal("Rarity: " + formatCounts(rarityCounts, 8)));
+        player.sendSystemMessage(Component.literal("Categories: " + formatCounts(categoryCounts, 12)));
+
+        for (int i = 0; i < matches.size(); i += 4) {
+            String line = matches.subList(i, Math.min(i + 4, matches.size())).stream()
+                    .map(definition -> definition.id()
+                            + " [" + definition.rarity()
+                            + "/" + definition.category()
+                            + "/" + definition.value() + "cr"
+                            + "/" + definition.gridWidth() + "x" + definition.gridHeight() + "]")
+                    .collect(Collectors.joining(" | "));
+            player.sendSystemMessage(Component.literal(line));
+        }
+        return 1;
+    }
+
+    private static Map<String, Long> orderedCounts(Map<String, Long> counts, List<String> preferredOrder) {
+        Map<String, Long> ordered = new LinkedHashMap<>();
+        for (String key : preferredOrder) {
+            if (counts.containsKey(key)) {
+                ordered.put(key, counts.get(key));
+            }
+        }
+        counts.entrySet().stream()
+                .filter(entry -> !ordered.containsKey(entry.getKey()))
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> ordered.put(entry.getKey(), entry.getValue()));
+        return ordered;
+    }
+
+    private static String formatCountsWithPercent(Map<String, Long> counts, int total) {
+        return counts.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue() + " (" + formatPercent(entry.getValue(), total) + "%)")
+                .collect(Collectors.joining(", "));
+    }
+
+    private static String formatCounts(Map<String, Long> counts, int limit) {
+        return counts.entrySet().stream()
+                .limit(limit)
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining(", "));
+    }
+
+    private static String formatPercent(long count, int total) {
+        if (total <= 0) {
+            return "0.0";
+        }
+        return String.format(Locale.ROOT, "%.1f", count * 100.0D / total);
+    }
+
+    private static String lootSampleName(ItemValueEntry entry) {
+        return BuiltInRegistries.ITEM.get(entry.itemId()).getDescription().getString();
     }
 
     private static int debugInsertItem(ServerPlayer player, ItemStack stack, String target) {
