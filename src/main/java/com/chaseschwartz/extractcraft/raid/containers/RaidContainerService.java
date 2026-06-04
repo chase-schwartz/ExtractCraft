@@ -510,6 +510,16 @@ public class RaidContainerService {
         return List.of("generic", "safe", "military", "medical", "office", "industrial");
     }
 
+    public static List<String> lootContextReportLines() {
+        return List.of(
+                LootContext.GENERIC.reportLine("generic"),
+                LootContext.HIGH_VALUE.reportLine("safe/high_value"),
+                LootContext.MILITARY.reportLine("military"),
+                LootContext.MEDICAL.reportLine("medical"),
+                LootContext.OFFICE.reportLine("office"),
+                LootContext.INDUSTRIAL.reportLine("industrial"));
+    }
+
     private static List<ItemValueEntry> lootPool() {
         return ItemValueRegistry.entries().stream()
                 .filter(ItemValueEntry::sellable)
@@ -718,6 +728,21 @@ public class RaidContainerService {
                 }
             }
             return ItemRarity.BLUE;
+        }
+
+        private String reportLine(String name) {
+            String rarityText = rarityWeights.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .map(entry -> entry.getKey().name().toLowerCase(Locale.ROOT) + "=" + entry.getValue())
+                    .collect(Collectors.joining(", "));
+            String categoryText = categoryBias.isEmpty()
+                    ? "any"
+                    : categoryBias.stream().map(category -> category.name().toLowerCase(Locale.ROOT)).collect(Collectors.joining(", "));
+            return name
+                    + " | looseLootChance=" + looseLootChance + "%"
+                    + " | minimumTier=" + minimumTier
+                    + " | rarityWeights={" + rarityText + "}"
+                    + " | categoryBias=[" + categoryText + "]";
         }
 
         private static LootContext fromContainer(RaidContainerEntry entry) {

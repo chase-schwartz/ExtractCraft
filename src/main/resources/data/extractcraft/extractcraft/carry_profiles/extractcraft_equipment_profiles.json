@@ -471,24 +471,6 @@
       "consumable": true
     },
     {
-      "item": "extractcraft:field_dressing_roll",
-      "category": "medical",
-      "weight": 0.2,
-      "slotCost": 1,
-      "gridWidth": 1,
-      "gridHeight": 1,
-      "canRotate": true,
-      "allowInSafeBox": true,
-      "allowInVest": true,
-      "tier": 1,
-      "notes": [
-        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
-      ],
-      "useTimeTicks": 45,
-      "fixesBleed": true,
-      "consumable": true
-    },
-    {
       "item": "extractcraft:splint_trauma_kit",
       "category": "medical",
       "weight": 0.7,

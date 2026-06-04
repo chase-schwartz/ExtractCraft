@@ -46,6 +46,7 @@ INACTIVE_ITEMS = {
     "quickclot_injector",
     "trauma_field_pack",
     "blackseal_med_case",
+    "field_dressing_roll",
 }
 
 

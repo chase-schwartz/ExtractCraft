@@ -199,15 +199,6 @@
       "lootTier": 3
     },
     {
-      "item": "extractcraft:field_dressing_roll",
-      "category": "medical",
-      "rarity": "common",
-      "value": 28,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 1
-    },
-    {
       "item": "extractcraft:splint_trauma_kit",
       "category": "medical",
       "rarity": "uncommon",

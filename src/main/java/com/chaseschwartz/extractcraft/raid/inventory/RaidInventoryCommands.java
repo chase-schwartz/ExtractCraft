@@ -179,7 +179,14 @@ public class RaidInventoryCommands {
                                                                 context.getSource(),
                                                                 StringArgumentType.getString(context, "item"),
                                                                 StringArgumentType.getString(context, "target"),
-                                                                IntegerArgumentType.getInteger(context, "count"))))))))
+                                                        IntegerArgumentType.getInteger(context, "count"))))))))
+                        .then(Commands.literal("giveuitestkit")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.literal("stash")
+                                        .executes(context -> debugGiveUiTestKit(context.getSource()))))
+                        .then(Commands.literal("lootreport")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugLootReport(context.getSource())))
                         .then(Commands.literal("giveloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("rarity", StringArgumentType.word())
@@ -652,6 +659,70 @@ public class RaidInventoryCommands {
 
         player.sendSystemMessage(Component.literal("Debug spawned " + moved + "/" + attempted + " " + rarity + " loose loot item(s) to stash."));
         return moved > 0 ? 1 : 0;
+    }
+
+    private static int debugGiveUiTestKit(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        List<String> itemNames = List.of(
+                "scrapline_helmet",
+                "apex_assault_helmet",
+                "softshell_plate_carrier",
+                "juggernaut_assault_armor",
+                "sparrow_sling_pack",
+                "atlas_raid_pack",
+                "scout_chest_rig",
+                "specter_combat_rig",
+                "pioneer_lockbox",
+                "omega_safe_container",
+                "combat_stim_syringe",
+                "field_med_kit",
+                "trauma_response_case",
+                "helmet_rebuild_kit",
+                "armor_rebuild_kit",
+                "pack_rebuild_kit",
+                "sealed_cable_bundle",
+                "encrypted_usb_token",
+                "quantum_signal_chip",
+                "heart_of_the_dam",
+                "minecraft:string",
+                "minecraft:bread");
+
+        int added = 0;
+        List<String> failed = new ArrayList<>();
+        for (String itemName : itemNames) {
+            ResourceLocation itemId = debugItemId(itemName);
+            if (itemId == null || !BuiltInRegistries.ITEM.containsKey(itemId)) {
+                failed.add(itemName + " (missing)");
+                continue;
+            }
+
+            ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId));
+            int moved = debugInsertItem(player, stack, "stash");
+            if (moved > 0) {
+                added += moved;
+            } else {
+                failed.add(itemName);
+            }
+        }
+
+        player.sendSystemMessage(Component.literal("UI test kit added " + added + "/" + itemNames.size() + " item(s) to stash."));
+        if (!failed.isEmpty()) {
+            player.sendSystemMessage(Component.literal("UI test kit skipped: " + String.join(", ", failed)));
+        }
+        return added > 0 ? 1 : 0;
+    }
+
+    private static int debugLootReport(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            java.nio.file.Path path = LootAuditReport.write();
+            player.sendSystemMessage(Component.literal("Wrote ExtractCraft loot report: " + path.toAbsolutePath()));
+            return 1;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to write ExtractCraft loot report", exception);
+            player.sendSystemMessage(Component.literal("Failed to write loot report: " + exception.getMessage()));
+            return 0;
+        }
     }
 
     private static int debugSampleLoot(CommandSourceStack source, String contextName, int count) throws CommandSyntaxException {
