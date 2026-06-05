@@ -26,6 +26,8 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.raid.map.RaidDevBounds;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
+import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -669,22 +671,132 @@ public class RaidContainerService {
     private static void fill(Container container, List<ItemValueEntry> pool, RaidContainerEntry containerEntry, Random random) {
         int lootTier = containerEntry.lootTier().orElse(1);
         LootContext context = LootContext.fromContainer(containerEntry);
-        int slotCount = container.getContainerSize();
-        int itemCount = Math.min(MAX_CONTAINER_SLOTS_TO_FILL, Math.max(1, 1 + random.nextInt(Math.min(4, Math.max(1, lootTier + 1)))));
-        List<Integer> slots = new ArrayList<>();
-        for (int slot = 0; slot < slotCount; slot++) {
-            slots.add(slot);
+        int itemCount = rollContainerItemCount(random);
+        boolean[] occupied = new boolean[Math.max(0, container.getContainerSize())];
+
+        int placed = 0;
+        int attempts = 0;
+        int maxAttempts = Math.max(itemCount * 8, 16);
+        while (placed < itemCount && attempts++ < maxAttempts) {
+            ItemValueEntry entry = choose(pool, context, lootTier, random).entry();
+            if (tryPlaceGeneratedEntry(container, occupied, entry, random)) {
+                placed++;
+            }
         }
 
-        for (int i = 0; i < itemCount && !slots.isEmpty(); i++) {
-            int slotIndex = random.nextInt(slots.size());
-            int slot = slots.remove(slotIndex);
-            ItemValueEntry entry = choose(pool, context, lootTier, random).entry();
-            int count = countFor(entry, random);
-            ItemStack stack = ItemStackVariantFactory.create(entry.lookupKey(), count)
-                    .orElseGet(() -> new ItemStack(BuiltInRegistries.ITEM.get(entry.itemId()), count));
-            container.setItem(slot, stack);
+        if (placed == 0) {
+            forcePlaceOneFittingEntry(container, pool, context, lootTier, random, occupied);
         }
+    }
+
+    private static boolean tryPlaceGeneratedEntry(Container container, boolean[] occupied, ItemValueEntry entry, Random random) {
+        int count = countFor(entry, random);
+        ItemStack stack = ItemStackVariantFactory.create(entry.lookupKey(), count)
+                .orElseGet(() -> new ItemStack(BuiltInRegistries.ITEM.get(entry.itemId()), count));
+        Footprint footprint = footprint(entry);
+        Optional<Integer> slot = firstFitSlot(container, occupied, footprint);
+        if (slot.isEmpty()) {
+            return false;
+        }
+        int anchorSlot = slot.get();
+        container.setItem(anchorSlot, stampContainerGrid(stack, anchorSlot, footprint));
+        markOccupied(occupied, anchorSlot, footprint);
+        return true;
+    }
+
+    private static void forcePlaceOneFittingEntry(Container container, List<ItemValueEntry> pool, LootContext context, int lootTier, Random random, boolean[] occupied) {
+        for (int attempts = 0; attempts < 64; attempts++) {
+            ItemValueEntry entry = choose(pool, context, lootTier, random).entry();
+            if (tryPlaceGeneratedEntry(container, occupied, entry, random)) {
+                return;
+            }
+        }
+        for (ItemValueEntry entry : pool) {
+            if (tryPlaceGeneratedEntry(container, occupied, entry, random)) {
+                return;
+            }
+        }
+    }
+
+    private static int rollContainerItemCount(Random random) {
+        int roll = random.nextInt(100);
+        if (roll < 10) {
+            return 1;
+        }
+        if (roll < 32) {
+            return 2;
+        }
+        if (roll < 68) {
+            return 3;
+        }
+        if (roll < 88) {
+            return 4;
+        }
+        if (roll < 97) {
+            return 5;
+        }
+        return MAX_CONTAINER_SLOTS_TO_FILL;
+    }
+
+    private static Optional<Integer> firstFitSlot(Container container, boolean[] occupied, Footprint footprint) {
+        int slotCount = container.getContainerSize();
+        int rows = Math.max(1, (int) Math.ceil(slotCount / (double) ActiveLootContainerMenu.CONTAINER_COLUMNS));
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < ActiveLootContainerMenu.CONTAINER_COLUMNS; x++) {
+                int slot = y * ActiveLootContainerMenu.CONTAINER_COLUMNS + x;
+                if (slot >= slotCount) {
+                    continue;
+                }
+                if (fits(container, occupied, x, y, footprint)) {
+                    return Optional.of(slot);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static boolean fits(Container container, boolean[] occupied, int x, int y, Footprint footprint) {
+        int slotCount = container.getContainerSize();
+        int rows = Math.max(1, (int) Math.ceil(slotCount / (double) ActiveLootContainerMenu.CONTAINER_COLUMNS));
+        if (x < 0 || y < 0 || x + footprint.width() > ActiveLootContainerMenu.CONTAINER_COLUMNS || y + footprint.height() > rows) {
+            return false;
+        }
+        for (int dy = 0; dy < footprint.height(); dy++) {
+            for (int dx = 0; dx < footprint.width(); dx++) {
+                int slot = (y + dy) * ActiveLootContainerMenu.CONTAINER_COLUMNS + x + dx;
+                if (slot >= slotCount || occupied[slot] || !container.getItem(slot).isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static void markOccupied(boolean[] occupied, int anchorSlot, Footprint footprint) {
+        int x = anchorSlot % ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        int y = anchorSlot / ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        for (int dy = 0; dy < footprint.height(); dy++) {
+            for (int dx = 0; dx < footprint.width(); dx++) {
+                int slot = (y + dy) * ActiveLootContainerMenu.CONTAINER_COLUMNS + x + dx;
+                if (slot >= 0 && slot < occupied.length) {
+                    occupied[slot] = true;
+                }
+            }
+        }
+    }
+
+    private static ItemStack stampContainerGrid(ItemStack stack, int anchorSlot, Footprint footprint) {
+        int x = anchorSlot % ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        int y = anchorSlot / ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        return GridDisplayMetadata.stamp(stack, new GridDisplayMetadata.Metadata(anchorSlot, footprint.width(), footprint.height(), x, y, false, footprint.canRotate(), true), true);
+    }
+
+    private static Footprint footprint(ItemValueEntry entry) {
+        Optional<ItemCarryProfile> profile = ItemCarryProfileRegistry.get(entry.lookupKey()).or(() -> ItemCarryProfileRegistry.get(entry.itemId()));
+        int width = profile.flatMap(ItemCarryProfile::gridWidth).orElse(1);
+        int height = profile.flatMap(ItemCarryProfile::gridHeight).orElse(1);
+        boolean canRotate = profile.map(ItemCarryProfile::canRotate).orElse(true);
+        return new Footprint(Math.max(1, width), Math.max(1, height), canRotate);
     }
 
     private static LootSample choose(List<ItemValueEntry> pool, LootContext context, int lootTier, Random random) {
@@ -1228,6 +1340,13 @@ public class RaidContainerService {
 
         public String describe() {
             return min == max ? Integer.toString(min) : min + "-" + max;
+        }
+    }
+
+    private record Footprint(int width, int height, boolean canRotate) {
+        private Footprint {
+            width = Math.max(1, width);
+            height = Math.max(1, height);
         }
     }
 
