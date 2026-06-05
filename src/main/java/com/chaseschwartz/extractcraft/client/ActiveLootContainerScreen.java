@@ -910,9 +910,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private static void drawSearchSpinner(GuiGraphics guiGraphics, int x, int y, int width, int height, long now) {
-        int centerX = x + Math.max(1, width - 2) / 2;
-        int centerY = y + Math.max(1, height - 2) / 2;
-        int radius = Math.max(5, Math.min(width, height) / 3);
+        int interiorWidth = Math.max(1, width - 2);
+        int interiorHeight = Math.max(1, height - 2);
+        int centerX = x + interiorWidth / 2;
+        int centerY = y + interiorHeight / 2;
+        int radius = Math.max(5, Math.min(interiorWidth, interiorHeight) / 2 - 2);
         double angle = (now % 1_000L) / 1_000.0D * Math.PI * 2.0D - Math.PI / 2.0D;
         int endX = centerX + (int) Math.round(Math.cos(angle) * radius);
         int endY = centerY + (int) Math.round(Math.sin(angle) * radius);

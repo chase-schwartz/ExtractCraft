@@ -39,6 +39,14 @@ DIRECT_ASSET_ITEMS = {
     "helmet_rebuild_kit",
     "armor_rebuild_kit",
     "pack_rebuild_kit",
+    "maintenance_key_fob",
+    "security_badge_blank",
+    "armory_maintenance_card",
+    "blacksite_access_badge",
+    "damaged_keypad_panel",
+    "biometric_scanner",
+    "compact_signal_jammer",
+    "satellite_uplink_beacon",
 }
 INACTIVE_ITEMS = {
     "arsenal_elite_vest",

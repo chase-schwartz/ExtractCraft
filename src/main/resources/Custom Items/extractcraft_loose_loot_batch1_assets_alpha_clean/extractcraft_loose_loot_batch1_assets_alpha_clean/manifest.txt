@@ -1,0 +1,8 @@
+maintenance_key_fob.png <- pixelated_key_fob_with_blue_accent.png
+security_badge_blank.png <- pixel_art_id_card_on_checkered_background.png
+armory_maintenance_card.png <- pixelated_military_access_card.png
+blacksite_access_badge.png <- pixelated_access_badge_with_red_accents.png
+damaged_keypad_panel.png <- broken_keypad_with_exposed_wires.png
+biometric_scanner.png <- futuristic_handheld_scanner_device_icon.png
+compact_signal_jammer.png <- pixel_art_handheld_communicator_device.png
+satellite_uplink_beacon.png <- sci_fi_drone_with_glowing_antenna.png

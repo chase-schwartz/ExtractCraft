@@ -1,0 +1,15 @@
+maintenance_key_fob.png | item id: maintenance_key_fob | display: Maintenance Key Fob | category: Access | rarity: Common/Blue
+
+ diplomatic_id_card.png | item id: diplomatic_id_card | display: Diplomatic ID Card | category: Intel | rarity: Uncommon/Blue
+
+ armory_access_card.png | item id: armory_access_card | display: Armory Access Card | category: Access | rarity: Rare/Purple
+
+ security_access_badge.png | item id: security_access_badge | display: Security Access Badge | category: Security | rarity: Rare/Purple
+
+ damaged_keypad_panel.png | item id: damaged_keypad_panel | display: Damaged Keypad Panel | category: Electronics | rarity: Common/Blue
+
+ biometric_scanner.png | item id: biometric_scanner | display: Biometric Scanner | category: Security | rarity: Rare/Purple
+
+ secure_radio_module.png | item id: secure_radio_module | display: Secure Radio Module | category: Electronics | rarity: Rare/Purple
+
+ prototype_drone_brain.png | item id: prototype_drone_brain | display: Prototype Drone Brain | category: Electronics | rarity: Epic/Gold

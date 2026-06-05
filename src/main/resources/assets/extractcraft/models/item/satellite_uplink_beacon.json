@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_security"
+    "layer0": "extractcraft:item/satellite_uplink_beacon"
   }
 }
