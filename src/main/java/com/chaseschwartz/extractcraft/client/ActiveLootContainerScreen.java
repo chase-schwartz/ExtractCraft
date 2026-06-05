@@ -1103,7 +1103,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
         int width = metadata.footprintWidth() * SLOT_STEP;
         int height = metadata.footprintHeight() * SLOT_STEP;
-        renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+        if (isContainerSlot(slot)) {
+            renderItemCenteredInFootprintInterior(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+        } else {
+            renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+        }
     }
 
     private void renderFootprintOverlays(GuiGraphics guiGraphics) {
@@ -1333,6 +1337,20 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
         double iconX = x + (width - 16.0D * scale) / 2.0D;
         double iconY = y + (height - 16.0D * scale) / 2.0D;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(iconX, iconY, 0.0D);
+        guiGraphics.pose().scale(scale, scale, 1.0F);
+        guiGraphics.renderItem(stack, 0, 0);
+        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
+        guiGraphics.pose().popPose();
+    }
+
+    private static void renderItemCenteredInFootprintInterior(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
+        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
+        int interiorWidth = Math.max(VANILLA_ITEM_SIZE, width - 2);
+        int interiorHeight = Math.max(VANILLA_ITEM_SIZE, height - 2);
+        double iconX = x + (interiorWidth - 16.0D * scale) / 2.0D;
+        double iconY = y + (interiorHeight - 16.0D * scale) / 2.0D;
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(iconX, iconY, 0.0D);
         guiGraphics.pose().scale(scale, scale, 1.0F);
