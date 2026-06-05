@@ -353,6 +353,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return containerSlotCount;
     }
 
+    public BlockPos containerPos() {
+        return containerPos;
+    }
+
     public boolean hasWorldContainer() {
         return hasWorldContainer;
     }

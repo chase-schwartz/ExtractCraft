@@ -36,11 +36,11 @@ public class ActiveLootContainerInteractionHandler {
 
         RaidState raidState = RaidManager.getRaidState(player).orElse(null);
         RaidContainerLayout layout = raidState == null
-                ? RaidContainerService.load(RaidContainerService.DEBUG_LOOT_TEST_MAP_ID).orElse(null)
+                ? debugLayoutFor(event.getPos())
                 : RaidContainerService.load(raidState.raidMap().id()).orElse(null);
         if ((layout == null || !RaidContainerService.isActiveLootContainer(layout, event.getPos()))
                 && raidState != null) {
-            layout = RaidContainerService.load(RaidContainerService.DEBUG_LOOT_TEST_MAP_ID).orElse(null);
+            layout = debugLayoutFor(event.getPos());
         }
         if (layout == null || !RaidContainerService.isActiveLootContainer(layout, event.getPos())) {
             prioritizeInteractableBlockOverGun(event, player);
@@ -63,6 +63,14 @@ public class ActiveLootContainerInteractionHandler {
             buffer.writeBlockPos(event.getPos());
             ActiveLootContainerMenu.writeGridDimensions(player, buffer);
         });
+    }
+
+    private static RaidContainerLayout debugLayoutFor(net.minecraft.core.BlockPos pos) {
+        RaidContainerLayout lootTest = RaidContainerService.load(RaidContainerService.DEBUG_LOOT_TEST_MAP_ID).orElse(null);
+        if (lootTest != null && RaidContainerService.isActiveLootContainer(lootTest, pos)) {
+            return lootTest;
+        }
+        return RaidContainerService.load(RaidContainerService.DEBUG_REVEAL_TEST_MAP_ID).orElse(null);
     }
 
     private static void prioritizeInteractableBlockOverGun(PlayerInteractEvent.RightClickBlock event, ServerPlayer player) {

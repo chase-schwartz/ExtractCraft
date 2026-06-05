@@ -13,6 +13,7 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.itemvalues.RarityPresentation;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
@@ -56,7 +57,7 @@ public final class ExtractCraftTooltipBuilder {
         ChatFormatting tierColor = rarityColor(value.map(ItemValueEntry::rarity).orElse(ItemRarity.COMMON));
         lines.add(stack.getHoverName().copy().withStyle(tierColor));
         lines.add(Component.literal("Tier " + metadata.tier() + " " + metadata.category()).withStyle(tierColor));
-        value.ifPresent(entry -> lines.add(Component.literal("Rarity: " + label(entry.rarity().name())).withStyle(rarityColor(entry.rarity()))));
+        value.ifPresent(entry -> lines.add(Component.literal("Rarity: " + RarityPresentation.label(entry.rarity())).withStyle(rarityColor(entry.rarity()))));
         lines.add(Component.literal("Category: " + metadata.category()).withStyle(ChatFormatting.GRAY));
         value.ifPresent(entry -> lines.add(Component.literal(valueText(entry.value(), stack.getCount())).withStyle(ChatFormatting.GREEN)));
         if (detailed) {
@@ -115,7 +116,8 @@ public final class ExtractCraftTooltipBuilder {
 
     private static void addRegistryLines(List<Component> lines, ItemStack stack, Optional<ItemValueEntry> value, Optional<ItemCarryProfile> profile, boolean detailed) {
         value.ifPresent(entry -> {
-            lines.add(Component.literal("Rarity: " + label(entry.rarity().name())).withStyle(rarityColor(entry.rarity())));
+            applyTitleRarity(lines, entry.rarity());
+            lines.add(Component.literal("Rarity: " + RarityPresentation.label(entry.rarity())).withStyle(rarityColor(entry.rarity())));
             lines.add(Component.literal("Category: " + categoryLabel(entry.category())).withStyle(ChatFormatting.GRAY));
             lines.add(Component.literal(valueText(entry.value(), stack.getCount())).withStyle(ChatFormatting.GREEN));
             entry.lootTier().ifPresent(tier -> lines.add(Component.literal("Tier " + tier).withStyle(rarityColor(entry.rarity()))));
@@ -181,7 +183,14 @@ public final class ExtractCraftTooltipBuilder {
         if (!TaczDisplayNameResolver.isTaczVariantKey(normalizedKey)) {
             return;
         }
-        lines.set(0, Component.literal(TaczDisplayNameResolver.displayName(normalizedKey, stack.getHoverName().getString())).withStyle(ChatFormatting.WHITE));
+        lines.set(0, Component.literal(TaczDisplayNameResolver.displayName(normalizedKey, stack.getHoverName().getString())).withStyle(lines.get(0).getStyle()));
+    }
+
+    private static void applyTitleRarity(List<Component> lines, ItemRarity rarity) {
+        if (lines.isEmpty()) {
+            return;
+        }
+        lines.set(0, lines.get(0).copy().withStyle(rarityColor(rarity)));
     }
 
     private static void appendProfileNotes(List<Component> lines, ItemCarryProfile profile) {
@@ -319,13 +328,7 @@ public final class ExtractCraftTooltipBuilder {
     }
 
     private static ChatFormatting rarityColor(ItemRarity rarity) {
-        return switch (rarity) {
-            case COMMON -> ChatFormatting.GRAY;
-            case UNCOMMON, RARE, BLUE -> ChatFormatting.AQUA;
-            case EPIC, PURPLE -> ChatFormatting.LIGHT_PURPLE;
-            case LEGENDARY, GOLD -> ChatFormatting.GOLD;
-            case RED, QUEST -> ChatFormatting.RED;
-        };
+        return RarityPresentation.textColor(rarity);
     }
 
     private static String label(String raw) {

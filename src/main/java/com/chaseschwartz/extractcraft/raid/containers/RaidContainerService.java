@@ -61,6 +61,7 @@ public class RaidContainerService {
     private static final int AMBIENT_GRID_XZ = 10;
     private static final int AMBIENT_GRID_Y = 5;
     public static final String DEBUG_LOOT_TEST_MAP_ID = "__debug_loot_test";
+    public static final String DEBUG_REVEAL_TEST_MAP_ID = "__debug_reveal_test";
     private static final List<String> DEBUG_LOOT_CONTEXTS = List.of("generic", "safe", "military", "medical", "office", "industrial");
     private static final List<ResourceLocation> DENYLIST = List.of(
             ResourceLocation.withDefaultNamespace("hopper"),
@@ -401,6 +402,103 @@ public class RaidContainerService {
         }
         clearSaved(DEBUG_LOOT_TEST_MAP_ID);
         return new ClearLootTestResult(removed, skipped);
+    }
+
+    public static SpawnRevealTestResult spawnRevealTest(ServerPlayer player) throws IOException {
+        ServerLevel level = player.serverLevel();
+        Direction forward = player.getDirection();
+        Direction right = forward.getClockWise();
+        BlockPos origin = player.blockPosition().relative(forward, 4).relative(right, -4);
+        Random random = new Random(System.nanoTime() ^ level.getGameTime() ^ player.getUUID().hashCode());
+        List<ItemValueEntry> pool = lootPool();
+        List<RevealTestGroup> groups = List.of(
+                new RevealTestGroup("COMMON_BLUE", List.of(ItemRarity.COMMON, ItemRarity.BLUE), Blocks.CHEST),
+                new RevealTestGroup("UNCOMMON", List.of(ItemRarity.UNCOMMON), Blocks.BARREL),
+                new RevealTestGroup("RARE_PURPLE", List.of(ItemRarity.RARE, ItemRarity.PURPLE), Blocks.PURPLE_SHULKER_BOX),
+                new RevealTestGroup("EPIC_GOLD", List.of(ItemRarity.EPIC, ItemRarity.GOLD), Blocks.YELLOW_SHULKER_BOX),
+                new RevealTestGroup("RED", List.of(ItemRarity.RED, ItemRarity.LEGENDARY), Blocks.RED_SHULKER_BOX));
+        List<RaidContainerEntry> entries = new ArrayList<>();
+        Map<String, BlockPos> rowStarts = new LinkedHashMap<>();
+        int spawned = 0;
+        int blocked = 0;
+
+        for (int i = 0; i < groups.size(); i++) {
+            RevealTestGroup group = groups.get(i);
+            BlockPos target = origin.relative(right, i * 2);
+            BlockPos placePos = firstAvailableAir(level, target).orElse(null);
+            if (placePos == null) {
+                blocked++;
+                continue;
+            }
+            level.setBlock(placePos, group.block().defaultBlockState(), 3);
+            BlockEntity blockEntity = level.getBlockEntity(placePos);
+            if (!(blockEntity instanceof Container)) {
+                level.setBlock(placePos, Blocks.BARREL.defaultBlockState(), 3);
+                blockEntity = level.getBlockEntity(placePos);
+            }
+            if (!(blockEntity instanceof Container container)) {
+                blocked++;
+                continue;
+            }
+
+            clear(container);
+            boolean[] occupied = new boolean[Math.max(0, container.getContainerSize())];
+            List<ItemValueEntry> candidates = revealCandidates(pool, group.rarities());
+            for (int itemIndex = 0; itemIndex < Math.min(2, candidates.size()); itemIndex++) {
+                tryPlaceGeneratedEntry(container, occupied, candidates.get(itemIndex), random);
+            }
+            container.setChanged();
+
+            RaidContainerEntry entry = new RaidContainerEntry(
+                    level.dimension().location(),
+                    placePos,
+                    BuiltInRegistries.BLOCK.getKey(level.getBlockState(placePos).getBlock()),
+                    "debug_reveal_test_" + group.label().toLowerCase(Locale.ROOT),
+                    Optional.of("debug_reveal_" + group.label().toLowerCase(Locale.ROOT)),
+                    true,
+                    Optional.of("extractcraft:debug/reveal/" + group.label().toLowerCase(Locale.ROOT)),
+                    Optional.of(4),
+                    Map.of("debugRevealTest", "true", "rarityGroup", group.label()));
+            entries.add(entry);
+            rowStarts.put(group.label(), placePos);
+            spawned++;
+        }
+
+        save(new RaidContainerLayout(DEBUG_REVEAL_TEST_MAP_ID, origin, entries));
+        return new SpawnRevealTestResult(spawned, blocked, rowStarts, layoutPath(DEBUG_REVEAL_TEST_MAP_ID));
+    }
+
+    public static ClearLootTestResult clearRevealTest(ServerLevel level) throws IOException {
+        RaidContainerLayout layout = load(DEBUG_REVEAL_TEST_MAP_ID).orElse(null);
+        if (layout == null) {
+            return new ClearLootTestResult(0, 0);
+        }
+
+        int removed = 0;
+        int skipped = 0;
+        for (RaidContainerEntry entry : layout.containers()) {
+            if (!entry.dimensionId().equals(level.dimension().location())) {
+                skipped++;
+                continue;
+            }
+            BlockEntity blockEntity = level.getBlockEntity(entry.pos());
+            if (blockEntity instanceof Container) {
+                level.removeBlock(entry.pos(), false);
+                removed++;
+            } else {
+                skipped++;
+            }
+        }
+        clearSaved(DEBUG_REVEAL_TEST_MAP_ID);
+        return new ClearLootTestResult(removed, skipped);
+    }
+
+    private static List<ItemValueEntry> revealCandidates(List<ItemValueEntry> pool, List<ItemRarity> rarities) {
+        return pool.stream()
+                .filter(entry -> rarities.contains(entry.rarity()))
+                .filter(entry -> isLooseLoot(entry) || isFirstClassTaczLoot(entry))
+                .sorted(Comparator.comparingInt(ItemValueEntry::value).thenComparing(ItemValueEntry::lookupKey))
+                .toList();
     }
 
     private static Optional<BlockPos> firstAvailableAir(ServerLevel level, BlockPos target) {
@@ -1324,6 +1422,12 @@ public class RaidContainerService {
         }
     }
 
+    public record SpawnRevealTestResult(int spawnedCount, int blockedCount, Map<String, BlockPos> rowStarts, Path layoutPath) {
+        public SpawnRevealTestResult {
+            rowStarts = Map.copyOf(rowStarts);
+        }
+    }
+
     public record ClearLootTestResult(int removedCount, int skippedCount) {
     }
 
@@ -1348,6 +1452,9 @@ public class RaidContainerService {
             width = Math.max(1, width);
             height = Math.max(1, height);
         }
+    }
+
+    private record RevealTestGroup(String label, List<ItemRarity> rarities, Block block) {
     }
 
     public enum LootSource {

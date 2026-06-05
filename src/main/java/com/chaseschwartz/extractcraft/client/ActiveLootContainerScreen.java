@@ -1,19 +1,31 @@
 package com.chaseschwartz.extractcraft.client;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
+import com.chaseschwartz.extractcraft.raid.containers.LootRevealTiming;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
+import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
+import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
+import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
+import com.chaseschwartz.extractcraft.itemvalues.RarityPresentation;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -47,6 +59,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private static final int CONTEXT_MENU_WIDTH = 74;
     private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
     private static final int CONTEXT_MENU_HEIGHT = CONTEXT_MENU_ROW_HEIGHT + 4;
+    private static final Map<String, Set<String>> REVEALED_CONTAINER_CACHE = new HashMap<>();
     private DragSource dragSource = DragSource.NONE;
     private int draggedSourceIndex = -1;
     private RaidEquipmentSlot draggedRaidSlot = null;
@@ -63,6 +76,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private boolean loggedLayout;
     private String lastPreviewLogKey = "";
     private ContextMenu contextMenu = null;
+    private final Map<Integer, RevealState> revealStates = new HashMap<>();
+    private boolean revealInitialized;
 
     public ActiveLootContainerScreen(ActiveLootContainerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -72,8 +87,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        syncRevealState();
+        updateRevealState();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderFootprintOverlays(guiGraphics);
+        renderRevealOverlays(guiGraphics);
         renderDragPreview(guiGraphics, mouseX, mouseY);
         renderFootprintHover(guiGraphics, mouseX, mouseY);
         if (!draggedStack.isEmpty()) {
@@ -114,7 +132,13 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             } else {
                 drawVanillaSlotBackground(guiGraphics, slot.x, slot.y);
             }
+            if (isContainerSlot(slot) && isContainerSlotRevealed(slot)) {
+                drawRevealTint(guiGraphics, slot, revealStateForSlot(slot));
+            }
             if (isDragSourceSlot(slot)) {
+                return;
+            }
+            if (isContainerSlotHidden(slot)) {
                 return;
             }
             if (isGridShadowSlot(slot)) {
@@ -212,6 +236,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
 
         Slot slot = slotAt(mouseX, mouseY);
+        if (slot != null && isContainerSlot(slot) && hiddenRevealAtSlot(slot) != null) {
+            return true;
+        }
+        slot = containerOwnerSlotForCell(slot);
         if (button == 0 && slot != null && isContainerSlot(slot) && slot.hasItem()) {
             int containerSlot = slot.index - this.menu.containerMenuSlotStart();
             if (hasShiftDown()) {
@@ -455,6 +483,12 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return null;
         }
         Slot slot = slotAt(mouseX, mouseY);
+        if (slot != null && isContainerSlot(slot)) {
+            if (hiddenRevealAtSlot(slot) != null) {
+                return null;
+            }
+            slot = containerOwnerSlotForCell(slot);
+        }
         if (slot == null || !slot.hasItem() || isDragSourceSlot(slot)) {
             return null;
         }
@@ -624,7 +658,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private boolean isGridShadowSlot(Slot slot) {
-        if (!slot.hasItem() || isWeaponSlot(slot) || !isRaidInventorySlot(slot)) {
+        if (!slot.hasItem() || isWeaponSlot(slot) || !isFootprintOverlaySlot(slot)) {
             return false;
         }
         GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
@@ -632,7 +666,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private boolean isGridAnchorFootprintSlot(Slot slot) {
-        if (!slot.hasItem() || isWeaponSlot(slot) || !isRaidInventorySlot(slot)) {
+        if (!slot.hasItem() || isWeaponSlot(slot) || !isFootprintOverlaySlot(slot)) {
             return false;
         }
         GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
@@ -771,8 +805,277 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         guiGraphics.fill(x, y, x + 16, y + 16, SLOT_COLOR);
     }
 
+    private void syncRevealState() {
+        if (!this.menu.hasWorldContainer()) {
+            revealStates.clear();
+            revealInitialized = false;
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        List<Slot> anchors = containerAnchorSlots();
+        Set<Integer> activeSlots = anchors.stream().map(slot -> slot.index).collect(java.util.stream.Collectors.toSet());
+        revealStates.entrySet().removeIf(entry -> !activeSlots.contains(entry.getKey()) || !entry.getValue().signature().equals(revealSignature(this.menu.slots.get(entry.getKey()))));
+        Set<String> cachedRevealed = cachedRevealedSignatures();
+
+        if (!revealInitialized) {
+            long cursor = now;
+            for (Slot slot : anchors) {
+                if (revealStates.containsKey(slot.index)) {
+                    continue;
+                }
+                ItemRarity rarity = rarityFor(slot.getItem());
+                String signature = revealSignature(slot);
+                if (cachedRevealed.contains(signature)) {
+                    revealStates.put(slot.index, RevealState.revealed(signature, rarity, now));
+                } else {
+                    cursor += revealDelayMs(rarity);
+                    revealStates.put(slot.index, RevealState.hidden(signature, rarity, cursor));
+                }
+            }
+            revealInitialized = true;
+            return;
+        }
+
+        for (Slot slot : anchors) {
+            revealStates.computeIfAbsent(slot.index, ignored -> {
+                String signature = revealSignature(slot);
+                if (cachedRevealed.contains(signature)) {
+                    return RevealState.revealed(signature, rarityFor(slot.getItem()), now);
+                }
+                return RevealState.revealed(signature, rarityFor(slot.getItem()), now);
+            });
+        }
+    }
+
+    private List<Slot> containerAnchorSlots() {
+        List<Slot> anchors = new ArrayList<>();
+        for (Slot slot : this.menu.slots) {
+            if (!isContainerSlot(slot) || !slot.hasItem()) {
+                continue;
+            }
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+            if (!metadata.present() || metadata.anchor()) {
+                anchors.add(slot);
+            }
+        }
+        anchors.sort(Comparator.comparingInt(slot -> slot.index));
+        return anchors;
+    }
+
+    private void updateRevealState() {
+        long now = System.currentTimeMillis();
+        RevealState nextHidden = null;
+        for (RevealState state : revealStates.values()) {
+            if (!state.revealed() && now >= state.revealAtMs()) {
+                state.reveal();
+                cacheRevealed(state.signature());
+                playRevealSound(state.rarity());
+            }
+            if (!state.revealed() && (nextHidden == null || state.revealAtMs() < nextHidden.revealAtMs())) {
+                nextHidden = state;
+            }
+        }
+        for (RevealState state : revealStates.values()) {
+            state.setActive(state == nextHidden);
+        }
+        if (nextHidden != null && now - nextHidden.lastSearchSoundAtMs() > 360L) {
+            nextHidden.markSearchSound(now);
+            playSearchSound();
+        }
+    }
+
+    private void renderRevealOverlays(GuiGraphics guiGraphics) {
+        long now = System.currentTimeMillis();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(this.leftPos, this.topPos, 40.0F);
+        for (Map.Entry<Integer, RevealState> entry : revealStates.entrySet()) {
+            if (entry.getValue().revealed()) {
+                continue;
+            }
+            Slot slot = this.menu.slots.get(entry.getKey());
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+            int width = (metadata.present() ? metadata.footprintWidth() : 1) * SLOT_STEP;
+            int height = (metadata.present() ? metadata.footprintHeight() : 1) * SLOT_STEP;
+            int x = slot.x;
+            int y = slot.y;
+            guiGraphics.fill(x, y, x + width - 2, y + height - 2, 0xAA10141B);
+            border(guiGraphics, x - 1, y - 1, width, height, 0x775E6B78);
+            if (!entry.getValue().active()) {
+                continue;
+            }
+            drawSearchSpinner(guiGraphics, x, y, width, height, now);
+        }
+        guiGraphics.pose().popPose();
+    }
+
+    private static void drawSearchSpinner(GuiGraphics guiGraphics, int x, int y, int width, int height, long now) {
+        int centerX = x + Math.max(1, width - 2) / 2;
+        int centerY = y + Math.max(1, height - 2) / 2;
+        int radius = Math.max(5, Math.min(width, height) / 3);
+        double angle = (now % 1_000L) / 1_000.0D * Math.PI * 2.0D - Math.PI / 2.0D;
+        int endX = centerX + (int) Math.round(Math.cos(angle) * radius);
+        int endY = centerY + (int) Math.round(Math.sin(angle) * radius);
+        drawLine(guiGraphics, centerX, centerY, endX, endY, 0xCC7EEAF2);
+        guiGraphics.fill(centerX - 1, centerY - 1, centerX + 1, centerY + 1, 0xAA7EEAF2);
+    }
+
+    private static void drawLine(GuiGraphics guiGraphics, int x0, int y0, int x1, int y1, int color) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int error = dx - dy;
+        int x = x0;
+        int y = y0;
+        while (true) {
+            guiGraphics.fill(x, y, x + 1, y + 1, color);
+            if (x == x1 && y == y1) {
+                break;
+            }
+            int e2 = 2 * error;
+            if (e2 > -dy) {
+                error -= dy;
+                x += sx;
+            }
+            if (e2 < dx) {
+                error += dx;
+                y += sy;
+            }
+        }
+    }
+
+    private void drawRevealTint(GuiGraphics guiGraphics, Slot slot, RevealState state) {
+        if (state == null || !state.revealed()) {
+            return;
+        }
+        GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+        int width = (metadata.present() ? metadata.footprintWidth() : 1) * SLOT_STEP - 2;
+        int height = (metadata.present() ? metadata.footprintHeight() : 1) * SLOT_STEP - 2;
+        guiGraphics.fill(slot.x, slot.y, slot.x + width, slot.y + height, rarityTint(state.rarity()));
+    }
+
+    private RevealState revealStateForSlot(Slot slot) {
+        return slot == null ? null : revealStates.get(slot.index);
+    }
+
+    private boolean isContainerSlotRevealed(Slot slot) {
+        RevealState state = revealStateForSlot(slot);
+        return state != null && state.revealed();
+    }
+
+    private boolean isContainerSlotHidden(Slot slot) {
+        RevealState state = revealStateForSlot(slot);
+        return state != null && !state.revealed();
+    }
+
+    private RevealState hiddenRevealAtSlot(Slot slot) {
+        if (slot == null || !isContainerSlot(slot)) {
+            return null;
+        }
+        int containerSlot = slot.index - this.menu.containerMenuSlotStart();
+        int cellX = containerSlot % ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        int cellY = containerSlot / ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        for (Map.Entry<Integer, RevealState> entry : revealStates.entrySet()) {
+            RevealState state = entry.getValue();
+            if (state.revealed()) {
+                continue;
+            }
+            Slot anchor = this.menu.slots.get(entry.getKey());
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(anchor.getItem());
+            int anchorSlot = anchor.index - this.menu.containerMenuSlotStart();
+            int anchorX = metadata.present() ? metadata.gridX() : anchorSlot % ActiveLootContainerMenu.CONTAINER_COLUMNS;
+            int anchorY = metadata.present() ? metadata.gridY() : anchorSlot / ActiveLootContainerMenu.CONTAINER_COLUMNS;
+            int width = metadata.present() ? metadata.footprintWidth() : 1;
+            int height = metadata.present() ? metadata.footprintHeight() : 1;
+            if (cellX >= anchorX && cellX < anchorX + width && cellY >= anchorY && cellY < anchorY + height) {
+                return state;
+            }
+        }
+        return null;
+    }
+
+    private static String revealSignature(Slot slot) {
+        if (slot == null || !slot.hasItem()) {
+            return "empty";
+        }
+        ItemStack stack = slot.getItem();
+        GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(stack);
+        return ItemIdentityResolver.resolve(stack).normalizedKey()
+                + "|" + stack.getCount()
+                + "|" + metadata.gridX()
+                + "," + metadata.gridY()
+                + "|" + metadata.footprintWidth()
+                + "x" + metadata.footprintHeight();
+    }
+
+    private static ItemRarity rarityFor(ItemStack stack) {
+        return ItemValueRegistry.get(stack).map(ItemValueEntry::rarity).orElse(ItemRarity.COMMON);
+    }
+
+    private Set<String> cachedRevealedSignatures() {
+        String key = revealCacheKey();
+        if (key.isBlank()) {
+            return Set.of();
+        }
+        return REVEALED_CONTAINER_CACHE.computeIfAbsent(key, ignored -> new HashSet<>());
+    }
+
+    private void cacheRevealed(String signature) {
+        String key = revealCacheKey();
+        if (!key.isBlank()) {
+            REVEALED_CONTAINER_CACHE.computeIfAbsent(key, ignored -> new HashSet<>()).add(signature);
+        }
+    }
+
+    private String revealCacheKey() {
+        if (this.minecraft == null || this.minecraft.level == null || !this.menu.hasWorldContainer()) {
+            return "";
+        }
+        return this.minecraft.level.dimension().location() + "|" + this.menu.containerPos() + "|" + this.menu.containerSlotCount();
+    }
+
+    private static long revealDelayMs(ItemRarity rarity) {
+        return LootRevealTiming.delayMs(rarity);
+    }
+
+    private static int rarityTint(ItemRarity rarity) {
+        return RarityPresentation.slotTint(rarity);
+    }
+
+    private void playSearchSound() {
+        if (this.minecraft == null || this.minecraft.player == null) {
+            return;
+        }
+        this.minecraft.player.playSound(SoundEvents.UI_BUTTON_CLICK.value(), 0.08F, 1.7F);
+    }
+
+    private void playRevealSound(ItemRarity rarity) {
+        if (this.minecraft == null || this.minecraft.player == null) {
+            return;
+        }
+        float pitch = switch (rarity) {
+            case COMMON, BLUE -> 1.15F;
+            case UNCOMMON -> 1.3F;
+            case RARE, PURPLE -> 1.55F;
+            case EPIC, GOLD -> 1.85F;
+            case RED, LEGENDARY -> 2.0F;
+            default -> 1.2F;
+        };
+        float volume = switch (rarity) {
+            case RED, LEGENDARY -> 0.45F;
+            case EPIC, GOLD -> 0.35F;
+            case RARE, PURPLE -> 0.28F;
+            default -> 0.2F;
+        };
+        this.minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, volume, pitch);
+    }
+
     private void drawFootprint(GuiGraphics guiGraphics, Slot slot) {
         if (!slot.hasItem()) {
+            return;
+        }
+        if (isContainerSlot(slot) && isContainerSlotHidden(slot)) {
             return;
         }
         GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
@@ -781,12 +1084,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int width = metadata.footprintWidth() * SLOT_STEP - 2;
         int height = metadata.footprintHeight() * SLOT_STEP - 2;
-        guiGraphics.fill(slot.x, slot.y, slot.x + width, slot.y + height, 0x2210151D);
+        RevealState revealState = isContainerSlot(slot) ? revealStateForSlot(slot) : null;
+        guiGraphics.fill(slot.x, slot.y, slot.x + width, slot.y + height, revealState == null ? 0x2210151D : rarityTint(revealState.rarity()));
         border(guiGraphics, slot.x - 1, slot.y - 1, width + 2, height + 2, 0x8849D8E8);
     }
 
     private void renderFootprintItem(GuiGraphics guiGraphics, Slot slot) {
         if (!slot.hasItem() || isDragSourceSlot(slot)) {
+            return;
+        }
+        if (isContainerSlot(slot) && isContainerSlotHidden(slot)) {
             return;
         }
         GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
@@ -803,16 +1110,20 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(this.leftPos, this.topPos, 0.0F);
         for (Slot slot : this.menu.slots) {
-            if (isRaidInventorySlot(slot) && !isWeaponSlot(slot)) {
+            if (isFootprintOverlaySlot(slot)) {
                 drawFootprint(guiGraphics, slot);
             }
         }
         for (Slot slot : this.menu.slots) {
-            if (isRaidInventorySlot(slot) && !isWeaponSlot(slot)) {
+            if (isFootprintOverlaySlot(slot)) {
                 renderFootprintItem(guiGraphics, slot);
             }
         }
         guiGraphics.pose().popPose();
+    }
+
+    private boolean isFootprintOverlaySlot(Slot slot) {
+        return (isRaidInventorySlot(slot) && !isWeaponSlot(slot)) || isContainerSlot(slot);
     }
 
     private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -823,6 +1134,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return;
         }
         Slot slot = slotAt(mouseX, mouseY);
+        if (slot != null && isContainerSlot(slot)) {
+            if (hiddenRevealAtSlot(slot) != null) {
+                return;
+            }
+            Slot owner = containerOwnerSlotForCell(slot);
+            if (owner != null) {
+                renderOwnerHover(guiGraphics, owner);
+            }
+            return;
+        }
         if (slot == null || !slot.hasItem()) {
             return;
         }
@@ -833,9 +1154,6 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             Slot owner = ownerSlotFor(slot, this.menu.raidSlotForMenuSlot(slot.index), this.menu.raidItemIndexForMenuSlot(slot.index));
             renderOwnerHover(guiGraphics, owner == null ? slot : owner);
             return;
-        }
-        if (isContainerSlot(slot)) {
-            renderOwnerHover(guiGraphics, slot);
         }
     }
 
@@ -853,6 +1171,39 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             }
         }
         return clickedSlot;
+    }
+
+    private Slot containerOwnerSlotForCell(Slot clickedSlot) {
+        if (clickedSlot == null || !isContainerSlot(clickedSlot)) {
+            return clickedSlot;
+        }
+        if (clickedSlot.hasItem()) {
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(clickedSlot.getItem());
+            if (!metadata.present() || metadata.anchor()) {
+                return clickedSlot;
+            }
+        }
+
+        int containerSlot = clickedSlot.index - this.menu.containerMenuSlotStart();
+        int cellX = containerSlot % ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        int cellY = containerSlot / ActiveLootContainerMenu.CONTAINER_COLUMNS;
+        for (Slot slot : this.menu.slots) {
+            if (!isContainerSlot(slot) || !slot.hasItem()) {
+                continue;
+            }
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
+            if (!metadata.present() || !metadata.anchor()) {
+                continue;
+            }
+            boolean inside = cellX >= metadata.gridX()
+                    && cellY >= metadata.gridY()
+                    && cellX < metadata.gridX() + metadata.footprintWidth()
+                    && cellY < metadata.gridY() + metadata.footprintHeight();
+            if (inside && hiddenRevealAtSlot(slot) == null) {
+                return slot;
+            }
+        }
+        return clickedSlot.hasItem() ? clickedSlot : null;
     }
 
     private void renderOwnerHover(GuiGraphics guiGraphics, Slot ownerSlot) {
@@ -1202,5 +1553,66 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex) {
+    }
+
+    private static final class RevealState {
+        private final String signature;
+        private final ItemRarity rarity;
+        private final long revealAtMs;
+        private boolean revealed;
+        private boolean active;
+        private long lastSearchSoundAtMs;
+
+        private RevealState(String signature, ItemRarity rarity, long revealAtMs, boolean revealed) {
+            this.signature = signature;
+            this.rarity = rarity;
+            this.revealAtMs = revealAtMs;
+            this.revealed = revealed;
+        }
+
+        private static RevealState hidden(String signature, ItemRarity rarity, long revealAtMs) {
+            return new RevealState(signature, rarity, revealAtMs, false);
+        }
+
+        private static RevealState revealed(String signature, ItemRarity rarity, long now) {
+            return new RevealState(signature, rarity, now, true);
+        }
+
+        private String signature() {
+            return signature;
+        }
+
+        private ItemRarity rarity() {
+            return rarity;
+        }
+
+        private long revealAtMs() {
+            return revealAtMs;
+        }
+
+        private boolean revealed() {
+            return revealed;
+        }
+
+        private boolean active() {
+            return active;
+        }
+
+        private long lastSearchSoundAtMs() {
+            return lastSearchSoundAtMs;
+        }
+
+        private void reveal() {
+            this.revealed = true;
+            this.active = false;
+        }
+
+        private void setActive(boolean active) {
+            this.active = active;
+        }
+
+        private void markSearchSound(long now) {
+            this.lastSearchSoundAtMs = now;
+        }
     }
 }

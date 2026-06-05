@@ -15,9 +15,11 @@ import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemidentity.TaczDisplayNameResolver;
+import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
+import com.chaseschwartz.extractcraft.raid.containers.LootRevealTiming;
 import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
@@ -195,6 +197,9 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("taczreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugTaczReport(context.getSource())))
+                        .then(Commands.literal("revealtimes")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugRevealTimes(context.getSource())))
                         .then(Commands.literal("spawnloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugSpawnLootTest(context.getSource(), 2))
@@ -205,6 +210,12 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("clearloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugClearLootTest(context.getSource())))
+                        .then(Commands.literal("spawnrevealtest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugSpawnRevealTest(context.getSource())))
+                        .then(Commands.literal("clearrevealtest")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugClearRevealTest(context.getSource())))
                         .then(Commands.literal("giveloottest")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("rarity", StringArgumentType.word())
@@ -771,6 +782,26 @@ public class RaidInventoryCommands {
         }
     }
 
+    private static int debugRevealTimes(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        player.sendSystemMessage(Component.literal("ExtractCraft loot reveal durations:"));
+        sendRevealTime(player, "Common", ItemRarity.COMMON);
+        sendRevealTime(player, "Uncommon (blue data alias)", ItemRarity.BLUE);
+        sendRevealTime(player, "Uncommon", ItemRarity.UNCOMMON);
+        sendRevealTime(player, "Rare", ItemRarity.RARE);
+        sendRevealTime(player, "Rare (purple data alias)", ItemRarity.PURPLE);
+        sendRevealTime(player, "Epic", ItemRarity.EPIC);
+        sendRevealTime(player, "Epic (gold data alias)", ItemRarity.GOLD);
+        sendRevealTime(player, "Red", ItemRarity.RED);
+        sendRevealTime(player, "Unknown/default", null);
+        return 1;
+    }
+
+    private static void sendRevealTime(ServerPlayer player, String label, ItemRarity rarity) {
+        long delayMs = rarity == null ? LootRevealTiming.delayMs(null) : LootRevealTiming.delayMs(rarity);
+        player.sendSystemMessage(Component.literal(label + ": " + String.format(Locale.ROOT, "%.1f", delayMs / 1000.0D) + " seconds"));
+    }
+
     private static int debugSpawnLootTest(CommandSourceStack source, int countPerContext) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         try {
@@ -803,6 +834,40 @@ public class RaidInventoryCommands {
         } catch (Exception exception) {
             ExtractCraft.LOGGER.warn("Failed to clear ExtractCraft loot test containers", exception);
             player.sendSystemMessage(Component.literal("Failed to clear loot test containers: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int debugSpawnRevealTest(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            RaidContainerService.SpawnRevealTestResult result = RaidContainerService.spawnRevealTest(player);
+            player.sendSystemMessage(Component.literal("Spawned " + result.spawnedCount()
+                    + " ExtractCraft reveal test container(s). Blocked/skipped: " + result.blockedCount() + "."));
+            for (Map.Entry<String, BlockPos> entry : result.rowStarts().entrySet()) {
+                BlockPos pos = entry.getValue();
+                player.sendSystemMessage(Component.literal(entry.getKey()
+                        + " reveal container at " + pos.getX() + " " + pos.getY() + " " + pos.getZ()));
+            }
+            player.sendSystemMessage(Component.literal("Use /extractcraft debug revealtimes for exact durations and /extractcraft debug clearrevealtest to remove this layout."));
+            return result.spawnedCount() > 0 ? 1 : 0;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to spawn ExtractCraft reveal test containers", exception);
+            player.sendSystemMessage(Component.literal("Failed to spawn reveal test containers: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int debugClearRevealTest(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        try {
+            RaidContainerService.ClearLootTestResult result = RaidContainerService.clearRevealTest(player.serverLevel());
+            player.sendSystemMessage(Component.literal("Cleared " + result.removedCount()
+                    + " reveal test container(s). Skipped: " + result.skippedCount() + "."));
+            return result.removedCount() > 0 ? 1 : 0;
+        } catch (Exception exception) {
+            ExtractCraft.LOGGER.warn("Failed to clear ExtractCraft reveal test containers", exception);
+            player.sendSystemMessage(Component.literal("Failed to clear reveal test containers: " + exception.getMessage()));
             return 0;
         }
     }
