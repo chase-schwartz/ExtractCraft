@@ -222,13 +222,11 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             if (player instanceof ServerPlayer serverPlayer) {
                 transferContainerSlot(serverPlayer, containerSlotForMenuSlot(slotId), RaidEquipmentSlot.BACKPACK);
             }
-            setCarried(ItemStack.EMPTY);
             broadcastChanges();
             return;
         }
 
         if (isWorldContainerSlot(slotId) && clickType == ClickType.PICKUP) {
-            setCarried(ItemStack.EMPTY);
             broadcastChanges();
             return;
         }
@@ -236,7 +234,6 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(Component.literal("Drag loot to a section, or shift-click to quick-move to Backpack."));
         }
-        setCarried(ItemStack.EMPTY);
     }
 
     @Override
@@ -278,7 +275,6 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             int containerSlot = Math.floorMod(id, BUTTON_FACTOR);
             transferContainerSlot(serverPlayer, containerSlot, slotFromId(targetId));
         }
-        setCarried(ItemStack.EMPTY);
         broadcastChanges();
         return true;
     }
@@ -297,9 +293,16 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                     returnStoredItemToContainer(player, slotFromId(sourceSlotId), sourceIndex);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_DROP ->
                     dropStoredItem(player, slotFromId(sourceSlotId), sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_SPLIT ->
+                    splitStoredItem(player, slotFromId(sourceSlotId), sourceIndex, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CONTAINER_SPLIT ->
+                    splitContainerItem(player, sourceIndex, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CARRIED_TO_RAID_CELL ->
+                    placeCarriedToRaid(player, slotFromId(targetSlotId), targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CARRIED_TO_CONTAINER ->
+                    placeCarriedToContainer(player);
             default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
         };
-        setCarried(ItemStack.EMPTY);
         broadcastChanges();
         return result;
     }
@@ -881,6 +884,147 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return GridMoveResult.success(message);
     }
 
+    private GridMoveResult splitStoredItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, int amount) {
+        if (source == null) {
+            return GridMoveResult.failure("Invalid source.");
+        }
+        RaidInventory inventory = currentInventory(player);
+        RaidInventoryItem item = itemAt(inventory, source, sourceIndex);
+        String failure = splitFailure(item, amount);
+        if (failure != null) {
+            player.sendSystemMessage(Component.literal(failure));
+            return GridMoveResult.failure(failure);
+        }
+        ItemStack preview = item.withCount(amount).toItemStack();
+        if (!canAcceptSplit(preview, amount)) {
+            String message = "Clear the cursor before splitting this stack.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        RaidInventoryItem removed = inventory.removeCountAt(source, sourceIndex, amount);
+        return finishSplit(player, removed, inventory, source);
+    }
+
+    private GridMoveResult splitContainerItem(ServerPlayer player, int containerSlot, int amount) {
+        if (containerSlot < 0 || containerSlot >= container.getContainerSize()) {
+            return GridMoveResult.failure("Invalid container slot.");
+        }
+        ItemStack source = container.getItem(containerSlot);
+        if (source.isEmpty() || source.getCount() <= 1 || source.getMaxStackSize() <= 1) {
+            String message = "That item cannot be split.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        if (amount < 1 || amount >= source.getCount()) {
+            String message = "Split amount must be between 1 and " + (source.getCount() - 1) + ".";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        ItemStack preview = source.copyWithCount(amount);
+        if (!canAcceptSplit(preview, amount)) {
+            String message = "Clear the cursor before splitting this stack.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        ItemStack removed = source.split(amount);
+        container.setChanged();
+        acceptSplitStack(removed);
+        String message = "Split " + removed.getCount() + "x " + removed.getHoverName().getString() + ".";
+        player.sendSystemMessage(Component.literal(message));
+        return GridMoveResult.success(message);
+    }
+
+    private String splitFailure(RaidInventoryItem item, int amount) {
+        if (item == null) {
+            return "Source item is no longer available.";
+        }
+        if (item.count() <= 1 || item.maxStackSize() <= 1) {
+            return "That item cannot be split.";
+        }
+        if (amount < 1 || amount >= item.count()) {
+            return "Split amount must be between 1 and " + (item.count() - 1) + ".";
+        }
+        return null;
+    }
+
+    private boolean canAcceptSplit(ItemStack splitStack, int amount) {
+        ItemStack carried = getCarried();
+        return carried.isEmpty()
+                || (!splitStack.isEmpty()
+                && ItemStack.isSameItemSameComponents(carried, splitStack)
+                && carried.getCount() + amount <= carried.getMaxStackSize());
+    }
+
+    private GridMoveResult finishSplit(ServerPlayer player, RaidInventoryItem removed, RaidInventory inventory, RaidEquipmentSlot source) {
+        if (removed == null) {
+            return GridMoveResult.failure("Source item is no longer available.");
+        }
+        ItemStack splitStack = removed.toItemStack();
+        if (splitStack.isEmpty()) {
+            restoreRemovedItem(inventory, source, removed);
+            return GridMoveResult.failure("Could not rebuild split stack.");
+        }
+        acceptSplitStack(splitStack);
+        if (persistentBaseMode) {
+            PlayerStashService.save(player, baseData);
+        }
+        rebuildRaidDisplay();
+        String message = "Split " + splitStack.getCount() + "x " + splitStack.getHoverName().getString() + ".";
+        player.sendSystemMessage(Component.literal(message));
+        return GridMoveResult.success(message);
+    }
+
+    private void acceptSplitStack(ItemStack splitStack) {
+        ItemStack carried = getCarried();
+        if (carried.isEmpty()) {
+            setCarried(splitStack);
+            return;
+        }
+        carried.grow(splitStack.getCount());
+        setCarried(carried);
+    }
+
+    private GridMoveResult placeCarriedToRaid(ServerPlayer player, RaidEquipmentSlot target, int targetCell) {
+        if (target == null || !isGridSlot(target) || targetCell < 0) {
+            return GridMoveResult.failure("No valid target cell selected.");
+        }
+        ItemStack carried = getCarried();
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, carried).orElse(null);
+        if (item == null) {
+            return GridMoveResult.failure("Cursor item has no carry profile.");
+        }
+        RaidInventory inventory = currentInventory(player);
+        RaidStorageContainer storage = storage(inventory, target);
+        int moved = storage.addPartialAt(item.withoutPlacement(), cellX(target, targetCell), cellY(target, targetCell), false, -1, true);
+        if (moved <= 0) {
+            return GridMoveResult.failure("Target cell is blocked.");
+        }
+        ItemStack remaining = carried.copy();
+        remaining.shrink(moved);
+        setCarried(remaining);
+        if (persistentBaseMode) {
+            PlayerStashService.save(player, baseData);
+        }
+        rebuildRaidDisplay();
+        return GridMoveResult.success("Placed split stack.");
+    }
+
+    private GridMoveResult placeCarriedToContainer(ServerPlayer player) {
+        ItemStack carried = getCarried();
+        if (carried.isEmpty()) {
+            return GridMoveResult.failure("Cursor is empty.");
+        }
+        ItemStack before = carried.copy();
+        ItemStack remaining = insertIntoContainerAndReturnRemaining(carried);
+        int moved = before.getCount() - remaining.getCount();
+        if (moved <= 0) {
+            return GridMoveResult.failure("Container does not have room for that stack.");
+        }
+        setCarried(remaining);
+        container.setChanged();
+        return GridMoveResult.success("Returned " + moved + "x " + before.getHoverName().getString() + " to container.");
+    }
+
     private void restoreRemovedItem(RaidInventory inventory, RaidEquipmentSlot source, RaidInventoryItem removed) {
         if (source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
             inventory.setWeaponSlot(source, removed);
@@ -1038,6 +1182,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private void insertIntoContainer(ItemStack stack) {
+        insertIntoContainerAndReturnRemaining(stack);
+    }
+
+    private ItemStack insertIntoContainerAndReturnRemaining(ItemStack stack) {
         ItemStack remaining = stack.copy();
         for (int slot = 0; slot < container.getContainerSize() && !remaining.isEmpty(); slot++) {
             ItemStack current = container.getItem(slot);
@@ -1051,6 +1199,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                 container.setItem(slot, current);
             }
         }
+        return remaining;
     }
 
     private static RaidInventoryItem itemAt(RaidInventory inventory, RaidEquipmentSlot source, int sourceIndex) {

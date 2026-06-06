@@ -58,7 +58,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private static final int MUTED_TEXT = 0xFF9AA6B2;
     private static final int CONTEXT_MENU_WIDTH = 74;
     private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
-    private static final int CONTEXT_MENU_HEIGHT = CONTEXT_MENU_ROW_HEIGHT + 4;
+    private static final int SPLIT_DIALOG_WIDTH = 150;
+    private static final int SPLIT_DIALOG_HEIGHT = 106;
     private static final Map<String, Set<String>> REVEALED_CONTAINER_CACHE = new HashMap<>();
     private DragSource dragSource = DragSource.NONE;
     private int draggedSourceIndex = -1;
@@ -76,6 +77,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private boolean loggedLayout;
     private String lastPreviewLogKey = "";
     private ContextMenu contextMenu = null;
+    private SplitDialog splitDialog = null;
+    private String splitInput = "";
+    private boolean splitInputFocused = false;
+    private boolean splitSliderDragging = false;
     private final Map<Integer, RevealState> revealStates = new HashMap<>();
     private boolean revealInitialized;
 
@@ -98,6 +103,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
         renderContextMenu(guiGraphics, mouseX, mouseY);
+        renderSplitDialog(guiGraphics, mouseX, mouseY);
         renderCustomTooltip(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
@@ -153,6 +159,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     protected void renderSlotHighlight(GuiGraphics guiGraphics, Slot slot, int mouseX, int mouseY, float partialTick) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -164,6 +173,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -206,6 +218,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (splitDialog != null) {
+            if (button == 0 && handleSplitDialogClick(mouseX, mouseY)) {
+                return true;
+            }
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+
         if (contextMenu != null) {
             if (button == 0 && handleContextMenuClick(mouseX, mouseY)) {
                 return true;
@@ -216,13 +239,33 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             }
         }
 
+        if (button == 0 && !this.menu.getCarried().isEmpty()) {
+            return tryPlaceCarriedStack(mouseX, mouseY);
+        }
+
         if (button == 1) {
             Slot slot = slotAt(mouseX, mouseY);
+            if (slot != null && slot.hasItem() && isContainerSlot(slot)) {
+                slot = containerOwnerSlotForCell(slot);
+                if (slot != null && slot.hasItem() && hiddenRevealAtSlot(slot) == null) {
+                    int containerSlot = slot.index - this.menu.containerMenuSlotStart();
+                    if (hasShiftDown()) {
+                        sendSplit(true, null, containerSlot, halfSplitAmount(slot.getItem()));
+                    } else if (canSplit(slot.getItem())) {
+                        openSplitDialog(new SplitDialog(true, null, containerSlot, slot.getItem().copy(), halfSplitAmount(slot.getItem()), slot.getItem().getCount() - 1));
+                    }
+                    return true;
+                }
+            }
             if (slot != null && slot.hasItem() && isRaidInventorySlot(slot)) {
                 RaidEquipmentSlot source = this.menu.raidSlotForMenuSlot(slot.index);
                 int sourceIndex = this.menu.raidItemIndexForMenuSlot(slot.index);
                 if (sourceIndex >= 0) {
-                    contextMenu = new ContextMenu((int) mouseX, (int) mouseY, source, sourceIndex);
+                    if (hasShiftDown()) {
+                        sendSplit(false, source, sourceIndex, halfSplitAmount(slot.getItem()));
+                    } else {
+                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, source, sourceIndex, canSplit(slot.getItem()));
+                    }
                     return true;
                 }
             }
@@ -282,6 +325,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (splitDialog != null) {
+            splitSliderDragging = false;
+            return true;
+        }
         if (button == 0 && dragSource != DragSource.NONE) {
             if (isClickRelease(mouseX, mouseY)) {
                 return true;
@@ -313,6 +360,60 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (splitDialog != null) {
+            if (splitSliderDragging) {
+                updateSplitAmountFromSlider(mouseX);
+            }
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return splitDialog != null || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (splitDialog != null) {
+            if (splitInputFocused && Character.isDigit(codePoint)) {
+                splitInput = (splitInput + codePoint).replaceFirst("^0+(?!$)", "");
+                setSplitAmount(parseSplitInput());
+            }
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (splitDialog != null) {
+            if (keyCode == 256) {
+                splitDialog = null;
+                splitInput = "";
+                splitInputFocused = false;
+                splitSliderDragging = false;
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 335) {
+                confirmSplitDialog();
+                return true;
+            }
+            if (keyCode == 259 && splitInputFocused && !splitInput.isEmpty()) {
+                splitInput = splitInput.substring(0, splitInput.length() - 1);
+                if (!splitInput.isEmpty()) {
+                    setSplitAmount(parseSplitInput());
+                }
+                return true;
+            }
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private void startDrag(DragSource source, int sourceIndex, RaidEquipmentSlot raidSlot, ItemStack stack, Slot clickedSlot, double mouseX, double mouseY) {
@@ -445,6 +546,36 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         PacketDistributor.sendToServer(new GridMoveRequestPayload(transactionId, this.menu.containerId, operation, slotId(source), sourceIndex, slotId(target), targetCell));
     }
 
+    private void sendSplit(boolean containerSource, RaidEquipmentSlot source, int sourceIndex, int amount) {
+        if (amount <= 0) {
+            return;
+        }
+        int operation = containerSource ? GridMoveRequestPayload.ACTIVE_CONTAINER_SPLIT : GridMoveRequestPayload.ACTIVE_RAID_SPLIT;
+        sendGridMove(operation, source, sourceIndex, null, amount);
+    }
+
+    private boolean tryPlaceCarriedStack(double mouseX, double mouseY) {
+        ItemStack carried = this.menu.getCarried();
+        if (carried.isEmpty()) {
+            return false;
+        }
+        RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
+        if (target != null && isGridTarget(target)) {
+            int targetCell = placementCellAt(target, (int) mouseX, (int) mouseY, footprintFor(carried));
+            if (targetCell < 0) {
+                gridMoveStatus = "Target cell is blocked.";
+                return true;
+            }
+            sendGridMove(GridMoveRequestPayload.ACTIVE_CARRIED_TO_RAID_CELL, null, -1, target, targetCell);
+            return true;
+        }
+        if (this.menu.hasWorldContainer() && isContainerPanel((int) mouseX, (int) mouseY)) {
+            sendGridMove(GridMoveRequestPayload.ACTIVE_CARRIED_TO_CONTAINER, null, -1, null, -1);
+            return true;
+        }
+        return true;
+    }
+
     public void handleGridMoveResult(int transactionId, boolean success, String message) {
         if (pendingTransactionId != transactionId) {
             ExtractCraft.LOGGER.info("Grid move result ignored: tx={}, pendingTx={}, success={}, message={}", transactionId, pendingTransactionId, success, message);
@@ -479,6 +610,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private Slot customTooltipSlot(int mouseX, int mouseY) {
+        if (splitDialog != null) {
+            return null;
+        }
         if (contextMenu != null || dragSource != DragSource.NONE || !draggedStack.isEmpty()) {
             return null;
         }
@@ -504,10 +638,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int x = contextMenuX();
         int y = contextMenuY();
-        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT)) {
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH, contextMenuHeight())) {
             return false;
         }
-        if (contextMenuOptionAt(mouseX, mouseY) == 0) {
+        int option = contextMenuOptionAt(mouseX, mouseY);
+        if (contextMenu.canSplit() && option == 0) {
+            openSplitDialog(new SplitDialog(false, contextMenu.source(), contextMenu.sourceIndex(), sourceOwnerStack(contextMenu), halfSplitAmount(sourceOwnerStack(contextMenu)), sourceOwnerStack(contextMenu).getCount() - 1));
+            contextMenu = null;
+            return true;
+        }
+        if ((!contextMenu.canSplit() && option == 0) || (contextMenu.canSplit() && option == 1)) {
             this.pendingSourceMenuSlots.clear();
             this.pendingSourceMenuSlots.addAll(sourceMenuSlots(DragSource.RAID_INVENTORY, contextMenu.sourceIndex(), contextMenu.source()));
             this.pendingSourceTicks = 20;
@@ -525,18 +665,28 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int x = contextMenuX();
         int y = contextMenuY();
-        boolean hovered = contextMenuOptionAt(mouseX, mouseY) == 0;
+        int hovered = contextMenuOptionAt(mouseX, mouseY);
+        int rows = contextMenu.canSplit() ? 2 : 1;
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0D, 0.0D, 500.0D);
-        guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + CONTEXT_MENU_HEIGHT, 0xF0181B22);
-        border(guiGraphics, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT, BORDER_COLOR);
-        int rowX = x + 2;
-        int rowY = y + 2;
+        guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + CONTEXT_MENU_ROW_HEIGHT * rows + 4, 0xF0181B22);
+        border(guiGraphics, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_ROW_HEIGHT * rows + 4, BORDER_COLOR);
+        int row = 0;
+        if (contextMenu.canSplit()) {
+            renderContextRow(guiGraphics, x, y, row, "Split", hovered == row, TEXT);
+            row++;
+        }
+        renderContextRow(guiGraphics, x, y, row, "Drop", hovered == row, TEXT);
+        guiGraphics.pose().popPose();
+    }
+
+    private void renderContextRow(GuiGraphics guiGraphics, int menuX, int menuY, int row, String label, boolean hovered, int textColor) {
+        int rowX = menuX + 2;
+        int rowY = menuY + 2 + row * CONTEXT_MENU_ROW_HEIGHT;
         if (hovered) {
             guiGraphics.fill(rowX, rowY, rowX + CONTEXT_MENU_WIDTH - 4, rowY + CONTEXT_MENU_ROW_HEIGHT, 0x553A5E66);
         }
-        guiGraphics.drawString(this.font, "Drop", rowX + 5, rowY + 5, TEXT, false);
-        guiGraphics.pose().popPose();
+        guiGraphics.drawString(this.font, label, rowX + 5, rowY + 5, textColor, false);
     }
 
     private int contextMenuOptionAt(double mouseX, double mouseY) {
@@ -545,7 +695,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int x = contextMenuX() + 2;
         int y = contextMenuY() + 2;
-        return inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT) ? 0 : -1;
+        int rows = contextMenu.canSplit() ? 2 : 1;
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT * rows)) {
+            return -1;
+        }
+        int option = ((int) mouseY - y) / CONTEXT_MENU_ROW_HEIGHT;
+        return option >= 0 && option < rows ? option : -1;
+    }
+
+    private int contextMenuHeight() {
+        int rows = contextMenu != null && contextMenu.canSplit() ? 2 : 1;
+        return CONTEXT_MENU_ROW_HEIGHT * rows + 4;
     }
 
     private int contextMenuX() {
@@ -553,7 +713,185 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private int contextMenuY() {
-        return Math.min(contextMenu.y(), this.topPos + this.imageHeight - CONTEXT_MENU_HEIGHT - 4);
+        int rows = contextMenu.canSplit() ? 2 : 1;
+        return Math.min(contextMenu.y(), this.topPos + this.imageHeight - CONTEXT_MENU_ROW_HEIGHT * rows - 8);
+    }
+
+    private void openSplitDialog(SplitDialog dialog) {
+        if (dialog == null || !canSplit(dialog.stack())) {
+            return;
+        }
+        int amount = Math.max(1, Math.min(dialog.maxAmount(), dialog.amount()));
+        splitDialog = new SplitDialog(dialog.containerSource(), dialog.source(), dialog.sourceIndex(), dialog.stack(), amount, dialog.maxAmount());
+        splitInput = Integer.toString(amount);
+    }
+
+    private boolean handleSplitDialogClick(double mouseX, double mouseY) {
+        int x = splitDialogX();
+        int y = splitDialogY();
+        if (!inside((int) mouseX, (int) mouseY, x, y, SPLIT_DIALOG_WIDTH, SPLIT_DIALOG_HEIGHT)) {
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, splitSliderX(), splitSliderY() - 4, splitSliderWidth(), 11)) {
+            splitInputFocused = false;
+            splitSliderDragging = true;
+            updateSplitAmountFromSlider(mouseX);
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, splitInputX(), splitInputY(), splitInputWidth(), splitInputHeight())) {
+            splitInputFocused = true;
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + 10, splitButtonY(), 58, 16)) {
+            confirmSplitDialog();
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + 82, splitButtonY(), 58, 16)) {
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+        splitInputFocused = false;
+        return true;
+    }
+
+    private void renderSplitDialog(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (splitDialog == null) {
+            return;
+        }
+        int x = splitDialogX();
+        int y = splitDialogY();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0D, 0.0D, 1000.0D);
+        guiGraphics.fill(x, y, x + SPLIT_DIALOG_WIDTH, y + SPLIT_DIALOG_HEIGHT, 0xF0181B22);
+        border(guiGraphics, x, y, SPLIT_DIALOG_WIDTH, SPLIT_DIALOG_HEIGHT, BORDER_COLOR);
+        guiGraphics.renderItem(splitDialog.stack(), x + 10, y + 10);
+        guiGraphics.drawString(this.font, "Split Stack", x + 32, y + 10, TEXT, false);
+        guiGraphics.drawString(this.font, splitDialog.stack().getHoverName().getString(), x + 32, y + 22, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Count: " + splitDialog.stack().getCount(), x + 10, y + 36, MUTED_TEXT, false);
+        int barX = splitSliderX();
+        int barY = splitSliderY();
+        int barW = splitSliderWidth();
+        guiGraphics.fill(barX, barY, barX + barW, barY + 3, 0xFF4A5564);
+        int knob = barX + (int) Math.round((splitDialog.amount() - 1) / (double) Math.max(1, splitDialog.maxAmount() - 1) * barW);
+        guiGraphics.fill(knob - 2, barY - 3, knob + 2, barY + 6, 0xFF49D8E8);
+        guiGraphics.drawString(this.font, "Amount", x + 10, y + 63, MUTED_TEXT, false);
+        int inputX = splitInputX();
+        int inputY = splitInputY();
+        guiGraphics.fill(inputX, inputY, inputX + splitInputWidth(), inputY + splitInputHeight(), splitInputFocused ? 0xFF243640 : 0xFF151A21);
+        border(guiGraphics, inputX, inputY, splitInputWidth(), splitInputHeight(), splitInputFocused ? HOVER_BORDER : BORDER_COLOR);
+        guiGraphics.drawString(this.font, splitInput.isEmpty() ? "_" : splitInput, inputX + 4, inputY + 3, TEXT, false);
+        renderDialogButton(guiGraphics, x + 10, splitButtonY(), "Confirm", inside(mouseX, mouseY, x + 10, splitButtonY(), 58, 16));
+        renderDialogButton(guiGraphics, x + 82, splitButtonY(), "Cancel", inside(mouseX, mouseY, x + 82, splitButtonY(), 58, 16));
+        guiGraphics.pose().popPose();
+    }
+
+    private void renderDialogButton(GuiGraphics guiGraphics, int x, int y, String label, boolean hovered) {
+        guiGraphics.fill(x, y, x + 58, y + 16, hovered ? 0x663A5E66 : 0x333A5E66);
+        border(guiGraphics, x, y, 58, 16, hovered ? HOVER_BORDER : BORDER_COLOR);
+        guiGraphics.drawString(this.font, label, x + 6, y + 4, TEXT, false);
+    }
+
+    private int splitDialogX() {
+        return this.leftPos + this.imageWidth / 2 - SPLIT_DIALOG_WIDTH / 2;
+    }
+
+    private int splitDialogY() {
+        return this.topPos + this.imageHeight / 2 - SPLIT_DIALOG_HEIGHT / 2;
+    }
+
+    private int splitSliderX() {
+        return splitDialogX() + 12;
+    }
+
+    private int splitSliderY() {
+        return splitDialogY() + 50;
+    }
+
+    private int splitSliderWidth() {
+        return SPLIT_DIALOG_WIDTH - 24;
+    }
+
+    private int splitInputX() {
+        return splitDialogX() + 60;
+    }
+
+    private int splitInputY() {
+        return splitDialogY() + 61;
+    }
+
+    private int splitInputWidth() {
+        return 34;
+    }
+
+    private int splitInputHeight() {
+        return 12;
+    }
+
+    private int splitButtonY() {
+        return splitDialogY() + 82;
+    }
+
+    private void updateSplitAmountFromSlider(double mouseX) {
+        if (splitDialog == null) {
+            return;
+        }
+        int rel = Math.max(0, Math.min(splitSliderWidth(), (int) mouseX - splitSliderX()));
+        int amount = 1 + (int) Math.round(rel / (double) Math.max(1, splitSliderWidth()) * (splitDialog.maxAmount() - 1));
+        setSplitAmount(amount);
+    }
+
+    private void setSplitAmount(int amount) {
+        if (splitDialog == null) {
+            return;
+        }
+        int clamped = Math.max(1, Math.min(splitDialog.maxAmount(), amount));
+        splitDialog = new SplitDialog(splitDialog.containerSource(), splitDialog.source(), splitDialog.sourceIndex(), splitDialog.stack(), clamped, splitDialog.maxAmount());
+        splitInput = Integer.toString(clamped);
+    }
+
+    private void confirmSplitDialog() {
+        if (splitDialog == null) {
+            return;
+        }
+        sendSplit(splitDialog.containerSource(), splitDialog.source(), splitDialog.sourceIndex(), parseSplitInput());
+        splitDialog = null;
+        splitInput = "";
+        splitInputFocused = false;
+        splitSliderDragging = false;
+    }
+
+    private int parseSplitInput() {
+        if (splitDialog == null) {
+            return 1;
+        }
+        try {
+            return Math.max(1, Math.min(splitDialog.maxAmount(), Integer.parseInt(splitInput)));
+        } catch (NumberFormatException ignored) {
+            return splitDialog.amount();
+        }
+    }
+
+    private ItemStack sourceOwnerStack(ContextMenu menu) {
+        if (menu == null) {
+            return ItemStack.EMPTY;
+        }
+        int menuSlot = this.menu.raidMenuSlotForItemIndex(menu.source(), menu.sourceIndex());
+        return menuSlot >= 0 && menuSlot < this.menu.slots.size() ? this.menu.slots.get(menuSlot).getItem() : ItemStack.EMPTY;
+    }
+
+    private static boolean canSplit(ItemStack stack) {
+        return !stack.isEmpty() && stack.getCount() > 1 && stack.getMaxStackSize() > 1;
+    }
+
+    private static int halfSplitAmount(ItemStack stack) {
+        return canSplit(stack) ? Math.max(1, stack.getCount() / 2) : 0;
     }
 
     private int targetCellAt(RaidEquipmentSlot target, int mouseX, int mouseY) {
@@ -1133,6 +1471,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -1572,7 +1913,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
     }
 
-    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex) {
+    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex, boolean canSplit) {
+    }
+
+    private record SplitDialog(boolean containerSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, int amount, int maxAmount) {
     }
 
     private static final class RevealState {

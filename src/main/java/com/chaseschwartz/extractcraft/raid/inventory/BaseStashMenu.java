@@ -1,5 +1,7 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -122,7 +124,6 @@ public class BaseStashMenu extends AbstractContainerMenu {
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.sendSystemMessage(Component.literal("Drag items between Base Inventory and Stash."));
         }
-        setCarried(ItemStack.EMPTY);
     }
 
     @Override
@@ -188,7 +189,6 @@ public class BaseStashMenu extends AbstractContainerMenu {
             PlayerStashService.save(serverPlayer, stashData);
             rebuildDisplays();
         }
-        setCarried(ItemStack.EMPTY);
         broadcastChanges();
         reopenIfRequested(serverPlayer, changed);
         return true;
@@ -211,13 +211,20 @@ public class BaseStashMenu extends AbstractContainerMenu {
                     quickMoveStashToBase(player, sourceIndex);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_TO_STASH_CELL ->
                     moveStashToStash(player, sourceIndex, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_STASH_SPLIT ->
+                    splitStashItem(player, sourceIndex, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_BASE_SPLIT ->
+                    splitBaseItem(player, slotFromId(sourceSlotId), sourceIndex, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_CARRIED_TO_STASH_CELL ->
+                    placeCarriedToStash(player, targetCell);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.BASE_CARRIED_TO_BASE_CELL ->
+                    placeCarriedToBase(player, slotFromId(targetSlotId), targetCell);
             default -> false;
         };
         if (changed) {
             PlayerStashService.save(player, stashData);
             rebuildDisplays();
         }
-        setCarried(ItemStack.EMPTY);
         broadcastChanges();
         reopenIfRequested(player, changed);
         return changed ? GridMoveResult.success("Move committed.") : GridMoveResult.failure("Move rejected.");
@@ -565,6 +572,265 @@ public class BaseStashMenu extends AbstractContainerMenu {
             reopenIfEquipmentMove(source, null);
         }
         return true;
+    }
+
+    public GridMoveResult handleBulkAction(ServerPlayer player, int action, int[] stashDisplayIndexes, int[] baseSlotIds, int[] baseIndexes) {
+        if (action < 0 || action > 2) {
+            return GridMoveResult.failure("Unknown bulk action.");
+        }
+        if (stashData == null) {
+            return GridMoveResult.failure("Base inventory is not loaded.");
+        }
+
+        int removedCount = 0;
+        int skippedCount = 0;
+        int totalValue = 0;
+        List<RaidInventoryItem> droppedItems = new ArrayList<>();
+
+        for (int stashIndex : sortedUniqueActualStashIndexes(stashDisplayIndexes)) {
+            RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
+            if (item == null) {
+                skippedCount++;
+                continue;
+            }
+            RaidInventoryItem removed = stashData.stash().removeCountAt(stashIndex, item.count());
+            if (removed == null) {
+                skippedCount++;
+                continue;
+            }
+            BulkResult result = applyBulkRemovedItem(player, action, true, RaidEquipmentSlot.BACKPACK, removed, droppedItems);
+            if (result.removed()) {
+                removedCount++;
+                totalValue += result.value();
+            } else {
+                skippedCount++;
+            }
+        }
+
+        for (int[] entry : sortedBaseEntries(baseSlotIds, baseIndexes)) {
+            RaidEquipmentSlot source = slotFromId(entry[0]);
+            int sourceIndex = entry[1];
+            if (source == null || RaidInventory.isEquipmentSlot(source) || source == RaidEquipmentSlot.PRIMARY_WEAPON || source == RaidEquipmentSlot.SECONDARY_WEAPON) {
+                skippedCount++;
+                continue;
+            }
+            RaidInventoryItem item = stashData.baseInventory().itemAt(source, sourceIndex);
+            if (item == null) {
+                skippedCount++;
+                continue;
+            }
+            RaidInventoryItem removed = stashData.baseInventory().removeCountAt(source, sourceIndex, item.count());
+            if (removed == null) {
+                skippedCount++;
+                continue;
+            }
+            BulkResult result = applyBulkRemovedItem(player, action, false, source, removed, droppedItems);
+            if (result.removed()) {
+                removedCount++;
+                totalValue += result.value();
+            } else {
+                skippedCount++;
+            }
+        }
+
+        if (removedCount <= 0) {
+            String message = skippedCount > 0 ? "No selected items could be changed." : "Select at least one item first.";
+            return GridMoveResult.failure(message);
+        }
+
+        if (action == 0) {
+            stashData.setCredits(stashData.credits() + totalValue);
+            player.sendSystemMessage(Component.literal("Bulk sold " + removedCount + " items for " + totalValue + " Emeralds." + skippedSuffix(skippedCount)));
+        } else if (action == 1) {
+            for (RaidInventoryItem item : droppedItems) {
+                ManagedDropService.spawnManagedDrop(player, item.toItemStack());
+            }
+            player.sendSystemMessage(Component.literal("Bulk dropped " + removedCount + " items." + skippedSuffix(skippedCount)));
+        } else {
+            player.sendSystemMessage(Component.literal("Bulk trashed " + removedCount + " items." + skippedSuffix(skippedCount)));
+        }
+
+        PlayerStashService.save(player, stashData);
+        rebuildDisplays();
+        broadcastChanges();
+        return GridMoveResult.success("Bulk action committed.");
+    }
+
+    private BulkResult applyBulkRemovedItem(ServerPlayer player, int action, boolean stashSource, RaidEquipmentSlot source, RaidInventoryItem removed, List<RaidInventoryItem> droppedItems) {
+        if (action == 0) {
+            return new BulkResult(true, removed.totalValue());
+        }
+        if (action == 1) {
+            ItemStack stack = removed.toItemStack();
+            if (stack.isEmpty()) {
+                restoreRemovedItem(stashSource, source, removed);
+                return new BulkResult(false, 0);
+            }
+            droppedItems.add(removed);
+            return new BulkResult(true, 0);
+        }
+        if (action == 2) {
+            return new BulkResult(true, 0);
+        }
+        restoreRemovedItem(stashSource, source, removed);
+        return new BulkResult(false, 0);
+    }
+
+    private int[] sortedUniqueActualStashIndexes(int[] stashDisplayIndexes) {
+        int[] actualIndexes = Arrays.stream(stashDisplayIndexes == null ? new int[0] : stashDisplayIndexes)
+                .map(this::stashSourceIndex)
+                .filter(index -> index >= 0)
+                .distinct()
+                .sorted()
+                .toArray();
+        reverse(actualIndexes);
+        return actualIndexes;
+    }
+
+    private List<int[]> sortedBaseEntries(int[] baseSlotIds, int[] baseIndexes) {
+        List<int[]> entries = new ArrayList<>();
+        int count = Math.min(baseSlotIds == null ? 0 : baseSlotIds.length, baseIndexes == null ? 0 : baseIndexes.length);
+        for (int i = 0; i < count; i++) {
+            if (baseIndexes[i] >= 0) {
+                entries.add(new int[] { baseSlotIds[i], baseIndexes[i] });
+            }
+        }
+        entries.sort((a, b) -> {
+            int slotCompare = Integer.compare(a[0], b[0]);
+            return slotCompare != 0 ? slotCompare : Integer.compare(b[1], a[1]);
+        });
+        return entries;
+    }
+
+    private static void reverse(int[] values) {
+        for (int left = 0, right = values.length - 1; left < right; left++, right--) {
+            int swap = values[left];
+            values[left] = values[right];
+            values[right] = swap;
+        }
+    }
+
+    private static String skippedSuffix(int skippedCount) {
+        return skippedCount > 0 ? " Skipped " + skippedCount + "." : "";
+    }
+
+    private boolean splitStashItem(ServerPlayer player, int stashDisplayIndex, int amount) {
+        int stashIndex = stashSourceIndex(stashDisplayIndex);
+        RaidInventoryItem item = stashData.stash().itemAt(stashIndex);
+        if (!canSplit(player, item, amount)) {
+            return false;
+        }
+        RaidInventoryItem removed = stashData.stash().removeCountAt(stashIndex, amount);
+        return finishSplit(player, removed, true, RaidEquipmentSlot.BACKPACK, false);
+    }
+
+    private boolean splitBaseItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, int amount) {
+        RaidInventoryItem item = stashData.baseInventory().itemAt(source, sourceIndex);
+        if (!canSplit(player, item, amount)) {
+            return false;
+        }
+        RaidInventoryItem removed = stashData.baseInventory().removeCountAt(source, sourceIndex, amount);
+        return finishSplit(player, removed, false, source, false);
+    }
+
+    private boolean canSplit(ServerPlayer player, RaidInventoryItem item, int amount) {
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+        if (item.count() <= 1 || item.maxStackSize() <= 1) {
+            player.sendSystemMessage(Component.literal("That item cannot be split."));
+            return false;
+        }
+        if (amount < 1 || amount >= item.count()) {
+            player.sendSystemMessage(Component.literal("Split amount must be between 1 and " + (item.count() - 1) + "."));
+            return false;
+        }
+        ItemStack carried = getCarried();
+        ItemStack splitStack = item.withCount(amount).toItemStack();
+        if (!carried.isEmpty()) {
+            if (splitStack.isEmpty() || !ItemStack.isSameItemSameComponents(carried, splitStack) || carried.getCount() + amount > carried.getMaxStackSize()) {
+                player.sendSystemMessage(Component.literal("Clear the cursor before splitting this stack."));
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean finishSplit(ServerPlayer player, RaidInventoryItem removed, boolean stashSource, RaidEquipmentSlot restoreSource, boolean saveImmediately) {
+        if (removed == null) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+        ItemStack splitStack = removed.toItemStack();
+        if (splitStack.isEmpty()) {
+            restoreRemovedItem(stashSource, restoreSource, removed);
+            player.sendSystemMessage(Component.literal("Could not rebuild split stack."));
+            return false;
+        }
+        ItemStack carried = getCarried();
+        if (carried.isEmpty()) {
+            setCarried(splitStack);
+        } else if (ItemStack.isSameItemSameComponents(carried, splitStack) && carried.getCount() + splitStack.getCount() <= carried.getMaxStackSize()) {
+            carried.grow(splitStack.getCount());
+            setCarried(carried);
+        } else {
+            restoreRemovedItem(stashSource, restoreSource, removed);
+            player.sendSystemMessage(Component.literal("Clear the cursor before splitting this stack."));
+            return false;
+        }
+        if (saveImmediately) {
+            PlayerStashService.save(player, stashData);
+        }
+        player.sendSystemMessage(Component.literal("Split " + splitStack.getCount() + "x " + splitStack.getHoverName().getString() + "."));
+        return true;
+    }
+
+    private boolean placeCarriedToStash(ServerPlayer player, int targetCell) {
+        if (targetCell < 0) {
+            player.sendSystemMessage(Component.literal("No stash target cell selected."));
+            return false;
+        }
+        ItemStack carried = getCarried();
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, carried).orElse(null);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Cursor item has no carry profile."));
+            return false;
+        }
+        int moved = stashData.stash().addPartialAt(item.withoutPlacement(), stashCellX(targetCell), stashCellY(targetCell), false, -1, true);
+        return finishPlaceCarried(player, carried, moved, "Placed split stack in stash.");
+    }
+
+    private boolean placeCarriedToBase(ServerPlayer player, RaidEquipmentSlot target, int targetCell) {
+        if (target == null || !isStorageSlot(target) || targetCell < 0) {
+            player.sendSystemMessage(Component.literal("No valid target cell selected."));
+            return false;
+        }
+        ItemStack carried = getCarried();
+        RaidInventoryItem item = RaidInventoryManager.stackAsItem(player, carried).orElse(null);
+        if (item == null) {
+            player.sendSystemMessage(Component.literal("Cursor item has no carry profile."));
+            return false;
+        }
+        RaidStorageContainer storage = storage(stashData.baseInventory(), target);
+        int moved = storage.addPartialAt(item.withoutPlacement(), cellX(target, targetCell), cellY(target, targetCell), false, -1, true);
+        return finishPlaceCarried(player, carried, moved, "Placed split stack in " + target.name().toLowerCase() + ".");
+    }
+
+    private boolean finishPlaceCarried(ServerPlayer player, ItemStack carried, int moved, String message) {
+        if (moved <= 0) {
+            player.sendSystemMessage(Component.literal("Target cell is blocked."));
+            return false;
+        }
+        ItemStack remaining = carried.copy();
+        remaining.shrink(moved);
+        setCarried(remaining);
+        player.sendSystemMessage(Component.literal(message));
+        return true;
+    }
+
+    private static boolean isStorageSlot(RaidEquipmentSlot slot) {
+        return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
     }
 
     private boolean dropBaseItem(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
@@ -1284,5 +1550,8 @@ public class BaseStashMenu extends AbstractContainerMenu {
             }
             return NAME;
         }
+    }
+
+    private record BulkResult(boolean removed, int value) {
     }
 }

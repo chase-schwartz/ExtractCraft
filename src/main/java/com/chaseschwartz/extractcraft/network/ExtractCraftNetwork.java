@@ -58,6 +58,12 @@ public class ExtractCraftNetwork {
                 PacketDistributor.sendToPlayer(player, new GridMoveResultPayload(payload.transactionId(), result.success(), result.message()));
             }
         });
+        registrar.playToServer(BulkBaseInventoryActionPayload.TYPE, BulkBaseInventoryActionPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                GridMoveResult result = handleBulkBaseInventoryAction(player, payload);
+                PacketDistributor.sendToPlayer(player, new GridMoveResultPayload(payload.transactionId(), result.success(), result.message()));
+            }
+        });
         registrar.playToServer(PickupManagedDropPayload.TYPE, PickupManagedDropPayload.STREAM_CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player) {
                 com.chaseschwartz.extractcraft.raid.inventory.ManagedDropService.handlePickupRequest(player, payload.entityId());
@@ -78,6 +84,16 @@ public class ExtractCraftNetwork {
             return menu.handleGridMoveRequest(player, payload.operation(), payload.sourceSlotId(), payload.sourceIndex(), payload.targetSlotId(), payload.targetCell());
         }
         return GridMoveResult.failure("No ExtractCraft grid menu is open.");
+    }
+
+    private static GridMoveResult handleBulkBaseInventoryAction(ServerPlayer player, BulkBaseInventoryActionPayload payload) {
+        if (player.containerMenu == null || player.containerMenu.containerId != payload.menuId()) {
+            return GridMoveResult.failure("Menu changed before bulk action could commit.");
+        }
+        if (player.containerMenu instanceof BaseStashMenu menu) {
+            return menu.handleBulkAction(player, payload.action(), payload.stashDisplayIndexes(), payload.baseSlotIds(), payload.baseIndexes());
+        }
+        return GridMoveResult.failure("Open the base inventory before using bulk actions.");
     }
 
     public static void syncRaidState(ServerPlayer player, boolean inRaid) {

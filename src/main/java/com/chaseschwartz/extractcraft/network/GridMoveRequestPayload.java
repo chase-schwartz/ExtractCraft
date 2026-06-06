@@ -12,6 +12,10 @@ public record GridMoveRequestPayload(int transactionId, int menuId, int operatio
     public static final int ACTIVE_RAID_TO_RAID_CELL = 2;
     public static final int ACTIVE_RAID_TO_CONTAINER = 3;
     public static final int ACTIVE_RAID_DROP = 4;
+    public static final int ACTIVE_RAID_SPLIT = 5;
+    public static final int ACTIVE_CONTAINER_SPLIT = 6;
+    public static final int ACTIVE_CARRIED_TO_RAID_CELL = 7;
+    public static final int ACTIVE_CARRIED_TO_CONTAINER = 8;
     public static final int BASE_STASH_TO_BASE_CELL = 10;
     public static final int BASE_BASE_TO_BASE_CELL = 11;
     public static final int BASE_BASE_TO_STASH = 12;
@@ -19,6 +23,10 @@ public record GridMoveRequestPayload(int transactionId, int menuId, int operatio
     public static final int BASE_STASH_DROP = 14;
     public static final int BASE_STASH_QUICK_TO_BASE = 15;
     public static final int BASE_STASH_TO_STASH_CELL = 16;
+    public static final int BASE_STASH_SPLIT = 17;
+    public static final int BASE_BASE_SPLIT = 18;
+    public static final int BASE_CARRIED_TO_STASH_CELL = 19;
+    public static final int BASE_CARRIED_TO_BASE_CELL = 20;
 
     public static final CustomPacketPayload.Type<GridMoveRequestPayload> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "grid_move_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, GridMoveRequestPayload> STREAM_CODEC = CustomPacketPayload.codec(GridMoveRequestPayload::write, GridMoveRequestPayload::new);

@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.network.BulkBaseInventoryActionPayload;
 import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
@@ -46,8 +47,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private static final int STASH_PANEL_PADDING = 10;
     private static final int CONTEXT_MENU_WIDTH = 74;
     private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
-    private static final int CONTEXT_MENU_ROWS = 3;
-    private static final int CONTEXT_MENU_HEIGHT = CONTEXT_MENU_ROW_HEIGHT * CONTEXT_MENU_ROWS + 4;
+    private static final int SPLIT_DIALOG_WIDTH = 150;
+    private static final int SPLIT_DIALOG_HEIGHT = 106;
+    private static final int MULTI_BUTTON_Y_OFFSET = 20;
+    private static final int MULTI_BUTTON_HEIGHT = 16;
     private DragSource dragSource = DragSource.NONE;
     private RaidEquipmentSlot draggedBaseSlot;
     private int draggedSourceIndex = -1;
@@ -65,6 +68,12 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private int pendingTransactionId = -1;
     private String gridMoveStatus = "";
     private ContextMenu contextMenu = null;
+    private SplitDialog splitDialog = null;
+    private String splitInput = "";
+    private boolean splitInputFocused = false;
+    private boolean splitSliderDragging = false;
+    private boolean multiSelectMode = false;
+    private final Set<SelectionKey> selectedItems = new HashSet<>();
     private double dragStartX;
     private double dragStartY;
     private String lastPreviewLogKey = "";
@@ -84,7 +93,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (!draggedStack.isEmpty()) {
             renderHeldStack(guiGraphics, mouseX, mouseY);
         }
+        renderMultiSelectOverlays(guiGraphics);
         renderContextMenu(guiGraphics, mouseX, mouseY);
+        renderSplitDialog(guiGraphics, mouseX, mouseY);
         renderCustomTooltip(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
@@ -134,6 +145,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     @Override
     protected void renderSlotHighlight(GuiGraphics guiGraphics, Slot slot, int mouseX, int mouseY, float partialTick) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -145,6 +159,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     @Override
     protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -195,10 +212,22 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         guiGraphics.drawString(this.font, "[Value]", STASH_X + 50, sortY, MUTED_TEXT, false);
         guiGraphics.drawString(this.font, "[Wt]", STASH_X + 96, sortY, MUTED_TEXT, false);
         guiGraphics.drawString(this.font, "[Cat]", STASH_X + 134, sortY, MUTED_TEXT, false);
+        renderMultiSelectButtons(guiGraphics, mouseX, mouseY);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (splitDialog != null) {
+            if (button == 0 && handleSplitDialogClick(mouseX, mouseY)) {
+                return true;
+            }
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+
         if (contextMenu != null) {
             if (button == 0 && handleContextMenuClick(mouseX, mouseY)) {
                 return true;
@@ -209,6 +238,22 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             }
         }
 
+        if (button == 0 && handleMultiSelectClick(mouseX, mouseY)) {
+            return true;
+        }
+
+        if (button == 0 && !this.menu.getCarried().isEmpty()) {
+            return tryPlaceCarriedStack(mouseX, mouseY);
+        }
+
+        if (button == 0 && multiSelectMode) {
+            Slot slot = slotAt(mouseX, mouseY);
+            if (toggleSelection(slot)) {
+                return true;
+            }
+            return true;
+        }
+
         if (button == 1) {
             Slot slot = slotAt(mouseX, mouseY);
             if (slot != null && slot.hasItem()) {
@@ -216,12 +261,21 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                     RaidEquipmentSlot source = this.menu.baseSlotForMenuSlot(slot.index);
                     int sourceIndex = this.menu.baseItemIndexForMenuSlot(slot.index);
                     if (sourceIndex >= 0) {
-                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, false, source, sourceIndex);
+                        if (hasShiftDown()) {
+                            sendSplit(false, source, sourceIndex, halfSplitAmount(slot.getItem()));
+                        } else {
+                            contextMenu = new ContextMenu((int) mouseX, (int) mouseY, false, source, sourceIndex, canSplit(slot.getItem()));
+                        }
                     }
                     return true;
                 }
                 if (isStashSlot(slot)) {
-                    contextMenu = new ContextMenu((int) mouseX, (int) mouseY, true, RaidEquipmentSlot.BACKPACK, this.menu.stashDisplayIndexForMenuSlot(slot.index));
+                    int sourceIndex = stashOwnerDisplayIndex(slot);
+                    if (hasShiftDown()) {
+                        sendSplit(true, RaidEquipmentSlot.BACKPACK, sourceIndex, halfSplitAmount(slot.getItem()));
+                    } else {
+                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, true, RaidEquipmentSlot.BACKPACK, sourceIndex, canSplit(slot.getItem()));
+                    }
                     return true;
                 }
             }
@@ -297,6 +351,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (splitDialog != null) {
+            splitSliderDragging = false;
+            return true;
+        }
         if (button == 0 && dragSource != DragSource.NONE) {
             if (isClickRelease(mouseX, mouseY)) {
                 return true;
@@ -306,6 +364,60 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             return true;
         }
         return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (splitDialog != null) {
+            if (splitSliderDragging) {
+                updateSplitAmountFromSlider(mouseX);
+            }
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return splitDialog != null || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (splitDialog != null) {
+            if (splitInputFocused && Character.isDigit(codePoint)) {
+                splitInput = (splitInput + codePoint).replaceFirst("^0+(?!$)", "");
+                setSplitAmount(parseSplitInput());
+            }
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (splitDialog != null) {
+            if (keyCode == 256) {
+                splitDialog = null;
+                splitInput = "";
+                splitInputFocused = false;
+                splitSliderDragging = false;
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 335) {
+                confirmSplitDialog();
+                return true;
+            }
+            if (keyCode == 259 && splitInputFocused && !splitInput.isEmpty()) {
+                splitInput = splitInput.substring(0, splitInput.length() - 1);
+                if (!splitInput.isEmpty()) {
+                    setSplitAmount(parseSplitInput());
+                }
+                return true;
+            }
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private boolean tryPlaceHeldStack(double mouseX, double mouseY) {
@@ -519,6 +631,41 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         PacketDistributor.sendToServer(new GridMoveRequestPayload(transactionId, this.menu.containerId, operation, slotId(source), sourceIndex, slotId(target), targetCell));
     }
 
+    private void sendSplit(boolean stashSource, RaidEquipmentSlot source, int sourceIndex, int amount) {
+        if (amount <= 0 || this.minecraft == null || this.minecraft.gameMode == null) {
+            return;
+        }
+        int operation = stashSource ? GridMoveRequestPayload.BASE_STASH_SPLIT : GridMoveRequestPayload.BASE_BASE_SPLIT;
+        sendGridMove(operation, source, sourceIndex, null, amount);
+    }
+
+    private boolean tryPlaceCarriedStack(double mouseX, double mouseY) {
+        ItemStack carried = this.menu.getCarried();
+        if (carried.isEmpty()) {
+            return false;
+        }
+        RaidEquipmentSlot target = targetAt((int) mouseX, (int) mouseY);
+        if (target != null && isGridTarget(target)) {
+            int targetCell = placementCellAt(target, (int) mouseX, (int) mouseY, footprintFor(carried));
+            if (targetCell < 0) {
+                gridMoveStatus = "Target cell is blocked.";
+                return true;
+            }
+            sendGridMove(GridMoveRequestPayload.BASE_CARRIED_TO_BASE_CELL, null, -1, target, targetCell);
+            return true;
+        }
+        if (isStashGrid((int) mouseX, (int) mouseY)) {
+            int targetCell = stashPlacementCellAt((int) mouseX, (int) mouseY, footprintFor(carried));
+            if (targetCell < 0) {
+                gridMoveStatus = "Stash target is blocked.";
+                return true;
+            }
+            sendGridMove(GridMoveRequestPayload.BASE_CARRIED_TO_STASH_CELL, null, -1, null, targetCell);
+            return true;
+        }
+        return true;
+    }
+
     private void sendDropBase(RaidEquipmentSlot source, int sourceIndex) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
             sendGridMove(GridMoveRequestPayload.BASE_BASE_DROP, source, sourceIndex, null, -1);
@@ -564,18 +711,112 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
     }
 
+    private void sendBulkAction(int action) {
+        if (selectedItems.isEmpty() || this.minecraft == null || this.minecraft.gameMode == null) {
+            return;
+        }
+        int[] stashIndexes = selectedItems.stream()
+                .filter(SelectionKey::stashSource)
+                .mapToInt(SelectionKey::sourceIndex)
+                .toArray();
+        SelectionKey[] baseKeys = selectedItems.stream()
+                .filter(key -> !key.stashSource())
+                .toArray(SelectionKey[]::new);
+        int[] baseSlotIds = new int[baseKeys.length];
+        int[] baseIndexes = new int[baseKeys.length];
+        for (int i = 0; i < baseKeys.length; i++) {
+            baseSlotIds[i] = slotId(baseKeys[i].source());
+            baseIndexes[i] = baseKeys[i].sourceIndex();
+        }
+        int transactionId = nextTransactionId++;
+        pendingTransactionId = transactionId;
+        gridMoveStatus = "";
+        PacketDistributor.sendToServer(new BulkBaseInventoryActionPayload(transactionId, this.menu.containerId, action, stashIndexes, baseSlotIds, baseIndexes));
+        selectedItems.clear();
+    }
+
+    private boolean handleMultiSelectClick(double mouseX, double mouseY) {
+        int localX = (int) mouseX - this.leftPos;
+        int localY = (int) mouseY - this.topPos;
+        int y = multiButtonY();
+        if (inside(localX, localY, 8, y, 82, MULTI_BUTTON_HEIGHT)) {
+            multiSelectMode = !multiSelectMode;
+            selectedItems.clear();
+            contextMenu = null;
+            splitDialog = null;
+            return true;
+        }
+        if (!multiSelectMode) {
+            return false;
+        }
+        if (inside(localX, localY, 96, y, 48, MULTI_BUTTON_HEIGHT)) {
+            sendBulkAction(BulkBaseInventoryActionPayload.ACTION_SELL);
+            return true;
+        }
+        if (inside(localX, localY, 148, y, 48, MULTI_BUTTON_HEIGHT)) {
+            sendBulkAction(BulkBaseInventoryActionPayload.ACTION_DROP);
+            return true;
+        }
+        if (inside(localX, localY, 200, y, 48, MULTI_BUTTON_HEIGHT)) {
+            sendBulkAction(BulkBaseInventoryActionPayload.ACTION_TRASH);
+            return true;
+        }
+        if (inside(localX, localY, 252, y, 48, MULTI_BUTTON_HEIGHT)) {
+            selectedItems.clear();
+            return true;
+        }
+        return false;
+    }
+
+    private void renderMultiSelectButtons(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        int y = multiButtonY();
+        renderButton(guiGraphics, 8, y, 82, MULTI_BUTTON_HEIGHT, multiSelectMode ? "Selecting" : "Multi-Select", multiSelectMode, localHover(mouseX, mouseY, 8, y, 82, MULTI_BUTTON_HEIGHT));
+        if (!multiSelectMode) {
+            return;
+        }
+        boolean hasSelection = !selectedItems.isEmpty();
+        renderButton(guiGraphics, 96, y, 48, MULTI_BUTTON_HEIGHT, "Sell", hasSelection, localHover(mouseX, mouseY, 96, y, 48, MULTI_BUTTON_HEIGHT));
+        renderButton(guiGraphics, 148, y, 48, MULTI_BUTTON_HEIGHT, "Drop", hasSelection, localHover(mouseX, mouseY, 148, y, 48, MULTI_BUTTON_HEIGHT));
+        renderButton(guiGraphics, 200, y, 48, MULTI_BUTTON_HEIGHT, "Trash", hasSelection, localHover(mouseX, mouseY, 200, y, 48, MULTI_BUTTON_HEIGHT));
+        renderButton(guiGraphics, 252, y, 48, MULTI_BUTTON_HEIGHT, "Clear", hasSelection, localHover(mouseX, mouseY, 252, y, 48, MULTI_BUTTON_HEIGHT));
+        guiGraphics.drawString(this.font, selectedItems.size() + " selected", 306, y + 4, MUTED_TEXT, false);
+    }
+
+    private void renderButton(GuiGraphics guiGraphics, int x, int y, int width, int height, String label, boolean enabled, boolean hovered) {
+        int fill = enabled ? (hovered ? 0xFF2B5360 : 0xFF243640) : 0xFF1B2026;
+        int border = enabled ? (hovered ? HOVER_BORDER : BORDER_COLOR) : 0x5549D8E8;
+        guiGraphics.fill(x, y, x + width, y + height, fill);
+        border(guiGraphics, x, y, width, height, border);
+        int color = enabled ? TEXT : 0xFF68727C;
+        guiGraphics.drawString(this.font, label, x + Math.max(4, (width - this.font.width(label)) / 2), y + 5, color, false);
+    }
+
+    private boolean localHover(int mouseX, int mouseY, int x, int y, int width, int height) {
+        return inside(mouseX - this.leftPos, mouseY - this.topPos, x, y, width, height);
+    }
+
+    private int multiButtonY() {
+        return this.imageHeight - MULTI_BUTTON_Y_OFFSET;
+    }
+
     private boolean handleContextMenuClick(double mouseX, double mouseY) {
         if (contextMenu == null) {
             return false;
         }
         int x = contextMenuX();
         int y = contextMenuY();
-        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT)) {
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH, contextMenuHeight())) {
             return false;
         }
         int option = contextMenuOptionAt(mouseX, mouseY);
-        if (option >= 0 && option <= 2) {
-            sendContextAction(option, contextMenu);
+        int action = contextMenuActionForOption(option);
+        if (action == 3) {
+            openSplitDialog(contextMenu);
+            contextMenu = null;
+            return true;
+        }
+        if (action >= 0 && action <= 2) {
+            sendContextAction(action, contextMenu);
             contextMenu = null;
             return true;
         }
@@ -589,13 +830,21 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int x = contextMenuX();
         int y = contextMenuY();
         int hovered = contextMenuOptionAt(mouseX, mouseY);
+        int rows = contextMenuRows();
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0D, 0.0D, 500.0D);
-        guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + CONTEXT_MENU_HEIGHT, 0xF0181B22);
-        border(guiGraphics, x, y, CONTEXT_MENU_WIDTH, CONTEXT_MENU_HEIGHT, BORDER_COLOR);
-        renderContextRow(guiGraphics, x, y, 0, "Sell", hovered == 0, TEXT, 0x553A5E66);
-        renderContextRow(guiGraphics, x, y, 1, "Drop", hovered == 1, TEXT, 0x553A5E66);
-        renderContextRow(guiGraphics, x, y, 2, "Trash", hovered == 2, 0xFFFFA0A0, 0x554A2228);
+        guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + contextMenuHeight(), 0xF0181B22);
+        border(guiGraphics, x, y, CONTEXT_MENU_WIDTH, contextMenuHeight(), BORDER_COLOR);
+        int row = 0;
+        if (contextMenu.canSplit()) {
+            renderContextRow(guiGraphics, x, y, row, "Split", hovered == row, TEXT, 0x553A5E66);
+            row++;
+        }
+        renderContextRow(guiGraphics, x, y, row, "Sell", hovered == row, TEXT, 0x553A5E66);
+        row++;
+        renderContextRow(guiGraphics, x, y, row, "Drop", hovered == row, TEXT, 0x553A5E66);
+        row++;
+        renderContextRow(guiGraphics, x, y, row, "Trash", hovered == row, 0xFFFFA0A0, 0x554A2228);
         guiGraphics.pose().popPose();
     }
 
@@ -614,11 +863,35 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
         int x = contextMenuX() + 2;
         int y = contextMenuY() + 2;
-        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT * CONTEXT_MENU_ROWS)) {
+        if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT * contextMenuRows())) {
             return -1;
         }
         int option = ((int) mouseY - y) / CONTEXT_MENU_ROW_HEIGHT;
-        return option >= 0 && option < CONTEXT_MENU_ROWS ? option : -1;
+        return option >= 0 && option < contextMenuRows() ? option : -1;
+    }
+
+    private int contextMenuRows() {
+        return contextMenu != null && contextMenu.canSplit() ? 4 : 3;
+    }
+
+    private int contextMenuHeight() {
+        return CONTEXT_MENU_ROW_HEIGHT * contextMenuRows() + 4;
+    }
+
+    private int contextMenuActionForOption(int option) {
+        if (contextMenu == null || option < 0) {
+            return -1;
+        }
+        if (contextMenu.canSplit()) {
+            return switch (option) {
+                case 0 -> 3;
+                case 1 -> 0;
+                case 2 -> 1;
+                case 3 -> 2;
+                default -> -1;
+            };
+        }
+        return option;
     }
 
     private int contextMenuX() {
@@ -626,7 +899,191 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private int contextMenuY() {
-        return Math.min(contextMenu.y(), this.topPos + this.imageHeight - CONTEXT_MENU_HEIGHT - 4);
+        return Math.min(contextMenu.y(), this.topPos + this.imageHeight - contextMenuHeight() - 4);
+    }
+
+    private void openSplitDialog(ContextMenu menu) {
+        Slot slot = sourceOwnerSlot(menu);
+        if (slot == null || !canSplit(slot.getItem())) {
+            return;
+        }
+        int max = slot.getItem().getCount() - 1;
+        int amount = Math.max(1, slot.getItem().getCount() / 2);
+        splitDialog = new SplitDialog(menu.stashSource(), menu.source(), menu.sourceIndex(), slot.getItem().copy(), amount, max);
+        splitInput = Integer.toString(amount);
+    }
+
+    private boolean handleSplitDialogClick(double mouseX, double mouseY) {
+        int x = splitDialogX();
+        int y = splitDialogY();
+        if (!inside((int) mouseX, (int) mouseY, x, y, SPLIT_DIALOG_WIDTH, SPLIT_DIALOG_HEIGHT)) {
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, splitSliderX(), splitSliderY() - 4, splitSliderWidth(), 11)) {
+            splitInputFocused = false;
+            splitSliderDragging = true;
+            updateSplitAmountFromSlider(mouseX);
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, splitInputX(), splitInputY(), splitInputWidth(), splitInputHeight())) {
+            splitInputFocused = true;
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + 10, splitButtonY(), 58, 16)) {
+            confirmSplitDialog();
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + 82, splitButtonY(), 58, 16)) {
+            splitDialog = null;
+            splitInput = "";
+            splitInputFocused = false;
+            splitSliderDragging = false;
+            return true;
+        }
+        splitInputFocused = false;
+        return true;
+    }
+
+    private void renderSplitDialog(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (splitDialog == null) {
+            return;
+        }
+        int x = splitDialogX();
+        int y = splitDialogY();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0D, 0.0D, 1000.0D);
+        guiGraphics.fill(x, y, x + SPLIT_DIALOG_WIDTH, y + SPLIT_DIALOG_HEIGHT, 0xF0181B22);
+        border(guiGraphics, x, y, SPLIT_DIALOG_WIDTH, SPLIT_DIALOG_HEIGHT, BORDER_COLOR);
+        guiGraphics.renderItem(splitDialog.stack(), x + 10, y + 10);
+        guiGraphics.drawString(this.font, "Split Stack", x + 32, y + 10, TEXT, false);
+        guiGraphics.drawString(this.font, splitDialog.stack().getHoverName().getString(), x + 32, y + 22, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Count: " + splitDialog.stack().getCount(), x + 10, y + 36, MUTED_TEXT, false);
+        int barX = splitSliderX();
+        int barY = splitSliderY();
+        int barW = splitSliderWidth();
+        guiGraphics.fill(barX, barY, barX + barW, barY + 3, 0xFF4A5564);
+        int knob = barX + (int) Math.round((splitDialog.amount() - 1) / (double) Math.max(1, splitDialog.maxAmount() - 1) * barW);
+        guiGraphics.fill(knob - 2, barY - 3, knob + 2, barY + 6, 0xFF49D8E8);
+        guiGraphics.drawString(this.font, "Amount", x + 10, y + 63, MUTED_TEXT, false);
+        int inputX = splitInputX();
+        int inputY = splitInputY();
+        guiGraphics.fill(inputX, inputY, inputX + splitInputWidth(), inputY + splitInputHeight(), splitInputFocused ? 0xFF243640 : 0xFF151A21);
+        border(guiGraphics, inputX, inputY, splitInputWidth(), splitInputHeight(), splitInputFocused ? HOVER_BORDER : BORDER_COLOR);
+        guiGraphics.drawString(this.font, splitInput.isEmpty() ? "_" : splitInput, inputX + 4, inputY + 3, TEXT, false);
+        renderDialogButton(guiGraphics, x + 10, splitButtonY(), "Confirm", inside(mouseX, mouseY, x + 10, splitButtonY(), 58, 16));
+        renderDialogButton(guiGraphics, x + 82, splitButtonY(), "Cancel", inside(mouseX, mouseY, x + 82, splitButtonY(), 58, 16));
+        guiGraphics.pose().popPose();
+    }
+
+    private void renderDialogButton(GuiGraphics guiGraphics, int x, int y, String label, boolean hovered) {
+        guiGraphics.fill(x, y, x + 58, y + 16, hovered ? 0x663A5E66 : 0x333A5E66);
+        border(guiGraphics, x, y, 58, 16, hovered ? HOVER_BORDER : BORDER_COLOR);
+        guiGraphics.drawString(this.font, label, x + 6, y + 4, TEXT, false);
+    }
+
+    private int splitDialogX() {
+        return this.leftPos + this.imageWidth / 2 - SPLIT_DIALOG_WIDTH / 2;
+    }
+
+    private int splitDialogY() {
+        return this.topPos + this.imageHeight / 2 - SPLIT_DIALOG_HEIGHT / 2;
+    }
+
+    private int splitSliderX() {
+        return splitDialogX() + 12;
+    }
+
+    private int splitSliderY() {
+        return splitDialogY() + 50;
+    }
+
+    private int splitSliderWidth() {
+        return SPLIT_DIALOG_WIDTH - 24;
+    }
+
+    private int splitInputX() {
+        return splitDialogX() + 60;
+    }
+
+    private int splitInputY() {
+        return splitDialogY() + 61;
+    }
+
+    private int splitInputWidth() {
+        return 34;
+    }
+
+    private int splitInputHeight() {
+        return 12;
+    }
+
+    private int splitButtonY() {
+        return splitDialogY() + 82;
+    }
+
+    private void updateSplitAmountFromSlider(double mouseX) {
+        if (splitDialog == null) {
+            return;
+        }
+        int rel = Math.max(0, Math.min(splitSliderWidth(), (int) mouseX - splitSliderX()));
+        int amount = 1 + (int) Math.round(rel / (double) Math.max(1, splitSliderWidth()) * (splitDialog.maxAmount() - 1));
+        setSplitAmount(amount);
+    }
+
+    private void setSplitAmount(int amount) {
+        if (splitDialog == null) {
+            return;
+        }
+        int clamped = Math.max(1, Math.min(splitDialog.maxAmount(), amount));
+        splitDialog = new SplitDialog(splitDialog.stashSource(), splitDialog.source(), splitDialog.sourceIndex(), splitDialog.stack(), clamped, splitDialog.maxAmount());
+        splitInput = Integer.toString(clamped);
+    }
+
+    private void confirmSplitDialog() {
+        if (splitDialog == null) {
+            return;
+        }
+        int amount = parseSplitInput();
+        sendSplit(splitDialog.stashSource(), splitDialog.source(), splitDialog.sourceIndex(), amount);
+        splitDialog = null;
+        splitInput = "";
+        splitInputFocused = false;
+        splitSliderDragging = false;
+    }
+
+    private int parseSplitInput() {
+        if (splitDialog == null) {
+            return 1;
+        }
+        try {
+            return Math.max(1, Math.min(splitDialog.maxAmount(), Integer.parseInt(splitInput)));
+        } catch (NumberFormatException ignored) {
+            return splitDialog.amount();
+        }
+    }
+
+    private Slot sourceOwnerSlot(ContextMenu menu) {
+        if (menu == null) {
+            return null;
+        }
+        if (menu.stashSource()) {
+            int menuSlot = this.menu.stashMenuSlotStart() + menu.sourceIndex();
+            return menuSlot >= 0 && menuSlot < this.menu.slots.size() ? ownerSlotForManagedGrid(this.menu.slots.get(menuSlot)) : null;
+        }
+        int menuSlot = this.menu.baseMenuSlotForItemIndex(menu.source(), menu.sourceIndex());
+        return menuSlot >= 0 && menuSlot < this.menu.slots.size() ? ownerSlotForManagedGrid(this.menu.slots.get(menuSlot)) : null;
+    }
+
+    private static boolean canSplit(ItemStack stack) {
+        return !stack.isEmpty() && stack.getCount() > 1 && stack.getMaxStackSize() > 1;
+    }
+
+    private static int halfSplitAmount(ItemStack stack) {
+        return canSplit(stack) ? Math.max(1, stack.getCount() / 2) : 0;
     }
 
     private Slot slotAt(double mouseX, double mouseY) {
@@ -648,6 +1105,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private Slot customTooltipSlot(int mouseX, int mouseY) {
+        if (splitDialog != null) {
+            return null;
+        }
         if (contextMenu != null || dragSource != DragSource.NONE || !draggedStack.isEmpty()) {
             return null;
         }
@@ -766,6 +1226,20 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private boolean isManagedGridSlot(Slot slot) {
         return (isBaseSlot(slot) && isGridDisplaySlot(slot)) || isStashSlot(slot);
+    }
+
+    private boolean isSelectableManagedSlot(Slot slot) {
+        if (slot == null) {
+            return false;
+        }
+        if (isStashSlot(slot)) {
+            return true;
+        }
+        if (!isBaseSlot(slot)) {
+            return false;
+        }
+        RaidEquipmentSlot source = this.menu.baseSlotForMenuSlot(slot.index);
+        return isGridTarget(source);
     }
 
     private int managedItemIndexForSlot(Slot slot) {
@@ -1066,7 +1540,76 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         guiGraphics.pose().popPose();
     }
 
+    private void renderMultiSelectOverlays(GuiGraphics guiGraphics) {
+        if (!multiSelectMode) {
+            return;
+        }
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(this.leftPos, this.topPos, 700.0F);
+        Set<SelectionKey> rendered = new HashSet<>();
+        for (Slot slot : this.menu.slots) {
+            if (!isSelectableManagedSlot(slot) || !slot.hasItem()) {
+                continue;
+            }
+            Slot owner = ownerSlotForManagedGrid(slot);
+            SelectionKey key = selectionKeyForSlot(owner);
+            if (key == null || !rendered.add(key)) {
+                continue;
+            }
+            GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(owner.getItem());
+            int width = metadata.present() ? metadata.footprintWidth() * 18 : 18;
+            int height = metadata.present() ? metadata.footprintHeight() * 18 : 18;
+            boolean selected = selectedItems.contains(key);
+            int fill = selected ? 0x5549D8E8 : 0x33202730;
+            int border = selected ? HOVER_BORDER : 0x8849D8E8;
+            guiGraphics.fill(owner.x, owner.y, owner.x + width - 2, owner.y + height - 2, fill);
+            border(guiGraphics, owner.x - 1, owner.y - 1, width, height, border);
+            int checkboxX = owner.x + 2;
+            int checkboxY = owner.y + 2;
+            int checkboxSize = 7;
+            guiGraphics.fill(checkboxX, checkboxY, checkboxX + checkboxSize, checkboxY + checkboxSize, selected ? 0xFF49D8E8 : 0xDD202632);
+            border(guiGraphics, checkboxX, checkboxY, checkboxSize, checkboxSize, selected ? 0xFFFFFFFF : 0xAA9AA6B2);
+            if (selected) {
+                guiGraphics.fill(checkboxX + 1, checkboxY + 4, checkboxX + 3, checkboxY + 6, 0xFF061016);
+                guiGraphics.fill(checkboxX + 3, checkboxY + 5, checkboxX + 5, checkboxY + 6, 0xFF061016);
+                guiGraphics.fill(checkboxX + 5, checkboxY + 2, checkboxX + 6, checkboxY + 5, 0xFF061016);
+            }
+        }
+        guiGraphics.pose().popPose();
+    }
+
+    private boolean toggleSelection(Slot slot) {
+        if (!isSelectableManagedSlot(slot) || !slot.hasItem()) {
+            return false;
+        }
+        Slot owner = ownerSlotForManagedGrid(slot);
+        SelectionKey key = selectionKeyForSlot(owner);
+        if (key == null) {
+            return false;
+        }
+        if (!selectedItems.add(key)) {
+            selectedItems.remove(key);
+        }
+        return true;
+    }
+
+    private SelectionKey selectionKeyForSlot(Slot slot) {
+        if (slot == null || !slot.hasItem() || !isSelectableManagedSlot(slot)) {
+            return null;
+        }
+        if (isStashSlot(slot)) {
+            int sourceIndex = stashOwnerDisplayIndex(slot);
+            return sourceIndex >= 0 ? new SelectionKey(true, null, sourceIndex) : null;
+        }
+        RaidEquipmentSlot source = this.menu.baseSlotForMenuSlot(slot.index);
+        int sourceIndex = this.menu.baseItemIndexForMenuSlot(slot.index);
+        return source != null && isGridTarget(source) && sourceIndex >= 0 ? new SelectionKey(false, source, sourceIndex) : null;
+    }
+
     private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (splitDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -1420,6 +1963,12 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
     }
 
-    private record ContextMenu(int x, int y, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
+    private record ContextMenu(int x, int y, boolean stashSource, RaidEquipmentSlot source, int sourceIndex, boolean canSplit) {
+    }
+
+    private record SplitDialog(boolean stashSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, int amount, int maxAmount) {
+    }
+
+    private record SelectionKey(boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
     }
 }
