@@ -1,0 +1,9 @@
+mre_flavor_pack.png <- mre_meal_pouch_icon_in_pixel_art.png
+ration_coupon_stack.png <- military_ration_coupons_stack_in_pixels.png
+signal_flare_tube.png <- pixel_flare_gun_launcher_icon.png
+water_purifier_cartridge.png <- futuristic_filter_cartridge_in_pixel_art.png
+brass_screw_tin.png <- brass_screws_in_metal_tin.png
+duct_tape_stack.png <- pixel_duct_tape_stack_icon.png
+low_grade_lubricant.png <- low_grade_lubricant_bottle_icon.png
+oily_cleaning_cloth.png <- worn_rag_in_pixel_art_style.png
+worn_tool_roll.png <- rolled_up_tool_pouch_in_pixel_art.png

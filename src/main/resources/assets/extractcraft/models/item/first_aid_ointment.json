@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/first_aid_ointment"
+                 },
+    "parent":  "minecraft:item/generated"
+}

@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/ancient_access_coin"
+                 },
+    "parent":  "minecraft:item/generated"
+}

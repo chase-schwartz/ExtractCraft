@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/glass_cough_syrup"
+                 },
+    "parent":  "minecraft:item/generated"
+}

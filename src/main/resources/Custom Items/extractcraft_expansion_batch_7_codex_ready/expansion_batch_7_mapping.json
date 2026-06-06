@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "storm_lighter",
+    "display_name": "Storm Lighter",
+    "png": "storm_lighter.png"
+  },
+  {
+    "item_id": "signal_mirror",
+    "display_name": "Signal Mirror",
+    "png": "signal_mirror.png"
+  },
+  {
+    "item_id": "emergency_blanket_roll",
+    "display_name": "Emergency Blanket Roll",
+    "png": "emergency_blanket_roll.png"
+  },
+  {
+    "item_id": "water_purification_tabs",
+    "display_name": "Water Purification Tabs",
+    "png": "water_purification_tabs.png"
+  },
+  {
+    "item_id": "compact_camp_stove",
+    "display_name": "Compact Camp Stove",
+    "png": "compact_camp_stove.png"
+  },
+  {
+    "item_id": "flare_case",
+    "display_name": "Flare Case",
+    "png": "flare_case.png"
+  },
+  {
+    "item_id": "filter_straw",
+    "display_name": "Filter Straw",
+    "png": "filter_straw.png"
+  },
+  {
+    "item_id": "firestarter_tin",
+    "display_name": "Firestarter Tin",
+    "png": "firestarter_tin.png"
+  }
+]

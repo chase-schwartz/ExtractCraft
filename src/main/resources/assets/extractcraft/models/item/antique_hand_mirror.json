@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/antique_hand_mirror"
+                 },
+    "parent":  "minecraft:item/generated"
+}

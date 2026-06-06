@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_medical_tech"
+    "layer0": "extractcraft:item/sterile_gauze_brick"
   }
 }

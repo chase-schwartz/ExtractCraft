@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/redacted_photo_locket"
+                 },
+    "parent":  "minecraft:item/generated"
+}

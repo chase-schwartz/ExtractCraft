@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "executive_keyring",
+    "display_name": "Executive Keyring",
+    "png": "executive_keyring.png"
+  },
+  {
+    "item_id": "sealed_cash_envelope",
+    "display_name": "Sealed Cash Envelope",
+    "png": "sealed_cash_envelope.png"
+  },
+  {
+    "item_id": "office_stamp_kit",
+    "display_name": "Office Stamp Kit",
+    "png": "office_stamp_kit.png"
+  },
+  {
+    "item_id": "security_badge_stack",
+    "display_name": "Security Badge Stack",
+    "png": "security_badge_stack.png"
+  },
+  {
+    "item_id": "locked_file_tube",
+    "display_name": "Locked File Tube",
+    "png": "locked_file_tube.png"
+  },
+  {
+    "item_id": "brass_nameplate",
+    "display_name": "Brass Nameplate",
+    "png": "brass_nameplate.png"
+  },
+  {
+    "item_id": "shredded_document_bag",
+    "display_name": "Shredded Document Bag",
+    "png": "shredded_document_bag.png"
+  },
+  {
+    "item_id": "encrypted_access_fob",
+    "display_name": "Encrypted Access Fob",
+    "png": "encrypted_access_fob.png"
+  }
+]

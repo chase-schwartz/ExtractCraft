@@ -1145,7 +1145,6 @@ public class RaidInventoryCommands {
                 "combat_stim_syringe",
                 "field_med_kit",
                 "trauma_response_case",
-                "splint_trauma_kit",
                 "helmet_rebuild_kit",
                 "armor_rebuild_kit",
                 "pack_rebuild_kit"));

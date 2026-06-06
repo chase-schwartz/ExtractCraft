@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "cracked_rangefinder_lens",
+    "display_name": "Cracked Rangefinder Lens",
+    "png": "cracked_rangefinder_lens.png"
+  },
+  {
+    "item_id": "broken_red_dot_housing",
+    "display_name": "Broken Red Dot Housing",
+    "png": "broken_red_dot_housing.png"
+  },
+  {
+    "item_id": "cheap_optic_mount",
+    "display_name": "Cheap Optic Mount",
+    "png": "cheap_optic_mount.png"
+  },
+  {
+    "item_id": "thermal_lens_module",
+    "display_name": "Thermal Lens Module",
+    "png": "thermal_lens_module.png"
+  },
+  {
+    "item_id": "night_vision_tube",
+    "display_name": "Night Vision Tube",
+    "png": "night_vision_tube.png"
+  },
+  {
+    "item_id": "optic_calibration_tool",
+    "display_name": "Optic Calibration Tool",
+    "png": "optic_calibration_tool.png"
+  },
+  {
+    "item_id": "laminated_zone_map",
+    "display_name": "Laminated Zone Map",
+    "png": "laminated_zone_map.png"
+  },
+  {
+    "item_id": "field_notebook",
+    "display_name": "Field Notebook",
+    "png": "field_notebook.png"
+  }
+]

@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/gemstone_tie_pin"
+                 },
+    "parent":  "minecraft:item/generated"
+}

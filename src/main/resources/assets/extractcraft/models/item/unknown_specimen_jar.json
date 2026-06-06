@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/unknown_specimen_jar"
+                 },
+    "parent":  "minecraft:item/generated"
+}

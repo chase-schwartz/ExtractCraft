@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "black_budget_payroll",
+    "display_name": "Black Budget Payroll",
+    "png": "black_budget_payroll.png"
+  },
+  {
+    "item_id": "diplomatic_courier_pouch",
+    "display_name": "Diplomatic Courier Pouch",
+    "png": "diplomatic_courier_pouch.png"
+  },
+  {
+    "item_id": "heart_of_the_dam",
+    "display_name": "Heart of the Dam",
+    "png": "heart_of_the_dam.png"
+  },
+  {
+    "item_id": "blacksite_master_ledger",
+    "display_name": "Blacksite Master Ledger",
+    "png": "blacksite_master_ledger.png"
+  },
+  {
+    "item_id": "quantum_encryption_vault",
+    "display_name": "Quantum Encryption Vault",
+    "png": "quantum_encryption_vault.png"
+  },
+  {
+    "item_id": "gold_tactical_pack_frame",
+    "display_name": "Gold Tactical Pack Frame",
+    "png": "gold_tactical_pack_frame.png"
+  },
+  {
+    "item_id": "classified_warhead_circuit",
+    "display_name": "Classified Warhead Circuit",
+    "png": "classified_warhead_circuit.png"
+  },
+  {
+    "item_id": "omega_protocol_drive",
+    "display_name": "Omega Protocol Drive",
+    "png": "omega_protocol_drive.png"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "pill_bottle_rx",
+    "display_name": "Pill Bottle RX",
+    "png": "pill_bottle_rx.png"
+  },
+  {
+    "item_id": "blister_painkillers",
+    "display_name": "Blister Painkillers",
+    "png": "blister_painkillers.png"
+  },
+  {
+    "item_id": "first_aid_ointment",
+    "display_name": "First Aid Ointment",
+    "png": "first_aid_ointment.png"
+  },
+  {
+    "item_id": "glass_cough_syrup",
+    "display_name": "Glass Cough Syrup",
+    "png": "glass_cough_syrup.png"
+  },
+  {
+    "item_id": "adhesive_bandage_box",
+    "display_name": "Adhesive Bandage Box",
+    "png": "adhesive_bandage_box.png"
+  },
+  {
+    "item_id": "digital_thermometer",
+    "display_name": "Digital Thermometer",
+    "png": "digital_thermometer.png"
+  },
+  {
+    "item_id": "inhaler_blue",
+    "display_name": "Blue Inhaler",
+    "png": "inhaler_blue.png"
+  },
+  {
+    "item_id": "saline_eye_drops",
+    "display_name": "Saline Eye Drops",
+    "png": "saline_eye_drops.png"
+  }
+]

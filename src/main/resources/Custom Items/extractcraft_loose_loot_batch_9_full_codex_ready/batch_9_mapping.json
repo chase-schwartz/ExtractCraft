@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "drone_flight_controller",
+    "display_name": "Drone Flight Controller",
+    "png": "drone_flight_controller.png"
+  },
+  {
+    "item_id": "tactical_tablet",
+    "display_name": "Tactical Tablet",
+    "png": "tactical_tablet.png"
+  },
+  {
+    "item_id": "satellite_phone",
+    "display_name": "Satellite Phone",
+    "png": "satellite_phone.png"
+  },
+  {
+    "item_id": "hardened_drive_caddy",
+    "display_name": "Hardened Drive Caddy",
+    "png": "hardened_drive_caddy.png"
+  },
+  {
+    "item_id": "quantum_signal_chip",
+    "display_name": "Quantum Signal Chip",
+    "png": "quantum_signal_chip.png"
+  },
+  {
+    "item_id": "classified_ssd_array",
+    "display_name": "Classified SSD Array",
+    "png": "classified_ssd_array.png"
+  },
+  {
+    "item_id": "secure_ops_laptop",
+    "display_name": "Secure Ops Laptop",
+    "png": "secure_ops_laptop.png"
+  },
+  {
+    "item_id": "command_ai_processor",
+    "display_name": "Command AI Processor",
+    "png": "command_ai_processor.png"
+  }
+]

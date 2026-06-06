@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "ballistic_fiber_roll",
+    "display_name": "Ballistic Fiber Roll",
+    "png": "ballistic_fiber_roll.png"
+  },
+  {
+    "item_id": "ceramic_plate_insert",
+    "display_name": "Ceramic Plate Insert",
+    "png": "ceramic_plate_insert.png"
+  },
+  {
+    "item_id": "composite_helmet_shell",
+    "display_name": "Composite Helmet Shell",
+    "png": "composite_helmet_shell.png"
+  },
+  {
+    "item_id": "kevlar_stitch_kit",
+    "display_name": "Kevlar Stitch Kit",
+    "png": "kevlar_stitch_kit.png"
+  },
+  {
+    "item_id": "smart_ballistic_plate",
+    "display_name": "Smart Ballistic Plate",
+    "png": "smart_ballistic_plate.png"
+  },
+  {
+    "item_id": "reactive_armor_tile",
+    "display_name": "Reactive Armor Tile",
+    "png": "reactive_armor_tile.png"
+  },
+  {
+    "item_id": "exo_fiber_harness",
+    "display_name": "Exo-Fiber Harness",
+    "png": "exo_fiber_harness.png"
+  },
+  {
+    "item_id": "gold_ballistic_helmet_core",
+    "display_name": "Gold Ballistic Helmet Core",
+    "png": "gold_ballistic_helmet_core.png"
+  }
+]

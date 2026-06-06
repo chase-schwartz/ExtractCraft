@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_tools"
+    "layer0": "extractcraft:item/worn_tool_roll"
   }
 }

@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/saline_eye_drops"
+                 },
+    "parent":  "minecraft:item/generated"
+}

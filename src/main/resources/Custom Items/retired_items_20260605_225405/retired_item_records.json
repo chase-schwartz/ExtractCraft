@@ -1,0 +1,967 @@
+{
+  "retired_at": "2026-06-05T22:54:05",
+  "note": "Items retired from active ExtractCraft registration/loot availability. User typo cheap_optical_mount mapped to existing cheap_optic_mount.",
+  "requested_ids": [
+    "prototype_drone_brain",
+    "composite_helmet_shell",
+    "tactical_flashlight_core",
+    "thermal_imaging_core",
+    "gold_ballistic_helmet_core",
+    "quantum_encryption_vault",
+    "empty_morphine_case",
+    "splint_trauma_kit",
+    "prototype_splint_brace",
+    "military_antidote_injector",
+    "electrical_relay",
+    "stripped_circuit_board",
+    "smart_magazine_sensor",
+    "bent_weapon_rail",
+    "cracked_polymer_grip",
+    "carbon_handguard",
+    "precision_trigger_group",
+    "suppressor_baffle_stack",
+    "match_grade_bolt_carrier",
+    "prototype_ammo_feed_unit",
+    "broken_red_dot_housing",
+    "cheap_optic_mount",
+    "night_vision_tube",
+    "compressed_fuel_tab"
+  ],
+  "removed_loose_loot_definition_lines": [
+    "            new LooseLootDefinition(\"broken_red_dot_housing\", \"Broken Red Dot Housing\", \"optics\", \"blue\", 2, \"A cracked sight shell with salvageable mounting hardware.\", 0.5D, 1, 1, 520),",
+    "            new LooseLootDefinition(\"tactical_flashlight_core\", \"Tactical Flashlight Core\", \"electronics\", \"blue\", 2, \"A compact light emitter core from a weapon-mounted flashlight.\", 0.5D, 1, 1, 740),",
+    "            new LooseLootDefinition(\"empty_morphine_case\", \"Empty Morphine Case\", \"medical_tech\", \"blue\", 2, \"An empty injector case with controlled-substance markings.\", 0.2D, 1, 1, 330),",
+    "            new LooseLootDefinition(\"compressed_fuel_tab\", \"Compressed Fuel Tab\", \"industrial\", \"blue\", 2, \"A dense fuel tab for emergency burners and field stoves.\", 0.5D, 1, 1, 430),",
+    "            new LooseLootDefinition(\"electrical_relay\", \"Electrical Relay\", \"electronics\", \"blue\", 2, \"A boxed relay module used in security and power panels.\", 0.3D, 1, 1, 650),",
+    "            new LooseLootDefinition(\"bent_weapon_rail\", \"Bent Weapon Rail\", \"weapon_parts\", \"blue\", 2, \"A damaged rail section that can still be milled for parts.\", 0.5D, 1, 1, 430),",
+    "            new LooseLootDefinition(\"cracked_polymer_grip\", \"Cracked Polymer Grip\", \"weapon_parts\", \"blue\", 2, \"A split grip with intact screws and texture panels.\", 0.4D, 1, 1, 360),",
+    "            new LooseLootDefinition(\"stripped_circuit_board\", \"Stripped Circuit Board\", \"electronics\", \"blue\", 2, \"A salvage board with a few valuable chips still attached.\", 0.2D, 1, 1, 770),",
+    "            new LooseLootDefinition(\"cheap_optic_mount\", \"Cheap Optic Mount\", \"optics\", \"blue\", 2, \"A low-grade optic mount with serviceable clamp hardware.\", 0.2D, 1, 1, 340),",
+    "            new LooseLootDefinition(\"night_vision_tube\", \"Night Vision Tube\", \"optics\", \"purple\", 3, \"A fragile intensifier tube for night vision assemblies.\", 0.3D, 1, 2, 4700),",
+    "            new LooseLootDefinition(\"composite_helmet_shell\", \"Composite Helmet Shell\", \"armor_materials\", \"purple\", 3, \"A shaped helmet shell awaiting liner and hardware.\", 1.6D, 2, 2, 3900),",
+    "            new LooseLootDefinition(\"suppressor_baffle_stack\", \"Suppressor Baffle Stack\", \"weapon_parts\", \"purple\", 3, \"A machined stack of baffles for suppressor rebuilds.\", 0.6D, 1, 1, 3300),",
+    "            new LooseLootDefinition(\"precision_trigger_group\", \"Precision Trigger Group\", \"weapon_parts\", \"purple\", 3, \"A tuned trigger group wrapped in oil paper.\", 0.5D, 1, 1, 4200),",
+    "            new LooseLootDefinition(\"carbon_handguard\", \"Carbon Handguard\", \"weapon_parts\", \"purple\", 3, \"A light carbon handguard for modern rifle builds.\", 0.7D, 1, 2, 3100),",
+    "            new LooseLootDefinition(\"smart_magazine_sensor\", \"Smart Magazine Sensor\", \"weapon_parts\", \"purple\", 3, \"A tiny sensor pack for round-counting magazines.\", 0.2D, 1, 1, 2600),",
+    "            new LooseLootDefinition(\"prototype_splint_brace\", \"Prototype Splint Brace\", \"medical_tech\", \"purple\", 3, \"A collapsible brace used by combat trauma teams.\", 0.9D, 1, 2, 2700),",
+    "            new LooseLootDefinition(\"prototype_drone_brain\", \"Prototype Drone Brain\", \"electronics\", \"gold\", 4, \"A prototype processor cluster from an autonomous drone.\", 0.8D, 2, 2, 24000),",
+    "            new LooseLootDefinition(\"thermal_imaging_core\", \"Thermal Imaging Core\", \"optics\", \"gold\", 4, \"The core sensor package from a military thermal optic.\", 0.6D, 1, 2, 21000),",
+    "            new LooseLootDefinition(\"match_grade_bolt_carrier\", \"Match-Grade Bolt Carrier\", \"weapon_parts\", \"gold\", 4, \"A match-grade carrier machined to tight tolerances.\", 0.8D, 1, 1, 9800),",
+    "            new LooseLootDefinition(\"prototype_ammo_feed_unit\", \"Prototype Ammo Feed Unit\", \"weapon_parts\", \"gold\", 4, \"A prototype feed unit for high-rate ammunition systems.\", 1.4D, 2, 2, 18400),",
+    "            new LooseLootDefinition(\"military_antidote_injector\", \"Military Antidote Injector\", \"medical_tech\", \"gold\", 4, \"A restricted injector for battlefield toxin exposure.\", 0.3D, 1, 1, 13400),",
+    "            new LooseLootDefinition(\"quantum_encryption_vault\", \"Quantum Encryption Vault\", \"electronics\", \"red\", 5, \"A hardened quantum vault containing unbroken encryption hardware.\", 2.8D, 2, 2, 135000),",
+    "            new LooseLootDefinition(\"gold_ballistic_helmet_core\", \"Gold Ballistic Helmet Core\", \"armor_materials\", \"red\", 5, \"A rare helmet core with dense premium ballistic layers.\", 2.6D, 2, 2, 62000),"
+  ],
+  "removed_extractcraft_registration_lines": [
+    "    public static final DeferredItem<Item> SPLINT_TRAUMA_KIT = registerProfiledItem(\"splint_trauma_kit\", treatmentMeta(2, \"A splint kit for stabilizing broken bones.\", 0.7D, 1, 2, false, true, 80));"
+  ],
+  "removed_raid_command_lines": [
+    "                \"splint_trauma_kit\","
+  ],
+  "removed_values": {
+    "loose_item_values": [
+      {
+        "item": "extractcraft:broken_red_dot_housing",
+        "category": "optics",
+        "rarity": "blue",
+        "value": 520,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A cracked sight shell with salvageable mounting hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:tactical_flashlight_core",
+        "category": "electronics",
+        "rarity": "blue",
+        "value": 740,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A compact light emitter core from a weapon-mounted flashlight."
+        ]
+      },
+      {
+        "item": "extractcraft:empty_morphine_case",
+        "category": "medical_tech",
+        "rarity": "blue",
+        "value": 330,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "An empty injector case with controlled-substance markings."
+        ]
+      },
+      {
+        "item": "extractcraft:compressed_fuel_tab",
+        "category": "industrial",
+        "rarity": "blue",
+        "value": 430,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A dense fuel tab for emergency burners and field stoves."
+        ]
+      },
+      {
+        "item": "extractcraft:electrical_relay",
+        "category": "electronics",
+        "rarity": "blue",
+        "value": 650,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A boxed relay module used in security and power panels."
+        ]
+      },
+      {
+        "item": "extractcraft:bent_weapon_rail",
+        "category": "weapon_parts",
+        "rarity": "blue",
+        "value": 430,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A damaged rail section that can still be milled for parts."
+        ]
+      },
+      {
+        "item": "extractcraft:cracked_polymer_grip",
+        "category": "weapon_parts",
+        "rarity": "blue",
+        "value": 360,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A split grip with intact screws and texture panels."
+        ]
+      },
+      {
+        "item": "extractcraft:stripped_circuit_board",
+        "category": "electronics",
+        "rarity": "blue",
+        "value": 770,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A salvage board with a few valuable chips still attached."
+        ]
+      },
+      {
+        "item": "extractcraft:cheap_optic_mount",
+        "category": "optics",
+        "rarity": "blue",
+        "value": 340,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2,
+        "notes": [
+          "A low-grade optic mount with serviceable clamp hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:night_vision_tube",
+        "category": "optics",
+        "rarity": "purple",
+        "value": 4700,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A fragile intensifier tube for night vision assemblies."
+        ]
+      },
+      {
+        "item": "extractcraft:composite_helmet_shell",
+        "category": "armor_materials",
+        "rarity": "purple",
+        "value": 3900,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A shaped helmet shell awaiting liner and hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:suppressor_baffle_stack",
+        "category": "weapon_parts",
+        "rarity": "purple",
+        "value": 3300,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A machined stack of baffles for suppressor rebuilds."
+        ]
+      },
+      {
+        "item": "extractcraft:precision_trigger_group",
+        "category": "weapon_parts",
+        "rarity": "purple",
+        "value": 4200,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A tuned trigger group wrapped in oil paper."
+        ]
+      },
+      {
+        "item": "extractcraft:carbon_handguard",
+        "category": "weapon_parts",
+        "rarity": "purple",
+        "value": 3100,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A light carbon handguard for modern rifle builds."
+        ]
+      },
+      {
+        "item": "extractcraft:smart_magazine_sensor",
+        "category": "weapon_parts",
+        "rarity": "purple",
+        "value": 2600,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A tiny sensor pack for round-counting magazines."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_splint_brace",
+        "category": "medical_tech",
+        "rarity": "purple",
+        "value": 2700,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 3,
+        "notes": [
+          "A collapsible brace used by combat trauma teams."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_drone_brain",
+        "category": "electronics",
+        "rarity": "gold",
+        "value": 24000,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 4,
+        "notes": [
+          "A prototype processor cluster from an autonomous drone."
+        ]
+      },
+      {
+        "item": "extractcraft:thermal_imaging_core",
+        "category": "optics",
+        "rarity": "gold",
+        "value": 21000,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 4,
+        "notes": [
+          "The core sensor package from a military thermal optic."
+        ]
+      },
+      {
+        "item": "extractcraft:match_grade_bolt_carrier",
+        "category": "weapon_parts",
+        "rarity": "gold",
+        "value": 9800,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 4,
+        "notes": [
+          "A match-grade carrier machined to tight tolerances."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_ammo_feed_unit",
+        "category": "weapon_parts",
+        "rarity": "gold",
+        "value": 18400,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 4,
+        "notes": [
+          "A prototype feed unit for high-rate ammunition systems."
+        ]
+      },
+      {
+        "item": "extractcraft:military_antidote_injector",
+        "category": "medical_tech",
+        "rarity": "gold",
+        "value": 13400,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 4,
+        "notes": [
+          "A restricted injector for battlefield toxin exposure."
+        ]
+      },
+      {
+        "item": "extractcraft:quantum_encryption_vault",
+        "category": "electronics",
+        "rarity": "red",
+        "value": 135000,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 5,
+        "notes": [
+          "A hardened quantum vault containing unbroken encryption hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:gold_ballistic_helmet_core",
+        "category": "armor_materials",
+        "rarity": "red",
+        "value": 62000,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 5,
+        "notes": [
+          "A rare helmet core with dense premium ballistic layers."
+        ]
+      }
+    ],
+    "equipment_item_values": [
+      {
+        "item": "extractcraft:splint_trauma_kit",
+        "category": "medical",
+        "rarity": "uncommon",
+        "value": 85,
+        "sellable": true,
+        "questItem": false,
+        "lootTier": 2
+      }
+    ]
+  },
+  "removed_profiles": {
+    "loose_carry_profiles": [
+      {
+        "item": "extractcraft:broken_red_dot_housing",
+        "category": "optics",
+        "weight": 0.5,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A cracked sight shell with salvageable mounting hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:tactical_flashlight_core",
+        "category": "electronics",
+        "weight": 0.5,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A compact light emitter core from a weapon-mounted flashlight."
+        ]
+      },
+      {
+        "item": "extractcraft:empty_morphine_case",
+        "category": "medical_tech",
+        "weight": 0.2,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "An empty injector case with controlled-substance markings."
+        ]
+      },
+      {
+        "item": "extractcraft:compressed_fuel_tab",
+        "category": "industrial",
+        "weight": 0.5,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A dense fuel tab for emergency burners and field stoves."
+        ]
+      },
+      {
+        "item": "extractcraft:electrical_relay",
+        "category": "electronics",
+        "weight": 0.3,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A boxed relay module used in security and power panels."
+        ]
+      },
+      {
+        "item": "extractcraft:bent_weapon_rail",
+        "category": "weapon_parts",
+        "weight": 0.5,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A damaged rail section that can still be milled for parts."
+        ]
+      },
+      {
+        "item": "extractcraft:cracked_polymer_grip",
+        "category": "weapon_parts",
+        "weight": 0.4,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A split grip with intact screws and texture panels."
+        ]
+      },
+      {
+        "item": "extractcraft:stripped_circuit_board",
+        "category": "electronics",
+        "weight": 0.2,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A salvage board with a few valuable chips still attached."
+        ]
+      },
+      {
+        "item": "extractcraft:cheap_optic_mount",
+        "category": "optics",
+        "weight": 0.2,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "A low-grade optic mount with serviceable clamp hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:night_vision_tube",
+        "category": "optics",
+        "weight": 0.3,
+        "slotCost": 2,
+        "gridWidth": 1,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A fragile intensifier tube for night vision assemblies."
+        ]
+      },
+      {
+        "item": "extractcraft:composite_helmet_shell",
+        "category": "armor_materials",
+        "weight": 1.6,
+        "slotCost": 4,
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A shaped helmet shell awaiting liner and hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:suppressor_baffle_stack",
+        "category": "weapon_parts",
+        "weight": 0.6,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A machined stack of baffles for suppressor rebuilds."
+        ]
+      },
+      {
+        "item": "extractcraft:precision_trigger_group",
+        "category": "weapon_parts",
+        "weight": 0.5,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A tuned trigger group wrapped in oil paper."
+        ]
+      },
+      {
+        "item": "extractcraft:carbon_handguard",
+        "category": "weapon_parts",
+        "weight": 0.7,
+        "slotCost": 2,
+        "gridWidth": 1,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A light carbon handguard for modern rifle builds."
+        ]
+      },
+      {
+        "item": "extractcraft:smart_magazine_sensor",
+        "category": "weapon_parts",
+        "weight": 0.2,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A tiny sensor pack for round-counting magazines."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_splint_brace",
+        "category": "medical_tech",
+        "weight": 0.9,
+        "slotCost": 2,
+        "gridWidth": 1,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 3,
+        "notes": [
+          "A collapsible brace used by combat trauma teams."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_drone_brain",
+        "category": "electronics",
+        "weight": 0.8,
+        "slotCost": 4,
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 4,
+        "notes": [
+          "A prototype processor cluster from an autonomous drone."
+        ]
+      },
+      {
+        "item": "extractcraft:thermal_imaging_core",
+        "category": "optics",
+        "weight": 0.6,
+        "slotCost": 2,
+        "gridWidth": 1,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 4,
+        "notes": [
+          "The core sensor package from a military thermal optic."
+        ]
+      },
+      {
+        "item": "extractcraft:match_grade_bolt_carrier",
+        "category": "weapon_parts",
+        "weight": 0.8,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 4,
+        "notes": [
+          "A match-grade carrier machined to tight tolerances."
+        ]
+      },
+      {
+        "item": "extractcraft:prototype_ammo_feed_unit",
+        "category": "weapon_parts",
+        "weight": 1.4,
+        "slotCost": 4,
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 4,
+        "notes": [
+          "A prototype feed unit for high-rate ammunition systems."
+        ]
+      },
+      {
+        "item": "extractcraft:military_antidote_injector",
+        "category": "medical_tech",
+        "weight": 0.3,
+        "slotCost": 1,
+        "gridWidth": 1,
+        "gridHeight": 1,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 4,
+        "notes": [
+          "A restricted injector for battlefield toxin exposure."
+        ]
+      },
+      {
+        "item": "extractcraft:quantum_encryption_vault",
+        "category": "electronics",
+        "weight": 2.8,
+        "slotCost": 4,
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 5,
+        "notes": [
+          "A hardened quantum vault containing unbroken encryption hardware."
+        ]
+      },
+      {
+        "item": "extractcraft:gold_ballistic_helmet_core",
+        "category": "armor_materials",
+        "weight": 2.6,
+        "slotCost": 4,
+        "gridWidth": 2,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": false,
+        "allowInVest": true,
+        "tier": 5,
+        "notes": [
+          "A rare helmet core with dense premium ballistic layers."
+        ]
+      }
+    ],
+    "equipment_carry_profiles": [
+      {
+        "item": "extractcraft:splint_trauma_kit",
+        "category": "medical",
+        "weight": 0.7,
+        "slotCost": 2,
+        "gridWidth": 1,
+        "gridHeight": 2,
+        "canRotate": true,
+        "allowInSafeBox": true,
+        "allowInVest": true,
+        "tier": 2,
+        "notes": [
+          "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
+        ],
+        "useTimeTicks": 80,
+        "fixesBrokenBone": true,
+        "consumable": true
+      }
+    ]
+  },
+  "removed_lang": {
+    "item.extractcraft.cheap_optic_mount": "Cheap Optic Mount",
+    "item.extractcraft.composite_helmet_shell": "Composite Helmet Shell",
+    "item.extractcraft.stripped_circuit_board": "Stripped Circuit Board",
+    "item.extractcraft.electrical_relay": "Electrical Relay",
+    "item.extractcraft.bent_weapon_rail": "Bent Weapon Rail",
+    "item.extractcraft.match_grade_bolt_carrier": "Match-Grade Bolt Carrier",
+    "item.extractcraft.compressed_fuel_tab": "Compressed Fuel Tab",
+    "item.extractcraft.tactical_flashlight_core": "Tactical Flashlight Core",
+    "item.extractcraft.precision_trigger_group": "Precision Trigger Group",
+    "item.extractcraft.splint_trauma_kit": "Splint Trauma Kit",
+    "item.extractcraft.quantum_encryption_vault": "Quantum Encryption Vault",
+    "item.extractcraft.cracked_polymer_grip": "Cracked Polymer Grip",
+    "item.extractcraft.empty_morphine_case": "Empty Morphine Case",
+    "item.extractcraft.prototype_drone_brain": "Prototype Drone Brain",
+    "item.extractcraft.prototype_ammo_feed_unit": "Prototype Ammo Feed Unit",
+    "item.extractcraft.night_vision_tube": "Night Vision Tube",
+    "item.extractcraft.suppressor_baffle_stack": "Suppressor Baffle Stack",
+    "item.extractcraft.broken_red_dot_housing": "Broken Red Dot Housing",
+    "item.extractcraft.gold_ballistic_helmet_core": "Gold Ballistic Helmet Core",
+    "item.extractcraft.prototype_splint_brace": "Prototype Splint Brace",
+    "item.extractcraft.smart_magazine_sensor": "Smart Magazine Sensor",
+    "item.extractcraft.military_antidote_injector": "Military Antidote Injector",
+    "item.extractcraft.carbon_handguard": "Carbon Handguard",
+    "item.extractcraft.thermal_imaging_core": "Thermal Imaging Core"
+  },
+  "moved_files": [
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\prototype_drone_brain.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\prototype_drone_brain.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\prototype_drone_brain.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\prototype_drone_brain.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\composite_helmet_shell.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\composite_helmet_shell.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\composite_helmet_shell.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\composite_helmet_shell.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\tactical_flashlight_core.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\tactical_flashlight_core.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\tactical_flashlight_core.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\tactical_flashlight_core.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\thermal_imaging_core.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\thermal_imaging_core.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\thermal_imaging_core.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\thermal_imaging_core.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\gold_ballistic_helmet_core.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\gold_ballistic_helmet_core.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\gold_ballistic_helmet_core.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\gold_ballistic_helmet_core.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\quantum_encryption_vault.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\quantum_encryption_vault.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\quantum_encryption_vault.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\quantum_encryption_vault.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\empty_morphine_case.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\empty_morphine_case.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\empty_morphine_case.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\empty_morphine_case.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\splint_trauma_kit.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\splint_trauma_kit.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\splint_trauma_kit.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\splint_trauma_kit.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\prototype_splint_brace.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\prototype_splint_brace.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\prototype_splint_brace.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\prototype_splint_brace.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\military_antidote_injector.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\military_antidote_injector.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\military_antidote_injector.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\military_antidote_injector.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\electrical_relay.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\electrical_relay.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\electrical_relay.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\electrical_relay.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\stripped_circuit_board.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\stripped_circuit_board.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\stripped_circuit_board.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\stripped_circuit_board.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\smart_magazine_sensor.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\smart_magazine_sensor.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\smart_magazine_sensor.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\smart_magazine_sensor.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\bent_weapon_rail.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\bent_weapon_rail.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\bent_weapon_rail.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\bent_weapon_rail.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\cracked_polymer_grip.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\cracked_polymer_grip.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\cracked_polymer_grip.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\cracked_polymer_grip.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\carbon_handguard.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\carbon_handguard.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\carbon_handguard.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\carbon_handguard.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\precision_trigger_group.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\precision_trigger_group.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\precision_trigger_group.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\precision_trigger_group.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\suppressor_baffle_stack.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\suppressor_baffle_stack.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\suppressor_baffle_stack.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\suppressor_baffle_stack.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\match_grade_bolt_carrier.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\match_grade_bolt_carrier.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\match_grade_bolt_carrier.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\match_grade_bolt_carrier.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\prototype_ammo_feed_unit.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\prototype_ammo_feed_unit.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\prototype_ammo_feed_unit.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\prototype_ammo_feed_unit.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\broken_red_dot_housing.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\broken_red_dot_housing.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\broken_red_dot_housing.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\broken_red_dot_housing.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\cheap_optic_mount.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\cheap_optic_mount.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\cheap_optic_mount.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\cheap_optic_mount.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\night_vision_tube.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\night_vision_tube.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\night_vision_tube.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\night_vision_tube.png"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\models\\item\\compressed_fuel_tab.json",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\models\\item\\compressed_fuel_tab.json"
+    },
+    {
+      "from": "src\\main\\resources\\assets\\extractcraft\\textures\\item\\compressed_fuel_tab.png",
+      "to": "src\\main\\resources\\Custom Items\\retired_items_20260605_225405\\textures\\item\\compressed_fuel_tab.png"
+    }
+  ],
+  "removed_generator_lines": [
+    "    \"tactical_flashlight_core\",",
+    "    \"electrical_relay\",",
+    "    \"stripped_circuit_board\",",
+    "    \"broken_red_dot_housing\",",
+    "    \"cheap_optic_mount\",",
+    "    \"night_vision_tube\",",
+    "    \"empty_morphine_case\",",
+    "    \"composite_helmet_shell\",",
+    "    \"gold_ballistic_helmet_core\",",
+    "    \"bent_weapon_rail\",",
+    "    \"cracked_polymer_grip\",",
+    "    \"suppressor_baffle_stack\",",
+    "    \"precision_trigger_group\",",
+    "    \"carbon_handguard\",",
+    "    \"smart_magazine_sensor\",",
+    "    \"match_grade_bolt_carrier\",",
+    "    \"quantum_encryption_vault\",",
+    "    \"prototype_drone_brain\",",
+    "    \"thermal_imaging_core\",",
+    "    \"prototype_ammo_feed_unit\",",
+    "    \"military_antidote_injector\",",
+    "    \"compressed_fuel_tab\",",
+    "    \"prototype_splint_brace\",",
+    "    (\"splint_trauma_kit\", \"Splint Trauma Kit\", \"Meds.png\", 5, 4, 2, 2, \"medical\", 0.7, 1, 2, 2, None, None, None, None, None, None, None, 80, False, True, True, 85),"
+  ]
+}

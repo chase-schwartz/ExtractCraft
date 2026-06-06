@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "compressed_fuel_tab",
+    "display_name": "Compressed Fuel Tab",
+    "png": "compressed_fuel_tab.png"
+  },
+  {
+    "item_id": "spark_plug_set",
+    "display_name": "Spark Plug Set",
+    "png": "spark_plug_set.png"
+  },
+  {
+    "item_id": "hydraulic_valve",
+    "display_name": "Hydraulic Valve",
+    "png": "hydraulic_valve.png"
+  },
+  {
+    "item_id": "cracked_phone_screen",
+    "display_name": "Cracked Phone Screen",
+    "png": "cracked_phone_screen.png"
+  },
+  {
+    "item_id": "encrypted_usb_token",
+    "display_name": "Encrypted USB Token",
+    "png": "encrypted_usb_token.png"
+  },
+  {
+    "item_id": "secure_radio_module",
+    "display_name": "Secure Radio Module",
+    "png": "secure_radio_module.png"
+  },
+  {
+    "item_id": "reinforced_cable_harness",
+    "display_name": "Reinforced Cable Harness",
+    "png": "reinforced_cable_harness.png"
+  },
+  {
+    "item_id": "prototype_exo_core",
+    "display_name": "Prototype Exo Core",
+    "png": "prototype_exo_core.png"
+  }
+]

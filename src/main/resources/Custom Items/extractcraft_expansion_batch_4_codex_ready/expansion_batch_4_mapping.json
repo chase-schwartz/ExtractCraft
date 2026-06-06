@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "antique_pocket_watch",
+    "display_name": "Antique Pocket Watch",
+    "png": "antique_pocket_watch.png"
+  },
+  {
+    "item_id": "pearl_bracelet",
+    "display_name": "Pearl Bracelet",
+    "png": "pearl_bracelet.png"
+  },
+  {
+    "item_id": "designer_wallet",
+    "display_name": "Designer Wallet",
+    "png": "designer_wallet.png"
+  },
+  {
+    "item_id": "rare_coin_case",
+    "display_name": "Rare Coin Case",
+    "png": "rare_coin_case.png"
+  },
+  {
+    "item_id": "luxury_sunglasses",
+    "display_name": "Luxury Sunglasses",
+    "png": "luxury_sunglasses.png"
+  },
+  {
+    "item_id": "jeweled_brooch",
+    "display_name": "Jeweled Brooch",
+    "png": "jeweled_brooch.png"
+  },
+  {
+    "item_id": "silver_cigarette_case",
+    "display_name": "Silver Cigarette Case",
+    "png": "silver_cigarette_case.png"
+  },
+  {
+    "item_id": "velvet_jewelry_pouch",
+    "display_name": "Velvet Jewelry Pouch",
+    "png": "velvet_jewelry_pouch.png"
+  }
+]

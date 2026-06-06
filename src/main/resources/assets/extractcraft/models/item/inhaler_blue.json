@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/inhaler_blue"
+                 },
+    "parent":  "minecraft:item/generated"
+}

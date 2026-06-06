@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "pressure_gauge",
+    "display_name": "Pressure Gauge",
+    "png": "pressure_gauge.png"
+  },
+  {
+    "item_id": "valve_wheel",
+    "display_name": "Valve Wheel",
+    "png": "valve_wheel.png"
+  },
+  {
+    "item_id": "welding_nozzle",
+    "display_name": "Welding Nozzle",
+    "png": "welding_nozzle.png"
+  },
+  {
+    "item_id": "bearing_set",
+    "display_name": "Bearing Set",
+    "png": "bearing_set.png"
+  },
+  {
+    "item_id": "drill_chuck",
+    "display_name": "Drill Chuck",
+    "png": "drill_chuck.png"
+  },
+  {
+    "item_id": "braided_hose_bundle",
+    "display_name": "Braided Hose Bundle",
+    "png": "braided_hose_bundle.png"
+  },
+  {
+    "item_id": "fuse_box_module",
+    "display_name": "Fuse Box Module",
+    "png": "fuse_box_module.png"
+  },
+  {
+    "item_id": "pump_impeller",
+    "display_name": "Pump Impeller",
+    "png": "pump_impeller.png"
+  }
+]

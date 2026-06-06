@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "gold_chess_king",
+    "display_name": "Gold Chess King",
+    "png": "gold_chess_king.png"
+  },
+  {
+    "item_id": "gemstone_reliquary",
+    "display_name": "Gemstone Reliquary",
+    "png": "gemstone_reliquary.png"
+  },
+  {
+    "item_id": "sealed_diplomatic_medal",
+    "display_name": "Sealed Diplomatic Medal",
+    "png": "sealed_diplomatic_medal.png"
+  },
+  {
+    "item_id": "platinum_data_wafer",
+    "display_name": "Platinum Data Wafer",
+    "png": "platinum_data_wafer.png"
+  },
+  {
+    "item_id": "ceremonial_dagger_hilt",
+    "display_name": "Ceremonial Dagger Hilt",
+    "png": "ceremonial_dagger_hilt.png"
+  },
+  {
+    "item_id": "luxury_gold_bar",
+    "display_name": "Luxury Gold Bar",
+    "png": "luxury_gold_bar.png"
+  },
+  {
+    "item_id": "royal_signet_ring",
+    "display_name": "Royal Signet Ring",
+    "png": "royal_signet_ring.png"
+  },
+  {
+    "item_id": "antique_music_box",
+    "display_name": "Antique Music Box",
+    "png": "antique_music_box.png"
+  }
+]

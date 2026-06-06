@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_intel"
+    "layer0": "extractcraft:item/laminated_zone_map"
   }
 }

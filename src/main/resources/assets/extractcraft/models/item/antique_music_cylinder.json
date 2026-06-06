@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/antique_music_cylinder"
+                 },
+    "parent":  "minecraft:item/generated"
+}

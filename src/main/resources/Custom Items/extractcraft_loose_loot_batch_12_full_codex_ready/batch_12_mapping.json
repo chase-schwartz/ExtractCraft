@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "prototype_drone_brain",
+    "display_name": "Prototype Drone Brain",
+    "png": "prototype_drone_brain.png"
+  },
+  {
+    "item_id": "thermal_imaging_core",
+    "display_name": "Thermal Imaging Core",
+    "png": "thermal_imaging_core.png"
+  },
+  {
+    "item_id": "advanced_nvg_assembly",
+    "display_name": "Advanced NVG Assembly",
+    "png": "advanced_nvg_assembly.png"
+  },
+  {
+    "item_id": "adaptive_suppressor_core",
+    "display_name": "Adaptive Suppressor Core",
+    "png": "adaptive_suppressor_core.png"
+  },
+  {
+    "item_id": "prototype_ammo_feed_unit",
+    "display_name": "Prototype Ammo Feed Unit",
+    "png": "prototype_ammo_feed_unit.png"
+  },
+  {
+    "item_id": "lab_grade_stimulant_case",
+    "display_name": "Lab Grade Stimulant Case",
+    "png": "lab_grade_stimulant_case.png"
+  },
+  {
+    "item_id": "portable_blood_analyzer",
+    "display_name": "Portable Blood Analyzer",
+    "png": "portable_blood_analyzer.png"
+  },
+  {
+    "item_id": "military_antidote_injector",
+    "display_name": "Military Antidote Injector",
+    "png": "military_antidote_injector.png"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "extractcraft:item/broken_red_dot_housing"
+  }
+}

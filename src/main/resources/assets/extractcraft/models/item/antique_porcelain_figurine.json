@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/antique_porcelain_figurine"
+                 },
+    "parent":  "minecraft:item/generated"
+}

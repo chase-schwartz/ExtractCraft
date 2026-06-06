@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_industrial"
+    "layer0": "extractcraft:item/reinforced_cable_harness"
   }
 }

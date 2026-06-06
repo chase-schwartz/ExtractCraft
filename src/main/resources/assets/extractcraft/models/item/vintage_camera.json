@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/vintage_camera"
+                 },
+    "parent":  "minecraft:item/generated"
+}

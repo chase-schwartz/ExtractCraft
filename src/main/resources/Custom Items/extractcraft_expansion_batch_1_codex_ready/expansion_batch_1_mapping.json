@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "gold_wristwatch",
+    "display_name": "Gold Wristwatch",
+    "png": "gold_wristwatch.png"
+  },
+  {
+    "item_id": "silver_locket",
+    "display_name": "Silver Locket",
+    "png": "silver_locket.png"
+  },
+  {
+    "item_id": "diamond_earrings_case",
+    "display_name": "Diamond Earrings Case",
+    "png": "diamond_earrings_case.png"
+  },
+  {
+    "item_id": "antique_compass",
+    "display_name": "Antique Compass",
+    "png": "antique_compass.png"
+  },
+  {
+    "item_id": "camera_lens",
+    "display_name": "Camera Lens",
+    "png": "camera_lens.png"
+  },
+  {
+    "item_id": "engraved_lighter",
+    "display_name": "Engraved Lighter",
+    "png": "engraved_lighter.png"
+  },
+  {
+    "item_id": "perfume_bottle",
+    "display_name": "Perfume Bottle",
+    "png": "perfume_bottle.png"
+  },
+  {
+    "item_id": "fountain_pen_case",
+    "display_name": "Fountain Pen Case",
+    "png": "fountain_pen_case.png"
+  }
+]

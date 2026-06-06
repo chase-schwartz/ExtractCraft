@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "specimen_slide_case",
+    "display_name": "Specimen Slide Case",
+    "png": "specimen_slide_case.png"
+  },
+  {
+    "item_id": "reagent_ampoule_rack",
+    "display_name": "Reagent Ampoule Rack",
+    "png": "reagent_ampoule_rack.png"
+  },
+  {
+    "item_id": "microscope_lens",
+    "display_name": "Microscope Lens",
+    "png": "microscope_lens.png"
+  },
+  {
+    "item_id": "biohazard_sample_tube",
+    "display_name": "Biohazard Sample Tube",
+    "png": "biohazard_sample_tube.png"
+  },
+  {
+    "item_id": "centrifuge_rotor",
+    "display_name": "Centrifuge Rotor",
+    "png": "centrifuge_rotor.png"
+  },
+  {
+    "item_id": "petri_dish_stack",
+    "display_name": "Petri Dish Stack",
+    "png": "petri_dish_stack.png"
+  },
+  {
+    "item_id": "sealed_lab_notebook",
+    "display_name": "Sealed Lab Notebook",
+    "png": "sealed_lab_notebook.png"
+  },
+  {
+    "item_id": "calibration_weight_set",
+    "display_name": "Calibration Weight Set",
+    "png": "calibration_weight_set.png"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "spent_data_tape",
+    "display_name": "Spent Data Tape",
+    "png": "spent_data_tape.png"
+  },
+  {
+    "item_id": "training_ammo_voucher",
+    "display_name": "Training Ammo Voucher",
+    "png": "training_ammo_voucher.png"
+  },
+  {
+    "item_id": "folded_evacuate_notice",
+    "display_name": "Folded Evacuate Notice",
+    "png": "folded_evacuate_notice.png"
+  },
+  {
+    "item_id": "redacted_patrol_orders",
+    "display_name": "Redacted Patrol Orders",
+    "png": "redacted_patrol_orders.png"
+  },
+  {
+    "item_id": "sealed_evidence_pouch",
+    "display_name": "Sealed Evidence Pouch",
+    "png": "sealed_evidence_pouch.png"
+  },
+  {
+    "item_id": "military_crypto_ledger",
+    "display_name": "Military Crypto Ledger",
+    "png": "military_crypto_ledger.png"
+  },
+  {
+    "item_id": "restricted_medical_manifest",
+    "display_name": "Restricted Medical Manifest",
+    "png": "restricted_medical_manifest.png"
+  },
+  {
+    "item_id": "commanders_encrypted_drive",
+    "display_name": "Commander's Encrypted Drive",
+    "png": "commanders_encrypted_drive.png"
+  }
+]

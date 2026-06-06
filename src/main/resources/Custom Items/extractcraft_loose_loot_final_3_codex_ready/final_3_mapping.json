@@ -1,0 +1,17 @@
+[
+  {
+    "item_id": "rusted_dog_tags",
+    "display_name": "Rusted Dog Tags",
+    "png": "rusted_dog_tags.png"
+  },
+  {
+    "item_id": "prototype_splint_brace",
+    "display_name": "Prototype Splint Brace",
+    "png": "prototype_splint_brace.png"
+  },
+  {
+    "item_id": "nano_suture_cartridge",
+    "display_name": "Nano Suture Cartridge",
+    "png": "nano_suture_cartridge.png"
+  }
+]

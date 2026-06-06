@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/silver_compact_case"
+                 },
+    "parent":  "minecraft:item/generated"
+}

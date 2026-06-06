@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/velvet_ring_box"
+                 },
+    "parent":  "minecraft:item/generated"
+}

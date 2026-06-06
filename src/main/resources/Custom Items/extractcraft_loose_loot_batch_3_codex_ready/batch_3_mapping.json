@@ -1,0 +1,34 @@
+[
+  {
+    "item_id": "lithium_battery_pack",
+    "png": "lithium_battery_pack.png"
+  },
+  {
+    "item_id": "cracked_smartphone",
+    "png": "cracked_smartphone.png"
+  },
+  {
+    "item_id": "encrypted_usb_stick",
+    "png": "encrypted_usb_stick.png"
+  },
+  {
+    "item_id": "circuit_board_scrap",
+    "png": "circuit_board_scrap.png"
+  },
+  {
+    "item_id": "copper_wire_spool",
+    "png": "copper_wire_spool.png"
+  },
+  {
+    "item_id": "broken_gps_unit",
+    "png": "broken_gps_unit.png"
+  },
+  {
+    "item_id": "tactical_flashlight_body",
+    "png": "tactical_flashlight_body.png"
+  },
+  {
+    "item_id": "ceramic_filter_disc",
+    "png": "ceramic_filter_disc.png"
+  }
+]

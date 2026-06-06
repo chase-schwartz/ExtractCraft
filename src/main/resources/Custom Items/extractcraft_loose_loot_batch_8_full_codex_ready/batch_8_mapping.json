@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "bent_weapon_rail",
+    "display_name": "Bent Weapon Rail",
+    "png": "bent_weapon_rail.png"
+  },
+  {
+    "item_id": "cracked_polymer_grip",
+    "display_name": "Cracked Polymer Grip",
+    "png": "cracked_polymer_grip.png"
+  },
+  {
+    "item_id": "suppressor_baffle_stack",
+    "display_name": "Suppressor Baffle Stack",
+    "png": "suppressor_baffle_stack.png"
+  },
+  {
+    "item_id": "precision_trigger_group",
+    "display_name": "Precision Trigger Group",
+    "png": "precision_trigger_group.png"
+  },
+  {
+    "item_id": "carbon_handguard",
+    "display_name": "Carbon Handguard",
+    "png": "carbon_handguard.png"
+  },
+  {
+    "item_id": "smart_magazine_sensor",
+    "display_name": "Smart Magazine Sensor",
+    "png": "smart_magazine_sensor.png"
+  },
+  {
+    "item_id": "precision_gyro_stabilizer",
+    "display_name": "Precision Gyro Stabilizer",
+    "png": "precision_gyro_stabilizer.png"
+  },
+  {
+    "item_id": "match_grade_bolt_carrier",
+    "display_name": "Match Grade Bolt Carrier",
+    "png": "match_grade_bolt_carrier.png"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "extractcraft:item/prototype_ammo_feed_unit"
+  }
+}

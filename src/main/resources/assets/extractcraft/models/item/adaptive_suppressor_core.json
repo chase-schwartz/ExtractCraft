@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_weapon_parts"
+    "layer0": "extractcraft:item/adaptive_suppressor_core"
   }
 }

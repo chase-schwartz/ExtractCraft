@@ -1,0 +1,54 @@
+Continue ExtractCraft loose-loot icon integration.
+
+Install this 8-item expansion batch 7 (survival / utility loot) using the same successful direct-asset process as the helmet / armor / backpack / vest / safe-box / meds / repair-kit / earlier loose-loot batches.
+
+Expansion Batch 7 full mapping:
+- storm_lighter.png -> existing item ID `storm_lighter`
+- signal_mirror.png -> existing item ID `signal_mirror`
+- emergency_blanket_roll.png -> existing item ID `emergency_blanket_roll`
+- water_purification_tabs.png -> existing item ID `water_purification_tabs`
+- compact_camp_stove.png -> existing item ID `compact_camp_stove`
+- flare_case.png -> existing item ID `flare_case`
+- filter_straw.png -> existing item ID `filter_straw`
+- firestarter_tin.png -> existing item ID `firestarter_tin`
+
+Important:
+These PNGs are intended to already be alpha-ready:
+- 64x64
+- RGBA
+- true transparency
+- no baked checkerboard
+- no white box background
+- one item per file
+
+Guardrail:
+Before installing, verify these exact IDs already exist. If any exact ID differs from the existing production ID, stop and report the mismatch rather than inventing substitutes.
+
+Install steps:
+1. Extract the ZIP.
+2. Confirm it contains exactly 8 separate 64x64 RGBA PNG files.
+3. Verify each PNG has true alpha transparency, no baked checkerboard, no white box background, and no text labels.
+4. Copy each PNG into the same production item texture path used by the successful prior icon batches, typically:
+   `src/main/resources/assets/extractcraft/textures/item/`
+5. Create or update the matching item model JSON for each ID using the same working pattern as prior batches:
+   - parent: `minecraft:item/generated`
+   - layer0: `extractcraft:item/<item_id>`
+6. Ensure these IDs are protected in `DIRECT_ASSET_ITEMS` or the equivalent direct-asset protection list so datagen/fallback generation does not overwrite them.
+7. Search for any resource generation or sync logic that could overwrite direct icons and protect these 8 exactly like the successful prior custom icon items.
+8. Run compile/build.
+9. After build, verify the final installed production PNGs still exist and were not overwritten.
+10. Perform a conservative final alpha/fringe check on the installed PNGs:
+   - confirm transparent corners
+   - confirm no checkerboard background exists
+   - confirm no obvious white halo/fringe around thin edges
+   - remove only unwanted fringe if needed
+   - do not remove intentional off-white details
+11. Rebuild if cleanup is performed.
+12. Report back:
+   - exact files changed
+   - where each PNG was installed
+   - model JSONs created/updated
+   - where the IDs were protected in `DIRECT_ASSET_ITEMS`
+   - build result
+   - confirmation the files were not overwritten
+   - confirmation all final installed files remain individual 64x64 true-alpha PNGs

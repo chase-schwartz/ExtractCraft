@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "extractcraft:item/placeholder_loot_survival"
+    "layer0": "extractcraft:item/signal_flare_tube"
   }
 }

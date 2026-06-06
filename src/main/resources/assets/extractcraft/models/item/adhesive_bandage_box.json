@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/adhesive_bandage_box"
+                 },
+    "parent":  "minecraft:item/generated"
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "vintage_camera",
+    "display_name": "Vintage Camera",
+    "png": "vintage_camera.png"
+  },
+  {
+    "item_id": "silver_pocket_flask",
+    "display_name": "Silver Pocket Flask",
+    "png": "silver_pocket_flask.png"
+  },
+  {
+    "item_id": "rare_stamp_album",
+    "display_name": "Rare Stamp Album",
+    "png": "rare_stamp_album.png"
+  },
+  {
+    "item_id": "antique_porcelain_figurine",
+    "display_name": "Antique Porcelain Figurine",
+    "png": "antique_porcelain_figurine.png"
+  },
+  {
+    "item_id": "gold_fountain_pen",
+    "display_name": "Gold Fountain Pen",
+    "png": "gold_fountain_pen.png"
+  },
+  {
+    "item_id": "collector_card_slab",
+    "display_name": "Collector Card Slab",
+    "png": "collector_card_slab.png"
+  },
+  {
+    "item_id": "silver_pocket_knife",
+    "display_name": "Silver Pocket Knife",
+    "png": "silver_pocket_knife.png"
+  },
+  {
+    "item_id": "antique_music_cylinder",
+    "display_name": "Antique Music Cylinder",
+    "png": "antique_music_cylinder.png"
+  }
+]

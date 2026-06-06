@@ -199,15 +199,6 @@
       "lootTier": 3
     },
     {
-      "item": "extractcraft:splint_trauma_kit",
-      "category": "medical",
-      "rarity": "uncommon",
-      "value": 85,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2
-    },
-    {
       "item": "extractcraft:helmet_rebuild_kit",
       "category": "armor_parts",
       "rarity": "common",

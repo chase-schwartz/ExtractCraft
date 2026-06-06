@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "sealed_coffee_tin",
+    "display_name": "Sealed Coffee Tin",
+    "png": "sealed_coffee_tin.png"
+  },
+  {
+    "item_id": "instant_noodle_cup",
+    "display_name": "Instant Noodle Cup",
+    "png": "instant_noodle_cup.png"
+  },
+  {
+    "item_id": "vacuum_tea_brick",
+    "display_name": "Vacuum Tea Brick",
+    "png": "vacuum_tea_brick.png"
+  },
+  {
+    "item_id": "canned_peaches",
+    "display_name": "Canned Peaches",
+    "png": "canned_peaches.png"
+  },
+  {
+    "item_id": "chocolate_bar_pack",
+    "display_name": "Chocolate Bar Pack",
+    "png": "chocolate_bar_pack.png"
+  },
+  {
+    "item_id": "cigarette_carton",
+    "display_name": "Cigarette Carton",
+    "png": "cigarette_carton.png"
+  },
+  {
+    "item_id": "travel_mug",
+    "display_name": "Travel Mug",
+    "png": "travel_mug.png"
+  },
+  {
+    "item_id": "sealed_spice_jar",
+    "display_name": "Sealed Spice Jar",
+    "png": "sealed_spice_jar.png"
+  }
+]

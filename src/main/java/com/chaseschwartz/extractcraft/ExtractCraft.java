@@ -137,7 +137,6 @@ public class ExtractCraft {
     public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80), false);
     public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120), false);
     public static final DeferredItem<Item> FIELD_DRESSING_ROLL = registerProfiledItem("field_dressing_roll", treatmentMeta(1, "A field dressing roll for stopping bleeds.", 0.2D, 1, 1, true, false, 45), false);
-    public static final DeferredItem<Item> SPLINT_TRAUMA_KIT = registerProfiledItem("splint_trauma_kit", treatmentMeta(2, "A splint kit for stabilizing broken bones.", 0.7D, 1, 2, false, true, 80));
 
     public static final DeferredItem<Item> HELMET_REBUILD_KIT = registerProfiledItem("helmet_rebuild_kit", repairMeta("Helmet", "A compact kit for future helmet durability repairs.", 0.9D, 2, 2, 90));
     public static final DeferredItem<Item> ARMOR_REBUILD_KIT = registerProfiledItem("armor_rebuild_kit", repairMeta("Armor", "A heavy kit for future armor plate rebuilds.", 1.8D, 2, 3, 160));

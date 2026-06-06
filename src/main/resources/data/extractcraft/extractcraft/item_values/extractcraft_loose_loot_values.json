@@ -37,30 +37,6 @@
       ]
     },
     {
-      "item": "extractcraft:broken_red_dot_housing",
-      "category": "optics",
-      "rarity": "blue",
-      "value": 520,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A cracked sight shell with salvageable mounting hardware."
-      ]
-    },
-    {
-      "item": "extractcraft:tactical_flashlight_core",
-      "category": "electronics",
-      "rarity": "blue",
-      "value": 740,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A compact light emitter core from a weapon-mounted flashlight."
-      ]
-    },
-    {
       "item": "extractcraft:spent_data_tape",
       "category": "intel",
       "rarity": "blue",
@@ -121,18 +97,6 @@
       ]
     },
     {
-      "item": "extractcraft:empty_morphine_case",
-      "category": "medical_tech",
-      "rarity": "blue",
-      "value": 330,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "An empty injector case with controlled-substance markings."
-      ]
-    },
-    {
       "item": "extractcraft:antibiotic_strip",
       "category": "medical_tech",
       "rarity": "blue",
@@ -166,18 +130,6 @@
       "lootTier": 2,
       "notes": [
         "A morale-saving packet of ration flavoring and salts."
-      ]
-    },
-    {
-      "item": "extractcraft:compressed_fuel_tab",
-      "category": "industrial",
-      "rarity": "blue",
-      "value": 430,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A dense fuel tab for emergency burners and field stoves."
       ]
     },
     {
@@ -229,18 +181,6 @@
       ]
     },
     {
-      "item": "extractcraft:electrical_relay",
-      "category": "electronics",
-      "rarity": "blue",
-      "value": 650,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A boxed relay module used in security and power panels."
-      ]
-    },
-    {
       "item": "extractcraft:ceramic_fuse",
       "category": "electronics",
       "rarity": "blue",
@@ -289,30 +229,6 @@
       ]
     },
     {
-      "item": "extractcraft:bent_weapon_rail",
-      "category": "weapon_parts",
-      "rarity": "blue",
-      "value": 430,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A damaged rail section that can still be milled for parts."
-      ]
-    },
-    {
-      "item": "extractcraft:cracked_polymer_grip",
-      "category": "weapon_parts",
-      "rarity": "blue",
-      "value": 360,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A split grip with intact screws and texture panels."
-      ]
-    },
-    {
       "item": "extractcraft:oily_cleaning_cloth",
       "category": "tools",
       "rarity": "blue",
@@ -337,18 +253,6 @@
       ]
     },
     {
-      "item": "extractcraft:stripped_circuit_board",
-      "category": "electronics",
-      "rarity": "blue",
-      "value": 770,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A salvage board with a few valuable chips still attached."
-      ]
-    },
-    {
       "item": "extractcraft:damaged_keypad_panel",
       "category": "security",
       "rarity": "blue",
@@ -358,18 +262,6 @@
       "lootTier": 2,
       "notes": [
         "A battered keypad panel from a locked facility door."
-      ]
-    },
-    {
-      "item": "extractcraft:cheap_optic_mount",
-      "category": "optics",
-      "rarity": "blue",
-      "value": 340,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 2,
-      "notes": [
-        "A low-grade optic mount with serviceable clamp hardware."
       ]
     },
     {
@@ -517,18 +409,6 @@
       ]
     },
     {
-      "item": "extractcraft:night_vision_tube",
-      "category": "optics",
-      "rarity": "purple",
-      "value": 4700,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A fragile intensifier tube for night vision assemblies."
-      ]
-    },
-    {
       "item": "extractcraft:ballistic_fiber_roll",
       "category": "armor_materials",
       "rarity": "purple",
@@ -553,18 +433,6 @@
       ]
     },
     {
-      "item": "extractcraft:composite_helmet_shell",
-      "category": "armor_materials",
-      "rarity": "purple",
-      "value": 3900,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A shaped helmet shell awaiting liner and hardware."
-      ]
-    },
-    {
       "item": "extractcraft:kevlar_stitch_kit",
       "category": "armor_materials",
       "rarity": "purple",
@@ -574,54 +442,6 @@
       "lootTier": 3,
       "notes": [
         "A reinforced stitching kit for torn combat textiles."
-      ]
-    },
-    {
-      "item": "extractcraft:suppressor_baffle_stack",
-      "category": "weapon_parts",
-      "rarity": "purple",
-      "value": 3300,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A machined stack of baffles for suppressor rebuilds."
-      ]
-    },
-    {
-      "item": "extractcraft:precision_trigger_group",
-      "category": "weapon_parts",
-      "rarity": "purple",
-      "value": 4200,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A tuned trigger group wrapped in oil paper."
-      ]
-    },
-    {
-      "item": "extractcraft:carbon_handguard",
-      "category": "weapon_parts",
-      "rarity": "purple",
-      "value": 3100,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A light carbon handguard for modern rifle builds."
-      ]
-    },
-    {
-      "item": "extractcraft:smart_magazine_sensor",
-      "category": "weapon_parts",
-      "rarity": "purple",
-      "value": 2600,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A tiny sensor pack for round-counting magazines."
       ]
     },
     {
@@ -706,18 +526,6 @@
       "lootTier": 3,
       "notes": [
         "A pack of injector cartridges for severe bleeding control."
-      ]
-    },
-    {
-      "item": "extractcraft:prototype_splint_brace",
-      "category": "medical_tech",
-      "rarity": "purple",
-      "value": 2700,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 3,
-      "notes": [
-        "A collapsible brace used by combat trauma teams."
       ]
     },
     {
@@ -865,30 +673,6 @@
       ]
     },
     {
-      "item": "extractcraft:prototype_drone_brain",
-      "category": "electronics",
-      "rarity": "gold",
-      "value": 24000,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 4,
-      "notes": [
-        "A prototype processor cluster from an autonomous drone."
-      ]
-    },
-    {
-      "item": "extractcraft:thermal_imaging_core",
-      "category": "optics",
-      "rarity": "gold",
-      "value": 21000,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 4,
-      "notes": [
-        "The core sensor package from a military thermal optic."
-      ]
-    },
-    {
       "item": "extractcraft:advanced_nvg_assembly",
       "category": "optics",
       "rarity": "gold",
@@ -949,18 +733,6 @@
       ]
     },
     {
-      "item": "extractcraft:match_grade_bolt_carrier",
-      "category": "weapon_parts",
-      "rarity": "gold",
-      "value": 9800,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 4,
-      "notes": [
-        "A match-grade carrier machined to tight tolerances."
-      ]
-    },
-    {
       "item": "extractcraft:adaptive_suppressor_core",
       "category": "weapon_parts",
       "rarity": "gold",
@@ -970,18 +742,6 @@
       "lootTier": 4,
       "notes": [
         "A suppressor core with adjustable gas-flow chambers."
-      ]
-    },
-    {
-      "item": "extractcraft:prototype_ammo_feed_unit",
-      "category": "weapon_parts",
-      "rarity": "gold",
-      "value": 18400,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 4,
-      "notes": [
-        "A prototype feed unit for high-rate ammunition systems."
       ]
     },
     {
@@ -1057,18 +817,6 @@
       ]
     },
     {
-      "item": "extractcraft:military_antidote_injector",
-      "category": "medical_tech",
-      "rarity": "gold",
-      "value": 13400,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 4,
-      "notes": [
-        "A restricted injector for battlefield toxin exposure."
-      ]
-    },
-    {
       "item": "extractcraft:nano_suture_cartridge",
       "category": "medical_tech",
       "rarity": "gold",
@@ -1117,18 +865,6 @@
       ]
     },
     {
-      "item": "extractcraft:quantum_encryption_vault",
-      "category": "electronics",
-      "rarity": "red",
-      "value": 135000,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 5,
-      "notes": [
-        "A hardened quantum vault containing unbroken encryption hardware."
-      ]
-    },
-    {
       "item": "extractcraft:gold_tactical_pack_frame",
       "category": "armor_materials",
       "rarity": "red",
@@ -1138,18 +874,6 @@
       "lootTier": 5,
       "notes": [
         "A gold-anodized frame from an elite tactical pack prototype."
-      ]
-    },
-    {
-      "item": "extractcraft:gold_ballistic_helmet_core",
-      "category": "armor_materials",
-      "rarity": "red",
-      "value": 62000,
-      "sellable": true,
-      "questItem": false,
-      "lootTier": 5,
-      "notes": [
-        "A rare helmet core with dense premium ballistic layers."
       ]
     },
     {
@@ -1198,6 +922,1158 @@
       "lootTier": 5,
       "notes": [
         "A restricted drive carrying fragments of Omega Protocol orders."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_wristwatch",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 1350,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A scuffed but valuable gold wristwatch from a private residence."
+      ]
+    },
+    {
+      "item": "extractcraft:silver_locket",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 820,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A tarnished silver locket with a worn clasp and personal engraving."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_compass",
+      "category": "intel",
+      "rarity": "blue",
+      "value": 1150,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A brass compass with old route marks scratched into the case."
+      ]
+    },
+    {
+      "item": "extractcraft:camera_lens",
+      "category": "optics",
+      "rarity": "blue",
+      "value": 1200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A compact camera lens with salvageable coated glass."
+      ]
+    },
+    {
+      "item": "extractcraft:engraved_lighter",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 420,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A battered lighter with a name and unit number engraved on the side."
+      ]
+    },
+    {
+      "item": "extractcraft:perfume_bottle",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 980,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small luxury perfume bottle that survived the evacuation intact."
+      ]
+    },
+    {
+      "item": "extractcraft:fountain_pen_case",
+      "category": "intel",
+      "rarity": "blue",
+      "value": 1050,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A slim case holding a fountain pen favored for signed orders."
+      ]
+    },
+    {
+      "item": "extractcraft:diamond_earrings_case",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A velvet jewelry case holding a pair of small diamond earrings."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_diplomatic_medal",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 6800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A diplomatic medal sealed in a scratched display case."
+      ]
+    },
+    {
+      "item": "extractcraft:ceremonial_dagger_hilt",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 6400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A jeweled ceremonial dagger hilt recovered without its blade."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_music_box",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 7200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An ornate wind-up music box from a civilian luxury collection."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_chess_king",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 22000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A solid gold chess king taken from an executive collection."
+      ]
+    },
+    {
+      "item": "extractcraft:platinum_data_wafer",
+      "category": "electronics",
+      "rarity": "gold",
+      "value": 32000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A thin platinum data wafer used for high-security archival storage."
+      ]
+    },
+    {
+      "item": "extractcraft:royal_signet_ring",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 34000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A heavy gold signet ring set with a sealed royal crest."
+      ]
+    },
+    {
+      "item": "extractcraft:gemstone_reliquary",
+      "category": "trophy",
+      "rarity": "red",
+      "value": 145000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5,
+      "notes": [
+        "An ornate reliquary packed with rare cut gemstones."
+      ]
+    },
+    {
+      "item": "extractcraft:luxury_gold_bar",
+      "category": "trophy",
+      "rarity": "red",
+      "value": 90000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5,
+      "notes": [
+        "A stamped luxury bullion bar from a private reserve."
+      ]
+    },
+    {
+      "item": "extractcraft:pressure_gauge",
+      "category": "industrial",
+      "rarity": "blue",
+      "value": 760,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A round dial gauge pulled from a boiler or utility line."
+      ]
+    },
+    {
+      "item": "extractcraft:valve_wheel",
+      "category": "industrial",
+      "rarity": "blue",
+      "value": 720,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A red metal valve wheel from an old pipe control station."
+      ]
+    },
+    {
+      "item": "extractcraft:welding_nozzle",
+      "category": "tools",
+      "rarity": "blue",
+      "value": 540,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A worn torch nozzle with enough clean brass to reuse."
+      ]
+    },
+    {
+      "item": "extractcraft:bearing_set",
+      "category": "industrial",
+      "rarity": "blue",
+      "value": 690,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A clustered set of machine bearings packed in shop grease."
+      ]
+    },
+    {
+      "item": "extractcraft:drill_chuck",
+      "category": "tools",
+      "rarity": "blue",
+      "value": 820,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A chunky drill chuck salvaged from a workshop toolhead."
+      ]
+    },
+    {
+      "item": "extractcraft:braided_hose_bundle",
+      "category": "industrial",
+      "rarity": "blue",
+      "value": 1180,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A coiled reinforced hose bundle from a vehicle bay."
+      ]
+    },
+    {
+      "item": "extractcraft:fuse_box_module",
+      "category": "electronics",
+      "rarity": "purple",
+      "value": 2400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A compact fuse block stripped from a maintenance panel."
+      ]
+    },
+    {
+      "item": "extractcraft:pump_impeller",
+      "category": "industrial",
+      "rarity": "purple",
+      "value": 3200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A machined impeller rotor from an industrial pump assembly."
+      ]
+    },
+    {
+      "item": "extractcraft:designer_wallet",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 3600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A folded designer wallet with cash and a premium card still tucked inside."
+      ]
+    },
+    {
+      "item": "extractcraft:luxury_sunglasses",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "Folded dark sunglasses with a polished gold frame."
+      ]
+    },
+    {
+      "item": "extractcraft:silver_cigarette_case",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4700,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An engraved silver flip case from an old lounge collection."
+      ]
+    },
+    {
+      "item": "extractcraft:velvet_jewelry_pouch",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A soft velvet drawstring pouch with a glint of jewelry inside."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_pocket_watch",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 18500,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "An open antique pocket watch with a delicate chain and intact face."
+      ]
+    },
+    {
+      "item": "extractcraft:pearl_bracelet",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 16000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A loop of matched pearls with a tiny gold clasp."
+      ]
+    },
+    {
+      "item": "extractcraft:rare_coin_case",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 21000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A small display case holding rare gold and silver collector coins."
+      ]
+    },
+    {
+      "item": "extractcraft:jeweled_brooch",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 24000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "An ornate brooch set with bright stones and delicate metalwork."
+      ]
+    },
+    {
+      "item": "extractcraft:office_stamp_kit",
+      "category": "intel",
+      "rarity": "blue",
+      "value": 620,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A rubber stamp and ink pad from an administrative desk."
+      ]
+    },
+    {
+      "item": "extractcraft:security_badge_stack",
+      "category": "access",
+      "rarity": "blue",
+      "value": 780,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small stack of blank and expired security badges."
+      ]
+    },
+    {
+      "item": "extractcraft:brass_nameplate",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 950,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A polished brass desk nameplate from an executive office."
+      ]
+    },
+    {
+      "item": "extractcraft:shredded_document_bag",
+      "category": "intel",
+      "rarity": "blue",
+      "value": 860,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A clear evidence bag packed with shredded document strips."
+      ]
+    },
+    {
+      "item": "extractcraft:executive_keyring",
+      "category": "access",
+      "rarity": "purple",
+      "value": 4200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A ring of executive keys with one polished master key."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_cash_envelope",
+      "category": "contraband",
+      "rarity": "purple",
+      "value": 5600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A sealed cash envelope thick enough to show the banded bills inside."
+      ]
+    },
+    {
+      "item": "extractcraft:locked_file_tube",
+      "category": "intel",
+      "rarity": "purple",
+      "value": 3900,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A cylindrical document tube capped with a small lock."
+      ]
+    },
+    {
+      "item": "extractcraft:encrypted_access_fob",
+      "category": "security",
+      "rarity": "purple",
+      "value": 6200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A modern encrypted access token issued for secured offices."
+      ]
+    },
+    {
+      "item": "extractcraft:specimen_slide_case",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 740,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A flat case holding labeled microscope specimen slides."
+      ]
+    },
+    {
+      "item": "extractcraft:microscope_lens",
+      "category": "optics",
+      "rarity": "blue",
+      "value": 890,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A compact brass and black optical lens assembly from a lab scope."
+      ]
+    },
+    {
+      "item": "extractcraft:petri_dish_stack",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 680,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A stack of clear petri dishes with sealed colored samples."
+      ]
+    },
+    {
+      "item": "extractcraft:reagent_ampoule_rack",
+      "category": "medical_tech",
+      "rarity": "purple",
+      "value": 3400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A tiny rack of colored reagent ampoules from a secure lab bench."
+      ]
+    },
+    {
+      "item": "extractcraft:biohazard_sample_tube",
+      "category": "medical_tech",
+      "rarity": "purple",
+      "value": 4600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A sealed sample tube marked with a bright biohazard warning."
+      ]
+    },
+    {
+      "item": "extractcraft:centrifuge_rotor",
+      "category": "medical_tech",
+      "rarity": "purple",
+      "value": 5200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A round metal centrifuge rotor with precision-drilled sample wells."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_lab_notebook",
+      "category": "intel",
+      "rarity": "purple",
+      "value": 4100,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A strapped lab notebook sealed with a warning label."
+      ]
+    },
+    {
+      "item": "extractcraft:calibration_weight_set",
+      "category": "industrial",
+      "rarity": "purple",
+      "value": 3800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A small tray of polished calibration weights for lab instruments."
+      ]
+    },
+    {
+      "item": "extractcraft:storm_lighter",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 780,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A rugged windproof lighter built for bad weather and field use."
+      ]
+    },
+    {
+      "item": "extractcraft:signal_mirror",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 620,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small reflective signal mirror with a sighting hole."
+      ]
+    },
+    {
+      "item": "extractcraft:emergency_blanket_roll",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 520,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A shiny foil emergency blanket rolled tight with a strap."
+      ]
+    },
+    {
+      "item": "extractcraft:water_purification_tabs",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 690,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A sealed strip of tablets for making questionable water drinkable."
+      ]
+    },
+    {
+      "item": "extractcraft:flare_case",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 980,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A red emergency flare case sealed for rough field storage."
+      ]
+    },
+    {
+      "item": "extractcraft:filter_straw",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 860,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A slim survival filter straw for emergency water collection."
+      ]
+    },
+    {
+      "item": "extractcraft:compact_camp_stove",
+      "category": "tools",
+      "rarity": "purple",
+      "value": 2400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A tiny fold-out stove burner packed for survival kits."
+      ]
+    },
+    {
+      "item": "extractcraft:firestarter_tin",
+      "category": "survival",
+      "rarity": "purple",
+      "value": 2100,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An open metal tin packed with matches, flint, and dry tinder."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_coffee_tin",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 620,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A sealed metal coffee tin from a kitchen or break-room shelf."
+      ]
+    },
+    {
+      "item": "extractcraft:instant_noodle_cup",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 260,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A cup of instant noodles with the lid still sealed."
+      ]
+    },
+    {
+      "item": "extractcraft:vacuum_tea_brick",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 540,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A vacuum-wrapped compressed tea brick prized by civilian traders."
+      ]
+    },
+    {
+      "item": "extractcraft:canned_peaches",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 340,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A labeled can of peaches with the pull tab intact."
+      ]
+    },
+    {
+      "item": "extractcraft:chocolate_bar_pack",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 310,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A wrapped chocolate bar pack still good for morale."
+      ]
+    },
+    {
+      "item": "extractcraft:travel_mug",
+      "category": "trophy",
+      "rarity": "blue",
+      "value": 520,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "An insulated travel mug with a dented but intact lid."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_spice_jar",
+      "category": "survival",
+      "rarity": "blue",
+      "value": 480,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small sealed spice jar with bright preserved contents."
+      ]
+    },
+    {
+      "item": "extractcraft:cigarette_carton",
+      "category": "contraband",
+      "rarity": "purple",
+      "value": 2600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A sealed carton of cigarettes with intact tax markings."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_blacksite_relic",
+      "category": "trophy",
+      "rarity": "red",
+      "value": 98000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5,
+      "notes": [
+        "A sealed artifact container recovered from a hidden blacksite room."
+      ]
+    },
+    {
+      "item": "extractcraft:glowing_core_fragment",
+      "category": "power",
+      "rarity": "red",
+      "value": 118000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5,
+      "notes": [
+        "A cracked glowing fragment locked inside a scorched metal clamp."
+      ]
+    },
+    {
+      "item": "extractcraft:unknown_specimen_jar",
+      "category": "medical_tech",
+      "rarity": "gold",
+      "value": 28500,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A sealed lab jar holding an unidentified organic specimen."
+      ]
+    },
+    {
+      "item": "extractcraft:encrypted_prayer_tablet",
+      "category": "intel",
+      "rarity": "red",
+      "value": 132000,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 5,
+      "notes": [
+        "An old-world tablet etched with glowing encrypted symbols."
+      ]
+    },
+    {
+      "item": "extractcraft:anomalous_compass",
+      "category": "intel",
+      "rarity": "gold",
+      "value": 24500,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A warped compass whose glowing needle refuses to point north."
+      ]
+    },
+    {
+      "item": "extractcraft:redacted_photo_locket",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 6400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An open locket with a blacked-out portrait sealed under cracked glass."
+      ]
+    },
+    {
+      "item": "extractcraft:sealed_eye_capsule",
+      "category": "medical_tech",
+      "rarity": "gold",
+      "value": 31800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A medical capsule containing an eye-like sensor suspended in fluid."
+      ]
+    },
+    {
+      "item": "extractcraft:ancient_access_coin",
+      "category": "access",
+      "rarity": "gold",
+      "value": 27600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A coin-key hybrid engraved with old circuitry and worn access runes."
+      ]
+    },
+    {
+      "item": "extractcraft:crystal_decanter",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 6200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An elegant crystal decanter with the stopper still intact."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_hand_mirror",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An ornate handheld mirror from a luxury vanity set."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_cufflinks",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5900,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A matched pair of gold cufflinks kept in a small executive case."
+      ]
+    },
+    {
+      "item": "extractcraft:silver_compact_case",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An engraved silver compact case with a polished clasp."
+      ]
+    },
+    {
+      "item": "extractcraft:pocket_cigar_case",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 3600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A slim pocket cigar case with a worn luxury finish."
+      ]
+    },
+    {
+      "item": "extractcraft:gemstone_tie_pin",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 15500,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A delicate tie pin set with a bright cut gemstone."
+      ]
+    },
+    {
+      "item": "extractcraft:ivory_letter_opener",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5400,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A decorative letter opener with an ivory-style handle."
+      ]
+    },
+    {
+      "item": "extractcraft:velvet_ring_box",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 22500,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A small velvet ring box left open with the ring still inside."
+      ]
+    },
+    {
+      "item": "extractcraft:vintage_camera",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An old rangefinder camera with a scratched but intact body."
+      ]
+    },
+    {
+      "item": "extractcraft:silver_pocket_flask",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4300,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "An engraved silver flask from a private bar cabinet."
+      ]
+    },
+    {
+      "item": "extractcraft:rare_stamp_album",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 17200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A small album of rare stamps from a collector's safe."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_porcelain_figurine",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 6900,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A fragile porcelain figurine with blue hand-painted detail."
+      ]
+    },
+    {
+      "item": "extractcraft:gold_fountain_pen",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 14800,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A fancy gold fountain pen with a clean nib and heavy cap."
+      ]
+    },
+    {
+      "item": "extractcraft:collector_card_slab",
+      "category": "trophy",
+      "rarity": "gold",
+      "value": 19600,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 4,
+      "notes": [
+        "A graded collector card sealed in a clear protective slab."
+      ]
+    },
+    {
+      "item": "extractcraft:silver_pocket_knife",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 5200,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A folded ornate pocket knife with polished silver scales."
+      ]
+    },
+    {
+      "item": "extractcraft:antique_music_cylinder",
+      "category": "trophy",
+      "rarity": "purple",
+      "value": 4700,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 3,
+      "notes": [
+        "A brass music cylinder from an old mechanical music box."
+      ]
+    },
+    {
+      "item": "extractcraft:pill_bottle_rx",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 640,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "An orange prescription bottle with the label mostly intact."
+      ]
+    },
+    {
+      "item": "extractcraft:blister_painkillers",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 420,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A foil blister strip of common painkiller tablets."
+      ]
+    },
+    {
+      "item": "extractcraft:first_aid_ointment",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 360,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small ointment tube from a civilian first aid kit."
+      ]
+    },
+    {
+      "item": "extractcraft:glass_cough_syrup",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 520,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A brown glass cough syrup bottle with a stained pharmacy label."
+      ]
+    },
+    {
+      "item": "extractcraft:adhesive_bandage_box",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 390,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small box of adhesive bandages from a medicine cabinet."
+      ]
+    },
+    {
+      "item": "extractcraft:digital_thermometer",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 560,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A slim digital thermometer with a tiny cracked display."
+      ]
+    },
+    {
+      "item": "extractcraft:inhaler_blue",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 740,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A blue rescue inhaler with a few doses left inside."
+      ]
+    },
+    {
+      "item": "extractcraft:saline_eye_drops",
+      "category": "medical_tech",
+      "rarity": "blue",
+      "value": 310,
+      "sellable": true,
+      "questItem": false,
+      "lootTier": 2,
+      "notes": [
+        "A small plastic dropper bottle of sterile saline eye drops."
       ]
     }
   ]

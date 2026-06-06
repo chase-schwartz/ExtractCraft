@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/anomalous_compass"
+                 },
+    "parent":  "minecraft:item/generated"
+}

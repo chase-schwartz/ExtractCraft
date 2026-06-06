@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "sealed_blacksite_relic",
+    "display_name": "Sealed Blacksite Relic",
+    "png": "sealed_blacksite_relic.png"
+  },
+  {
+    "item_id": "glowing_core_fragment",
+    "display_name": "Glowing Core Fragment",
+    "png": "glowing_core_fragment.png"
+  },
+  {
+    "item_id": "unknown_specimen_jar",
+    "display_name": "Unknown Specimen Jar",
+    "png": "unknown_specimen_jar.png"
+  },
+  {
+    "item_id": "encrypted_prayer_tablet",
+    "display_name": "Encrypted Prayer Tablet",
+    "png": "encrypted_prayer_tablet.png"
+  },
+  {
+    "item_id": "anomalous_compass",
+    "display_name": "Anomalous Compass",
+    "png": "anomalous_compass.png"
+  },
+  {
+    "item_id": "redacted_photo_locket",
+    "display_name": "Redacted Photo Locket",
+    "png": "redacted_photo_locket.png"
+  },
+  {
+    "item_id": "sealed_eye_capsule",
+    "display_name": "Sealed Eye Capsule",
+    "png": "sealed_eye_capsule.png"
+  },
+  {
+    "item_id": "ancient_access_coin",
+    "display_name": "Ancient Access Coin",
+    "png": "ancient_access_coin.png"
+  }
+]

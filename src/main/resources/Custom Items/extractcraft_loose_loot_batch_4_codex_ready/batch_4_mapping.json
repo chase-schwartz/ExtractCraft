@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "sealed_cable_bundle",
+    "display_name": "Sealed Cable Bundle",
+    "png": "sealed_cable_bundle.png"
+  },
+  {
+    "item_id": "field_radio_battery",
+    "display_name": "Field Radio Battery",
+    "png": "field_radio_battery.png"
+  },
+  {
+    "item_id": "tactical_flashlight_core",
+    "display_name": "Tactical Flashlight Core",
+    "png": "tactical_flashlight_core.png"
+  },
+  {
+    "item_id": "electrical_relay",
+    "display_name": "Electrical Relay",
+    "png": "electrical_relay.png"
+  },
+  {
+    "item_id": "ceramic_fuse",
+    "display_name": "Ceramic Fuse",
+    "png": "ceramic_fuse.png"
+  },
+  {
+    "item_id": "pocket_multimeter",
+    "display_name": "Pocket Multimeter",
+    "png": "pocket_multimeter.png"
+  },
+  {
+    "item_id": "stripped_circuit_board",
+    "display_name": "Stripped Circuit Board",
+    "png": "stripped_circuit_board.png"
+  },
+  {
+    "item_id": "copper_wire_spool",
+    "display_name": "Copper Wire Spool",
+    "png": "copper_wire_spool.png"
+  }
+]

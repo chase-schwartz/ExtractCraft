@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "combat_tourniquet_pack",
+    "display_name": "Combat Tourniquet Pack",
+    "png": "combat_tourniquet_pack.png"
+  },
+  {
+    "item_id": "sterile_gauze_brick",
+    "display_name": "Sterile Gauze Brick",
+    "png": "sterile_gauze_brick.png"
+  },
+  {
+    "item_id": "empty_morphine_case",
+    "display_name": "Empty Morphine Case",
+    "png": "empty_morphine_case.png"
+  },
+  {
+    "item_id": "antibiotic_strip",
+    "display_name": "Antibiotic Strip",
+    "png": "antibiotic_strip.png"
+  },
+  {
+    "item_id": "plastic_med_vials",
+    "display_name": "Plastic Med Vials",
+    "png": "plastic_med_vials.png"
+  },
+  {
+    "item_id": "lab_sample_cooler",
+    "display_name": "Lab Sample Cooler",
+    "png": "lab_sample_cooler.png"
+  },
+  {
+    "item_id": "surgical_stapler_kit",
+    "display_name": "Surgical Stapler Kit",
+    "png": "surgical_stapler_kit.png"
+  },
+  {
+    "item_id": "hemostatic_injector_pack",
+    "display_name": "Hemostatic Injector Pack",
+    "png": "hemostatic_injector_pack.png"
+  }
+]

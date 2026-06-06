@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/ivory_letter_opener"
+                 },
+    "parent":  "minecraft:item/generated"
+}

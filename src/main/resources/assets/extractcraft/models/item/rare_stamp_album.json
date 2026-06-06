@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/rare_stamp_album"
+                 },
+    "parent":  "minecraft:item/generated"
+}

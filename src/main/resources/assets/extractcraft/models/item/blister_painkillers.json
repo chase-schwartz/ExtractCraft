@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/blister_painkillers"
+                 },
+    "parent":  "minecraft:item/generated"
+}

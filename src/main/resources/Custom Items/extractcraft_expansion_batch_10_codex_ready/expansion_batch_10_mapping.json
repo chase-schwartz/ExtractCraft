@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "crystal_decanter",
+    "display_name": "Crystal Decanter",
+    "png": "crystal_decanter.png"
+  },
+  {
+    "item_id": "antique_hand_mirror",
+    "display_name": "Antique Hand Mirror",
+    "png": "antique_hand_mirror.png"
+  },
+  {
+    "item_id": "gold_cufflinks",
+    "display_name": "Gold Cufflinks",
+    "png": "gold_cufflinks.png"
+  },
+  {
+    "item_id": "silver_compact_case",
+    "display_name": "Silver Compact Case",
+    "png": "silver_compact_case.png"
+  },
+  {
+    "item_id": "pocket_cigar_case",
+    "display_name": "Pocket Cigar Case",
+    "png": "pocket_cigar_case.png"
+  },
+  {
+    "item_id": "gemstone_tie_pin",
+    "display_name": "Gemstone Tie Pin",
+    "png": "gemstone_tie_pin.png"
+  },
+  {
+    "item_id": "ivory_letter_opener",
+    "display_name": "Ivory Letter Opener",
+    "png": "ivory_letter_opener.png"
+  },
+  {
+    "item_id": "velvet_ring_box",
+    "display_name": "Velvet Ring Box",
+    "png": "velvet_ring_box.png"
+  }
+]

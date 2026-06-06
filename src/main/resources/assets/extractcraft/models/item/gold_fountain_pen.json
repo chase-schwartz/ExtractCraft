@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/gold_fountain_pen"
+                 },
+    "parent":  "minecraft:item/generated"
+}

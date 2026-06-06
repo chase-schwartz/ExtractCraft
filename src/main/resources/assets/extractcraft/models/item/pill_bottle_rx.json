@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/pill_bottle_rx"
+                 },
+    "parent":  "minecraft:item/generated"
+}

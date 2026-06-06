@@ -1,0 +1,6 @@
+﻿{
+    "textures":  {
+                     "layer0":  "extractcraft:item/pocket_cigar_case"
+                 },
+    "parent":  "minecraft:item/generated"
+}

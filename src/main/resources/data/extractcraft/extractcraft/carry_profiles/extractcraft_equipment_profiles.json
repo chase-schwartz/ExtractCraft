@@ -471,24 +471,6 @@
       "consumable": true
     },
     {
-      "item": "extractcraft:splint_trauma_kit",
-      "category": "medical",
-      "weight": 0.7,
-      "slotCost": 2,
-      "gridWidth": 1,
-      "gridHeight": 2,
-      "canRotate": true,
-      "allowInSafeBox": true,
-      "allowInVest": true,
-      "tier": 2,
-      "notes": [
-        "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
-      ],
-      "useTimeTicks": 80,
-      "fixesBrokenBone": true,
-      "consumable": true
-    },
-    {
       "item": "extractcraft:helmet_rebuild_kit",
       "category": "armor_parts",
       "weight": 0.9,
