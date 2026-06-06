@@ -1,5 +1,6 @@
 package com.chaseschwartz.extractcraft.raid.inventory;
 
+import com.chaseschwartz.extractcraft.durability.DurabilityService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -124,17 +125,47 @@ public record RaidInventoryItem(ResourceLocation itemId, String lookupKey, Strin
                 toItemStack());
     }
 
+    public RaidInventoryItem withStoredStack(ItemStack stack) {
+        ItemStack copy = stack == null ? ItemStack.EMPTY : stack.copy();
+        if (!copy.isEmpty()) {
+            copy.setCount(count);
+        }
+        return new RaidInventoryItem(
+                itemId,
+                lookupKey,
+                displayName,
+                category,
+                count,
+                slotCost,
+                weight,
+                value,
+                gridWidth,
+                gridHeight,
+                gridX,
+                gridY,
+                rotated,
+                canRotate,
+                copy);
+    }
+
     public ItemStack toItemStack() {
         if (!storedStack.isEmpty()) {
             ItemStack copy = storedStack.copy();
             copy.setCount(count);
+            DurabilityService.getOrInitialize(copy);
             return copy;
         }
 
         return ItemStackVariantFactory.create(lookupKey, count)
+                .map(stack -> {
+                    DurabilityService.getOrInitialize(stack);
+                    return stack;
+                })
                 .orElseGet(() -> {
                     if (BuiltInRegistries.ITEM.containsKey(itemId)) {
-                        return new ItemStack(BuiltInRegistries.ITEM.get(itemId), count);
+                        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(itemId), count);
+                        DurabilityService.getOrInitialize(stack);
+                        return stack;
                     }
                     return ItemStack.EMPTY;
                 });

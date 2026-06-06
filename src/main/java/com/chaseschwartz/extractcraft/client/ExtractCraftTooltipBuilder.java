@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import com.chaseschwartz.extractcraft.durability.DurabilityData;
+import com.chaseschwartz.extractcraft.durability.DurabilityService;
 import com.chaseschwartz.extractcraft.items.ExtractCraftItemMetadata;
 import com.chaseschwartz.extractcraft.items.ExtractCraftProfiledItem;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
@@ -79,7 +81,10 @@ public final class ExtractCraftTooltipBuilder {
         }
         metadata.maxCarryWeight().ifPresent(weight -> lines.add(Component.literal("Carry Limit: +" + format(weight) + " kg").withStyle(ChatFormatting.BLUE)));
         metadata.armorRating().ifPresent(rating -> lines.add(Component.literal("Armor: " + protectionLabel(rating)).withStyle(ChatFormatting.YELLOW)));
-        if (detailed && metadata.durabilityEnabled()) {
+        Optional<DurabilityData> durability = DurabilityService.getOrInitialize(stack);
+        if (durability.isPresent()) {
+            appendDurability(lines, durability.get(), detailed);
+        } else if (detailed && metadata.durabilityEnabled()) {
             lines.add(Component.literal("Durability: Configured"
                     + metadata.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
@@ -140,7 +145,10 @@ public final class ExtractCraftTooltipBuilder {
             carry.storageGridDefinition().ifPresent(grid -> lines.add(Component.literal("Storage: " + grid).withStyle(ChatFormatting.BLUE)));
             carry.maxCarryWeight().ifPresent(weight -> lines.add(Component.literal("Carry Limit: +" + format(weight) + " kg").withStyle(ChatFormatting.BLUE)));
             carry.armorRating().ifPresent(rating -> lines.add(Component.literal("Armor: " + protectionLabel(rating)).withStyle(ChatFormatting.YELLOW)));
-            if (detailed && carry.durabilityEnabled()) {
+            Optional<DurabilityData> durability = DurabilityService.getOrInitialize(stack);
+            if (durability.isPresent()) {
+                appendDurability(lines, durability.get(), detailed);
+            } else if (detailed && carry.durabilityEnabled()) {
                 lines.add(Component.literal("Durability: Configured"
                         + carry.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
             }
@@ -198,6 +206,15 @@ public final class ExtractCraftTooltipBuilder {
             if (isUsefulNote(note)) {
                 addWrapped(lines, note, ChatFormatting.ITALIC, ChatFormatting.DARK_GRAY);
             }
+        }
+    }
+
+    private static void appendDurability(List<Component> lines, DurabilityData data, boolean detailed) {
+        String label = data.type().equalsIgnoreCase("repair_kit") ? "Repair Capacity" : "Durability";
+        lines.add(Component.literal(label + ": " + data.currentDurability() + "/" + data.currentMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
+        if (detailed) {
+            lines.add(Component.literal("Pristine Max: " + data.pristineMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
+            lines.add(Component.literal("Repairs: " + data.repairCount()).withStyle(ChatFormatting.DARK_GRAY));
         }
     }
 

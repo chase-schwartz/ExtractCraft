@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.chaseschwartz.extractcraft.durability.DurabilityService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
@@ -152,6 +153,7 @@ public class RaidInventoryManager {
     }
 
     private static RaidInventoryItem inventoryItem(ItemStack stack, ResourceLocation itemId, ItemCarryProfile profile, int slotCost, double weight, int value) {
+        DurabilityService.getOrInitialize(stack);
         ItemIdentity identity = ItemIdentityResolver.resolve(stack);
         int gridWidth = profile.gridWidth().orElseGet(() -> fallbackGridWidth(profile.category()));
         int gridHeight = profile.gridHeight().orElseGet(() -> fallbackGridHeight(profile.category()));
@@ -206,6 +208,7 @@ public class RaidInventoryManager {
         if (stack.isEmpty()) {
             return 0;
         }
+        // TODO durability economy: scale durable gear sell value by current/pristine condition once stored item values are recalculated live.
         return ItemValueRegistry.get(stack).map(entry -> entry.value() * stack.getCount()).orElse(0);
     }
 }

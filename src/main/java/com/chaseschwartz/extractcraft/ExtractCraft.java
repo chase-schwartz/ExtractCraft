@@ -107,12 +107,12 @@ public class ExtractCraft {
     public static final DeferredItem<Item> RANGER_BALLISTIC_HELMET = registerProfiledItem("ranger_ballistic_helmet", helmetMeta(2, "A field helmet with reinforced ballistic plating.", 2.8D, 120, 2));
     public static final DeferredItem<Item> VECTOR_RAIL_HELMET = registerProfiledItem("vector_rail_helmet", helmetMeta(3, "A rail-mounted combat helmet built for extended raids.", 3.3D, 170, 3));
     public static final DeferredItem<Item> PHANTOM_COMMS_HELMET = registerProfiledItem("phantom_comms_helmet", helmetMeta(4, "An advanced helmet with sealed comms hardware.", 3.8D, 230, 4), false);
-    public static final DeferredItem<Item> APEX_ASSAULT_HELMET = registerProfiledItem("apex_assault_helmet", helmetMeta(4, "Elite assault headgear for the worst parts of the city.", 4.2D, 300, 5));
+    public static final DeferredItem<Item> APEX_ASSAULT_HELMET = registerProfiledItem("apex_assault_helmet", helmetMeta(4, "Elite assault headgear for the worst parts of the city.", 4.2D, 230, 5));
 
-    public static final DeferredItem<Item> SOFTSHELL_PLATE_CARRIER = registerProfiledItem("softshell_plate_carrier", armorMeta(1, "A light plate carrier for low-risk scav runs.", 5.0D, 140, 1, 2, 3));
-    public static final DeferredItem<Item> BULWARK_PLATE_CARRIER = registerProfiledItem("bulwark_plate_carrier", armorMeta(2, "A balanced carrier with thicker front and side plates.", 6.6D, 210, 2, 3, 3));
-    public static final DeferredItem<Item> WARDEN_COMBAT_ARMOR = registerProfiledItem("warden_combat_armor", armorMeta(3, "Heavy combat armor built to take sustained punishment.", 8.2D, 300, 4, 3, 3));
-    public static final DeferredItem<Item> JUGGERNAUT_ASSAULT_ARMOR = registerProfiledItem("juggernaut_assault_armor", armorMeta(4, "Elite assault armor with dense plating and hard points.", 10.0D, 420, 5, 3, 3));
+    public static final DeferredItem<Item> SOFTSHELL_PLATE_CARRIER = registerProfiledItem("softshell_plate_carrier", armorMeta(1, "A light plate carrier for low-risk scav runs.", 5.0D, 120, 1, 2, 3));
+    public static final DeferredItem<Item> BULWARK_PLATE_CARRIER = registerProfiledItem("bulwark_plate_carrier", armorMeta(2, "A balanced carrier with thicker front and side plates.", 6.6D, 180, 2, 3, 3));
+    public static final DeferredItem<Item> WARDEN_COMBAT_ARMOR = registerProfiledItem("warden_combat_armor", armorMeta(3, "Heavy combat armor built to take sustained punishment.", 8.2D, 260, 4, 3, 3));
+    public static final DeferredItem<Item> JUGGERNAUT_ASSAULT_ARMOR = registerProfiledItem("juggernaut_assault_armor", armorMeta(4, "Elite assault armor with dense plating and hard points.", 10.0D, 360, 5, 3, 3));
 
     public static final DeferredItem<Item> SCOUT_CHEST_RIG = registerProfiledItem("scout_chest_rig", vestMeta(1, "A compact rig for light raids and fast exits.", 2.4D, 90, 3, 2, 8.0D, 2, 2));
     public static final DeferredItem<Item> RANGEFINDER_TACTICAL_VEST = registerProfiledItem("rangefinder_tactical_vest", vestMeta(2, "A tactical vest with enough space for a proper kit.", 3.1D, 130, 4, 2, 12.0D, 2, 2));
@@ -120,11 +120,11 @@ public class ExtractCraft {
     public static final DeferredItem<Item> SPECTER_COMBAT_RIG = registerProfiledItem("specter_combat_rig", vestMeta(4, "A high-capacity combat rig for long urban pushes.", 4.6D, 240, 5, 3, 20.0D, 2, 3));
     public static final DeferredItem<Item> ARSENAL_ELITE_VEST = registerProfiledItem("arsenal_elite_vest", vestMeta(5, "An elite rig with dense pouches and strong retention.", 5.3D, 310, 5, 4, 24.0D, 2, 3), false);
 
-    public static final DeferredItem<Item> SPARROW_SLING_PACK = registerProfiledItem("sparrow_sling_pack", backpackMeta(1, "A nimble sling pack for small hauls.", 1.2D, 80, 4, 4, 14.0D, 2, 2));
-    public static final DeferredItem<Item> FIELDRUNNER_PACK = registerProfiledItem("fieldrunner_pack", backpackMeta(2, "A reliable field pack with room for essentials.", 1.8D, 130, 5, 5, 22.0D, 2, 2));
-    public static final DeferredItem<Item> MULE_TACTICAL_PACK = registerProfiledItem("mule_tactical_pack", backpackMeta(3, "A tactical pack with a practical raid footprint.", 2.6D, 200, 6, 6, 32.0D, 2, 3));
-    public static final DeferredItem<Item> ATLAS_RAID_PACK = registerProfiledItem("atlas_raid_pack", backpackMeta(4, "A large raid pack for serious extraction runs.", 3.6D, 280, 7, 7, 44.0D, 3, 3));
-    public static final DeferredItem<Item> ATLAS_RAID_PACK_MK2 = registerProfiledItem("atlas_raid_pack_mk2", backpackMeta(5, "A reinforced Atlas variant with maximum storage.", 4.4D, 380, 8, 8, 56.0D, 3, 3), false);
+    public static final DeferredItem<Item> SPARROW_SLING_PACK = registerProfiledItem("sparrow_sling_pack", backpackMeta(1, "A nimble sling pack for small hauls.", 1.2D, 100, 4, 4, 14.0D, 2, 2));
+    public static final DeferredItem<Item> FIELDRUNNER_PACK = registerProfiledItem("fieldrunner_pack", backpackMeta(2, "A reliable field pack with room for essentials.", 1.8D, 150, 5, 5, 22.0D, 2, 2));
+    public static final DeferredItem<Item> MULE_TACTICAL_PACK = registerProfiledItem("mule_tactical_pack", backpackMeta(3, "A tactical pack with a practical raid footprint.", 2.6D, 220, 6, 6, 32.0D, 2, 3));
+    public static final DeferredItem<Item> ATLAS_RAID_PACK = registerProfiledItem("atlas_raid_pack", backpackMeta(4, "A large raid pack for serious extraction runs.", 3.6D, 300, 7, 7, 44.0D, 3, 3));
+    public static final DeferredItem<Item> ATLAS_RAID_PACK_MK2 = registerProfiledItem("atlas_raid_pack_mk2", backpackMeta(5, "A reinforced Atlas variant with maximum storage.", 4.4D, 390, 8, 8, 56.0D, 3, 3), false);
 
     public static final DeferredItem<Item> PIONEER_LOCKBOX = registerProfiledItem("pioneer_lockbox", safeMeta(1, "A small lockbox that secures the absolute essentials.", 1.5D, 90, 2, 2, 2, 2));
     public static final DeferredItem<Item> BLACKSITE_SECURE_CASE = registerProfiledItem("blacksite_secure_case", safeMeta(2, "A reinforced case with more room for high-value finds.", 2.2D, 160, 3, 2, 2, 2));
@@ -203,7 +203,6 @@ public class ExtractCraft {
         return ExtractCraftItemMetadata.builder(tier, "Vest", description, weight, gridWidth, gridHeight)
                 .equipmentSlot(RaidEquipmentSlot.EQUIPPED_VEST)
                 .storageGrid(storageWidth, storageHeight, carryWeight)
-                .durability("Vest", durability)
                 .tooltip("Provides the equipped vest grid. Category restrictions are intentionally loose for now.")
                 .build();
     }
@@ -221,7 +220,6 @@ public class ExtractCraft {
         return ExtractCraftItemMetadata.builder(tier, "Safe Container", description, weight, gridWidth, gridHeight)
                 .equipmentSlot(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER)
                 .storageGrid(storageWidth, storageHeight, 6.0D + tier * 2.0D)
-                .durability("Safe Container", durability)
                 .tooltip("Contents use the existing safe-box death/failure preservation rules.")
                 .build();
     }

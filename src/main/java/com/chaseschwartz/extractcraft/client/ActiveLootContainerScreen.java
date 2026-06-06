@@ -155,6 +155,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             }
         }
         super.renderSlot(guiGraphics, slot);
+        if ((isRaidInventorySlot(slot) || isContainerSlot(slot)) && slot.hasItem() && !isContainerSlotHidden(slot) && !isGridShadowSlot(slot) && !isGridAnchorFootprintSlot(slot)) {
+            CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, SLOT_STEP, SLOT_STEP);
+        }
     }
 
     @Override
@@ -1448,6 +1451,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         } else {
             renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
         }
+        CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
     }
 
     private void renderFootprintOverlays(GuiGraphics guiGraphics) {
@@ -1710,6 +1714,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int y = mouseY - height / 2;
         border(guiGraphics, x - 1, y - 1, width, height, 0xAA62F3E8);
         renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
+        CustomDurabilityBarRenderer.render(guiGraphics, draggedStack, x, y, width, height);
     }
 
     private ItemStack withResolvedGridMetadata(ItemStack stack, int sourceIndex, RaidEquipmentSlot raidSlot, Slot clickedSlot) {

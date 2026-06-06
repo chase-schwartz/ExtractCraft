@@ -230,6 +230,20 @@ public class BaseStashMenu extends AbstractContainerMenu {
         return changed ? GridMoveResult.success("Move committed.") : GridMoveResult.failure("Move rejected.");
     }
 
+    public RaidInventory.AddResult debugReplaceEquipmentItem(ServerPlayer player, RaidEquipmentSlot slot, RaidInventoryItem item) {
+        if (stashData == null) {
+            return new RaidInventory.AddResult(false, slot, "Base/Stash data is not available in this menu.");
+        }
+        RaidInventory.AddResult result = stashData.baseInventory().setEquipmentSlot(slot, item);
+        if (!result.success()) {
+            return result;
+        }
+        PlayerStashService.save(player, stashData);
+        rebuildDisplays();
+        broadcastChanges();
+        return result;
+    }
+
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         return ItemStack.EMPTY;

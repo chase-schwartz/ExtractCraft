@@ -141,6 +141,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             }
         }
         super.renderSlot(guiGraphics, slot);
+        if ((isBaseSlot(slot) || isStashSlot(slot)) && slot.hasItem() && !isGridShadowSlot(slot) && !isGridAnchorFootprintSlot(slot)) {
+            CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, 18, 18);
+        }
     }
 
     @Override
@@ -1521,7 +1524,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (!metadata.present() || !metadata.anchor() || metadata.footprintWidth() <= 1 && metadata.footprintHeight() <= 1) {
             return;
         }
-        renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, metadata.footprintWidth() * 18, metadata.footprintHeight() * 18);
+        int width = metadata.footprintWidth() * 18;
+        int height = metadata.footprintHeight() * 18;
+        renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+        CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
     }
 
     private void renderFootprintOverlays(GuiGraphics guiGraphics) {
@@ -1860,6 +1866,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int y = mouseY - height / 2;
         border(guiGraphics, x - 1, y - 1, width, height, 0xAA62F3E8);
         renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
+        CustomDurabilityBarRenderer.render(guiGraphics, draggedStack, x, y, width, height);
     }
 
     private ItemStack withResolvedGridMetadata(ItemStack stack, int sourceIndex, RaidEquipmentSlot baseSlot, Slot clickedSlot) {

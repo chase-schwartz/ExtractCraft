@@ -17,6 +17,7 @@
       "equipmentSlot": "helmet",
       "durabilityEnabled": true,
       "maxDurability": 80,
+      "durabilityType": "helmet",
       "repairCategory": "Helmet",
       "armorRating": 1
     },
@@ -37,6 +38,7 @@
       "equipmentSlot": "helmet",
       "durabilityEnabled": true,
       "maxDurability": 120,
+      "durabilityType": "helmet",
       "repairCategory": "Helmet",
       "armorRating": 2
     },
@@ -57,6 +59,7 @@
       "equipmentSlot": "helmet",
       "durabilityEnabled": true,
       "maxDurability": 170,
+      "durabilityType": "helmet",
       "repairCategory": "Helmet",
       "armorRating": 3
     },
@@ -76,7 +79,8 @@
       ],
       "equipmentSlot": "helmet",
       "durabilityEnabled": true,
-      "maxDurability": 300,
+      "maxDurability": 230,
+      "durabilityType": "helmet",
       "repairCategory": "Helmet",
       "armorRating": 4
     },
@@ -96,7 +100,8 @@
       ],
       "equipmentSlot": "armor",
       "durabilityEnabled": true,
-      "maxDurability": 140,
+      "maxDurability": 120,
+      "durabilityType": "armor",
       "repairCategory": "Armor",
       "armorRating": 1
     },
@@ -116,7 +121,8 @@
       ],
       "equipmentSlot": "armor",
       "durabilityEnabled": true,
-      "maxDurability": 210,
+      "maxDurability": 180,
+      "durabilityType": "armor",
       "repairCategory": "Armor",
       "armorRating": 2
     },
@@ -136,7 +142,8 @@
       ],
       "equipmentSlot": "armor",
       "durabilityEnabled": true,
-      "maxDurability": 300,
+      "maxDurability": 260,
+      "durabilityType": "armor",
       "repairCategory": "Armor",
       "armorRating": 3
     },
@@ -156,7 +163,8 @@
       ],
       "equipmentSlot": "armor",
       "durabilityEnabled": true,
-      "maxDurability": 420,
+      "maxDurability": 360,
+      "durabilityType": "armor",
       "repairCategory": "Armor",
       "armorRating": 4
     },
@@ -178,10 +186,7 @@
       "storageGridDefinition": "3x2",
       "storageGridWidth": 3,
       "storageGridHeight": 2,
-      "maxCarryWeight": 8.0,
-      "durabilityEnabled": true,
-      "maxDurability": 90,
-      "repairCategory": "Vest"
+      "maxCarryWeight": 8.0
     },
     {
       "item": "extractcraft:rangefinder_tactical_vest",
@@ -201,10 +206,7 @@
       "storageGridDefinition": "4x2",
       "storageGridWidth": 4,
       "storageGridHeight": 2,
-      "maxCarryWeight": 12.0,
-      "durabilityEnabled": true,
-      "maxDurability": 130,
-      "repairCategory": "Vest"
+      "maxCarryWeight": 12.0
     },
     {
       "item": "extractcraft:operator_load_bearing_vest",
@@ -224,10 +226,7 @@
       "storageGridDefinition": "4x3",
       "storageGridWidth": 4,
       "storageGridHeight": 3,
-      "maxCarryWeight": 16.0,
-      "durabilityEnabled": true,
-      "maxDurability": 180,
-      "repairCategory": "Vest"
+      "maxCarryWeight": 16.0
     },
     {
       "item": "extractcraft:specter_combat_rig",
@@ -247,10 +246,7 @@
       "storageGridDefinition": "5x3",
       "storageGridWidth": 5,
       "storageGridHeight": 3,
-      "maxCarryWeight": 20.0,
-      "durabilityEnabled": true,
-      "maxDurability": 240,
-      "repairCategory": "Vest"
+      "maxCarryWeight": 20.0
     },
     {
       "item": "extractcraft:sparrow_sling_pack",
@@ -272,7 +268,8 @@
       "storageGridHeight": 4,
       "maxCarryWeight": 14.0,
       "durabilityEnabled": true,
-      "maxDurability": 80,
+      "maxDurability": 100,
+      "durabilityType": "backpack",
       "repairCategory": "Backpack"
     },
     {
@@ -295,7 +292,8 @@
       "storageGridHeight": 5,
       "maxCarryWeight": 22.0,
       "durabilityEnabled": true,
-      "maxDurability": 130,
+      "maxDurability": 150,
+      "durabilityType": "backpack",
       "repairCategory": "Backpack"
     },
     {
@@ -318,7 +316,8 @@
       "storageGridHeight": 6,
       "maxCarryWeight": 32.0,
       "durabilityEnabled": true,
-      "maxDurability": 200,
+      "maxDurability": 220,
+      "durabilityType": "backpack",
       "repairCategory": "Backpack"
     },
     {
@@ -341,7 +340,33 @@
       "storageGridHeight": 7,
       "maxCarryWeight": 44.0,
       "durabilityEnabled": true,
-      "maxDurability": 280,
+      "maxDurability": 300,
+      "durabilityType": "backpack",
+      "repairCategory": "Backpack"
+    },
+    {
+      "item": "extractcraft:atlas_raid_pack_mk2",
+      "category": "tools",
+      "weight": 4.4,
+      "slotCost": 9,
+      "gridWidth": 3,
+      "gridHeight": 3,
+      "canRotate": true,
+      "allowInSafeBox": false,
+      "allowInVest": false,
+      "tier": 5,
+      "notes": [
+        "ExtractCraft equipment/content profile; durability/use behavior is inert for now.",
+        "Registered inactive/future backpack profile; not added to active loot pools."
+      ],
+      "equipmentSlot": "equipped_backpack",
+      "storageGridDefinition": "8x8",
+      "storageGridWidth": 8,
+      "storageGridHeight": 8,
+      "maxCarryWeight": 56.0,
+      "durabilityEnabled": true,
+      "maxDurability": 390,
+      "durabilityType": "backpack",
       "repairCategory": "Backpack"
     },
     {
@@ -362,10 +387,7 @@
       "storageGridDefinition": "2x2",
       "storageGridWidth": 2,
       "storageGridHeight": 2,
-      "maxCarryWeight": 8.0,
-      "durabilityEnabled": true,
-      "maxDurability": 90,
-      "repairCategory": "Safe Container"
+      "maxCarryWeight": 8.0
     },
     {
       "item": "extractcraft:blacksite_secure_case",
@@ -385,10 +407,7 @@
       "storageGridDefinition": "3x2",
       "storageGridWidth": 3,
       "storageGridHeight": 2,
-      "maxCarryWeight": 10.0,
-      "durabilityEnabled": true,
-      "maxDurability": 160,
-      "repairCategory": "Safe Container"
+      "maxCarryWeight": 10.0
     },
     {
       "item": "extractcraft:omega_safe_container",
@@ -408,10 +427,7 @@
       "storageGridDefinition": "3x3",
       "storageGridWidth": 3,
       "storageGridHeight": 3,
-      "maxCarryWeight": 12.0,
-      "durabilityEnabled": true,
-      "maxDurability": 260,
-      "repairCategory": "Safe Container"
+      "maxCarryWeight": 12.0
     },
     {
       "item": "extractcraft:combat_stim_syringe",
@@ -486,6 +502,9 @@
       ],
       "repairTargetCategory": "Helmet",
       "repairAmount": 90,
+      "durabilityEnabled": true,
+      "maxDurability": 100,
+      "durabilityType": "repair_kit",
       "consumable": true
     },
     {
@@ -504,6 +523,9 @@
       ],
       "repairTargetCategory": "Armor",
       "repairAmount": 160,
+      "durabilityEnabled": true,
+      "maxDurability": 140,
+      "durabilityType": "repair_kit",
       "consumable": true
     },
     {
@@ -522,6 +544,9 @@
       ],
       "repairTargetCategory": "Backpack",
       "repairAmount": 120,
+      "durabilityEnabled": true,
+      "maxDurability": 120,
+      "durabilityType": "repair_kit",
       "consumable": true
     }
   ]

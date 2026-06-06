@@ -2,6 +2,9 @@ package com.chaseschwartz.extractcraft.items;
 
 import java.util.List;
 
+import com.chaseschwartz.extractcraft.durability.DurabilityData;
+import com.chaseschwartz.extractcraft.durability.DurabilityService;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -34,7 +37,11 @@ public class ExtractCraftProfiledItem extends Item {
                     + "x" + metadata.storageGridHeight().orElse(0) + carry).withStyle(ChatFormatting.BLUE));
         }
         metadata.armorRating().ifPresent(value -> tooltip.add(Component.literal("Protection: " + protectionLabel(value)).withStyle(ChatFormatting.BLUE)));
-        if (metadata.durabilityEnabled()) {
+        if (DurabilityService.getOrInitialize(stack).isPresent()) {
+            DurabilityData data = DurabilityService.getOrInitialize(stack).orElseThrow();
+            String label = data.type().equalsIgnoreCase("repair_kit") ? "Repair Capacity" : "Durability";
+            tooltip.add(Component.literal(label + ": " + data.currentDurability() + "/" + data.currentMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
+        } else if (metadata.durabilityEnabled()) {
             tooltip.add(Component.literal("Durability: Configured later"
                     + metadata.maxDurability().map(value -> " (" + value + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }

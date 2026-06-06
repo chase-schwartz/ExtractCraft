@@ -7,10 +7,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.DurabilityData;
+import com.chaseschwartz.extractcraft.durability.DurabilityProfile;
+import com.chaseschwartz.extractcraft.durability.DurabilityService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
@@ -197,6 +202,63 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("taczreport")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugTaczReport(context.getSource())))
+                        .then(Commands.literal("durability")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .then(Commands.literal("held")
+                                        .executes(context -> debugDurabilityHeld(context.getSource())))
+                                .then(Commands.literal("damageheld")
+                                        .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                .executes(context -> debugDurabilityDamageHeld(
+                                                        context.getSource(),
+                                                        IntegerArgumentType.getInteger(context, "amount")))))
+                                .then(Commands.literal("setheld")
+                                        .then(Commands.argument("current", IntegerArgumentType.integer(0))
+                                                .executes(context -> debugDurabilitySetHeld(
+                                                        context.getSource(),
+                                                        IntegerArgumentType.getInteger(context, "current"),
+                                                        Optional.empty()))
+                                                .then(Commands.argument("currentMax", IntegerArgumentType.integer(1))
+                                                        .executes(context -> debugDurabilitySetHeld(
+                                                                context.getSource(),
+                                                                IntegerArgumentType.getInteger(context, "current"),
+                                                                Optional.of(IntegerArgumentType.getInteger(context, "currentMax")))))))
+                                .then(Commands.literal("resetheld")
+                                        .executes(context -> debugDurabilityResetHeld(context.getSource())))
+                                .then(Commands.literal("equipped")
+                                        .then(Commands.argument("slot", StringArgumentType.word())
+                                                .suggests((context, builder) -> suggestDurabilityEquipmentSlots(builder))
+                                                .executes(context -> debugDurabilityEquipped(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "slot")))))
+                                .then(Commands.literal("damageequipped")
+                                        .then(Commands.argument("slot", StringArgumentType.word())
+                                                .suggests((context, builder) -> suggestDurabilityEquipmentSlots(builder))
+                                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                        .executes(context -> debugDurabilityDamageEquipped(
+                                                                context.getSource(),
+                                                                StringArgumentType.getString(context, "slot"),
+                                                                IntegerArgumentType.getInteger(context, "amount"))))))
+                                .then(Commands.literal("setequipped")
+                                        .then(Commands.argument("slot", StringArgumentType.word())
+                                                .suggests((context, builder) -> suggestDurabilityEquipmentSlots(builder))
+                                                .then(Commands.argument("current", IntegerArgumentType.integer(0))
+                                                        .executes(context -> debugDurabilitySetEquipped(
+                                                                context.getSource(),
+                                                                StringArgumentType.getString(context, "slot"),
+                                                                IntegerArgumentType.getInteger(context, "current"),
+                                                                Optional.empty()))
+                                                        .then(Commands.argument("currentMax", IntegerArgumentType.integer(1))
+                                                                .executes(context -> debugDurabilitySetEquipped(
+                                                                        context.getSource(),
+                                                                        StringArgumentType.getString(context, "slot"),
+                                                                        IntegerArgumentType.getInteger(context, "current"),
+                                                                        Optional.of(IntegerArgumentType.getInteger(context, "currentMax"))))))))
+                                .then(Commands.literal("resetequipped")
+                                        .then(Commands.argument("slot", StringArgumentType.word())
+                                                .suggests((context, builder) -> suggestDurabilityEquipmentSlots(builder))
+                                                .executes(context -> debugDurabilityResetEquipped(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "slot"))))))
                         .then(Commands.literal("revealtimes")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugRevealTimes(context.getSource())))
@@ -444,6 +506,220 @@ public class RaidInventoryCommands {
                 savedTag,
                 suspectedFields);
         return 1;
+    }
+
+    private static int debugDurabilityHeld(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Held durability commands inspect the vanilla main-hand stack. Use /extractcraft debug durability equipped <slot> for ExtractCraft custom equipment."));
+            return 0;
+        }
+
+        DurabilityProfile profile = DurabilityService.profileFor(stack).orElse(null);
+        if (profile == null) {
+            player.sendSystemMessage(Component.literal(stack.getHoverName().getString() + " has no ExtractCraft durability profile."));
+            return 0;
+        }
+
+        DurabilityData data = DurabilityService.getOrInitialize(stack).orElseThrow();
+        player.getInventory().setChanged();
+        player.sendSystemMessage(Component.literal("Held command target: vanilla main-hand stack. Equipped command target: ExtractCraft custom equipment slots."));
+        player.sendSystemMessage(Component.literal("Durability profile: " + profile.itemId()
+                + " | type " + profile.type()
+                + " | tier " + profile.tier()
+                + " | pristine max " + profile.pristineMaxDurability()));
+        player.sendSystemMessage(Component.literal("Held durability: " + DurabilityService.summary(data)));
+        return 1;
+    }
+
+    private static int debugDurabilityDamageHeld(CommandSourceStack source, int amount) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Hold a durable ExtractCraft item to damage it."));
+            return 0;
+        }
+
+        DurabilityData data = DurabilityService.damage(stack, amount).orElse(null);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(stack.getHoverName().getString() + " has no ExtractCraft durability profile."));
+            return 0;
+        }
+
+        player.getInventory().setChanged();
+        player.sendSystemMessage(Component.literal("Damaged vanilla held item by " + amount + ": " + DurabilityService.summary(data)));
+        return 1;
+    }
+
+    private static int debugDurabilitySetHeld(CommandSourceStack source, int current, Optional<Integer> currentMax) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Hold a durable ExtractCraft item to set durability."));
+            return 0;
+        }
+
+        DurabilityData data = DurabilityService.set(stack, current, currentMax).orElse(null);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(stack.getHoverName().getString() + " has no ExtractCraft durability profile."));
+            return 0;
+        }
+
+        player.getInventory().setChanged();
+        player.sendSystemMessage(Component.literal("Set vanilla held item durability: " + DurabilityService.summary(data)));
+        return 1;
+    }
+
+    private static int debugDurabilityResetHeld(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Hold a durable ExtractCraft item to reset durability."));
+            return 0;
+        }
+
+        DurabilityData data = DurabilityService.reset(stack).orElse(null);
+        if (data == null) {
+            player.sendSystemMessage(Component.literal(stack.getHoverName().getString() + " has no ExtractCraft durability profile."));
+            return 0;
+        }
+
+        player.getInventory().setChanged();
+        player.sendSystemMessage(Component.literal("Reset vanilla held item durability: " + DurabilityService.summary(data)));
+        return 1;
+    }
+
+    private static int debugDurabilityEquipped(CommandSourceStack source, String slotName) throws CommandSyntaxException {
+        return applyEquippedDurability(
+                source,
+                slotName,
+                "inspect",
+                true,
+                stack -> DurabilityService.getOrInitialize(stack));
+    }
+
+    private static int debugDurabilityDamageEquipped(CommandSourceStack source, String slotName, int amount) throws CommandSyntaxException {
+        return applyEquippedDurability(
+                source,
+                slotName,
+                "damage",
+                true,
+                stack -> DurabilityService.damage(stack, amount));
+    }
+
+    private static int debugDurabilitySetEquipped(CommandSourceStack source, String slotName, int current, Optional<Integer> currentMax) throws CommandSyntaxException {
+        return applyEquippedDurability(
+                source,
+                slotName,
+                "set",
+                false,
+                stack -> DurabilityService.set(stack, current, currentMax));
+    }
+
+    private static int debugDurabilityResetEquipped(CommandSourceStack source, String slotName) throws CommandSyntaxException {
+        return applyEquippedDurability(
+                source,
+                slotName,
+                "reset",
+                true,
+                stack -> DurabilityService.reset(stack));
+    }
+
+    private static int applyEquippedDurability(CommandSourceStack source, String slotName, String actionName, boolean allowAll, Function<ItemStack, Optional<DurabilityData>> action) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        List<RaidEquipmentSlot> slots = durabilityEquipmentSlots(slotName, allowAll);
+        if (slots.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Unknown durability equipment slot '" + slotName + "'. Use helmet, armor, backpack/pack" + (allowAll ? ", or all." : ".")));
+            return 0;
+        }
+
+        boolean activeRaid = RaidManager.isInRaid(player);
+        PlayerStashService.PlayerStashData stashData = activeRaid ? null : PlayerStashService.load(player);
+        RaidInventory inventory = activeRaid ? RaidInventoryManager.get(player) : stashData.baseInventory();
+        int successes = 0;
+        for (RaidEquipmentSlot slot : slots) {
+            RaidInventoryItem item = inventory.equipmentItem(slot);
+            if (item == null) {
+                player.sendSystemMessage(Component.literal("ExtractCraft " + debugDurabilitySlotLabel(slot) + " slot is empty."));
+                continue;
+            }
+
+            ItemStack stack = item.toItemStack();
+            DurabilityProfile profile = DurabilityService.profileFor(stack).orElse(null);
+            if (profile == null) {
+                DurabilityService.clear(stack);
+                RaidInventoryItem cleaned = item.withStoredStack(stack);
+                persistEquippedDurabilityItem(player, activeRaid, stashData, inventory, slot, cleaned);
+                player.sendSystemMessage(Component.literal(item.displayName() + " in " + debugDurabilitySlotLabel(slot) + " is not durable."));
+                continue;
+            }
+
+            DurabilityData data = action.apply(stack).orElse(null);
+            if (data == null) {
+                player.sendSystemMessage(Component.literal(item.displayName() + " in " + debugDurabilitySlotLabel(slot) + " has no durability data."));
+                continue;
+            }
+
+            RaidInventoryItem updated = item.withStoredStack(stack);
+            RaidInventory.AddResult result = persistEquippedDurabilityItem(player, activeRaid, stashData, inventory, slot, updated);
+            if (!result.success()) {
+                player.sendSystemMessage(Component.literal("Could not update " + debugDurabilitySlotLabel(slot) + ": " + result.message()));
+                continue;
+            }
+
+            player.sendSystemMessage(Component.literal("ExtractCraft equipped " + debugDurabilitySlotLabel(slot)
+                    + " " + actionName + ": " + item.displayName()
+                    + " | " + DurabilityService.summary(data)));
+            successes++;
+        }
+
+        return successes > 0 ? 1 : 0;
+    }
+
+    private static RaidInventory.AddResult persistEquippedDurabilityItem(ServerPlayer player, boolean activeRaid, PlayerStashService.PlayerStashData stashData,
+            RaidInventory inventory, RaidEquipmentSlot slot, RaidInventoryItem item) {
+        if (activeRaid) {
+            return inventory.setEquipmentSlot(slot, item);
+        }
+        if (player.containerMenu instanceof BaseStashMenu baseStashMenu) {
+            return baseStashMenu.debugReplaceEquipmentItem(player, slot, item);
+        }
+        RaidInventory.AddResult result = inventory.setEquipmentSlot(slot, item);
+        if (result.success()) {
+            PlayerStashService.save(player, stashData);
+        }
+        return result;
+    }
+
+    private static List<RaidEquipmentSlot> durabilityEquipmentSlots(String slotName, boolean allowAll) {
+        return switch (slotName.toLowerCase(Locale.ROOT)) {
+            case "helmet", "helm" -> List.of(RaidEquipmentSlot.HELMET);
+            case "armor", "body", "chest" -> List.of(RaidEquipmentSlot.ARMOR);
+            case "backpack", "pack", "bag" -> List.of(RaidEquipmentSlot.EQUIPPED_BACKPACK);
+            case "all" -> allowAll
+                    ? List.of(RaidEquipmentSlot.HELMET, RaidEquipmentSlot.ARMOR, RaidEquipmentSlot.EQUIPPED_BACKPACK)
+                    : List.of();
+            default -> List.of();
+        };
+    }
+
+    private static java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestDurabilityEquipmentSlots(com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        builder.suggest("helmet");
+        builder.suggest("armor");
+        builder.suggest("backpack");
+        builder.suggest("pack");
+        builder.suggest("all");
+        return builder.buildFuture();
+    }
+
+    private static String debugDurabilitySlotLabel(RaidEquipmentSlot slot) {
+        return switch (slot) {
+            case HELMET -> "helmet";
+            case ARMOR -> "armor";
+            case EQUIPPED_BACKPACK -> "backpack";
+            default -> slot.name().toLowerCase(Locale.ROOT);
+        };
     }
 
     private static int status(CommandSourceStack source) throws CommandSyntaxException {

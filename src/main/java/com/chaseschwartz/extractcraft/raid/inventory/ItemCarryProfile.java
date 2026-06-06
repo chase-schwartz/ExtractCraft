@@ -24,6 +24,7 @@ public record ItemCarryProfile(
         Optional<Double> maxCarryWeight,
         boolean durabilityEnabled,
         Optional<Integer> maxDurability,
+        Optional<String> durabilityType,
         Optional<String> repairCategory,
         Optional<Integer> repairAmount,
         Optional<String> repairTargetCategory,
@@ -42,6 +43,7 @@ public record ItemCarryProfile(
         tier = tier.filter(value -> value > 0);
         maxCarryWeight = maxCarryWeight.filter(value -> value > 0.0D);
         maxDurability = maxDurability.filter(value -> value > 0);
+        durabilityType = durabilityType.map(String::trim).filter(value -> !value.isBlank());
         repairAmount = repairAmount.filter(value -> value > 0);
         armorRating = armorRating.filter(value -> value > 0);
         healAmount = healAmount.filter(value -> value > 0);
@@ -75,6 +77,7 @@ public record ItemCarryProfile(
                 Optional.empty(),
                 Optional.empty(),
                 false,
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty(),

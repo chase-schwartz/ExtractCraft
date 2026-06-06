@@ -166,6 +166,7 @@ public class ItemCarryProfileRegistry implements PreparableReloadListener {
                     optionalDouble(object, "maxCarryWeight"),
                     optionalBoolean(object, "durabilityEnabled").orElse(false),
                     optionalInt(object, "maxDurability"),
+                    optionalString(object, "durabilityType"),
                     optionalString(object, "repairCategory"),
                     optionalInt(object, "repairAmount"),
                     optionalString(object, "repairTargetCategory"),
