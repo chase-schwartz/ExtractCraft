@@ -74,7 +74,7 @@
     },
     {
       "item": "extractcraft:combat_tourniquet_pack",
-      "category": "medical_tech",
+      "category": "field_medical",
       "rarity": "blue",
       "value": 480,
       "sellable": true,
@@ -86,7 +86,7 @@
     },
     {
       "item": "extractcraft:sterile_gauze_brick",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 390,
       "sellable": true,
@@ -98,7 +98,7 @@
     },
     {
       "item": "extractcraft:antibiotic_strip",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 580,
       "sellable": true,
@@ -110,7 +110,7 @@
     },
     {
       "item": "extractcraft:water_purifier_cartridge",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 540,
       "sellable": true,
@@ -122,7 +122,7 @@
     },
     {
       "item": "extractcraft:mre_flavor_pack",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 260,
       "sellable": true,
@@ -134,7 +134,7 @@
     },
     {
       "item": "extractcraft:spark_plug_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 610,
       "sellable": true,
@@ -146,7 +146,7 @@
     },
     {
       "item": "extractcraft:worn_tool_roll",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 750,
       "sellable": true,
@@ -158,7 +158,7 @@
     },
     {
       "item": "extractcraft:duct_tape_stack",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 300,
       "sellable": true,
@@ -170,7 +170,7 @@
     },
     {
       "item": "extractcraft:brass_screw_tin",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 290,
       "sellable": true,
@@ -194,7 +194,7 @@
     },
     {
       "item": "extractcraft:signal_flare_tube",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 690,
       "sellable": true,
@@ -278,7 +278,7 @@
     },
     {
       "item": "extractcraft:ration_coupon_stack",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 280,
       "sellable": true,
@@ -290,7 +290,7 @@
     },
     {
       "item": "extractcraft:plastic_med_vials",
-      "category": "medical_tech",
+      "category": "field_medical",
       "rarity": "blue",
       "value": 520,
       "sellable": true,
@@ -302,7 +302,7 @@
     },
     {
       "item": "extractcraft:hydraulic_valve",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 980,
       "sellable": true,
@@ -362,7 +362,7 @@
     },
     {
       "item": "extractcraft:low_grade_lubricant",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 390,
       "sellable": true,
@@ -494,7 +494,7 @@
     },
     {
       "item": "extractcraft:lab_sample_cooler",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "purple",
       "value": 5700,
       "sellable": true,
@@ -506,9 +506,9 @@
     },
     {
       "item": "extractcraft:surgical_stapler_kit",
-      "category": "medical_tech",
+      "category": "field_medical",
       "rarity": "purple",
-      "value": 2400,
+      "value": 2900,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -518,7 +518,7 @@
     },
     {
       "item": "extractcraft:hemostatic_injector_pack",
-      "category": "medical_tech",
+      "category": "field_medical",
       "rarity": "purple",
       "value": 3200,
       "sellable": true,
@@ -568,7 +568,7 @@
       "item": "extractcraft:sealed_evidence_pouch",
       "category": "intel",
       "rarity": "purple",
-      "value": 2900,
+      "value": 3400,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -604,7 +604,7 @@
       "item": "extractcraft:optic_calibration_tool",
       "category": "optics",
       "rarity": "purple",
-      "value": 2300,
+      "value": 3000,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -626,9 +626,9 @@
     },
     {
       "item": "extractcraft:reinforced_cable_harness",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "purple",
-      "value": 2600,
+      "value": 3100,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -724,7 +724,7 @@
       "item": "extractcraft:precision_gyro_stabilizer",
       "category": "weapon_parts",
       "rarity": "gold",
-      "value": 12800,
+      "value": 15000,
       "sellable": true,
       "questItem": false,
       "lootTier": 4,
@@ -794,7 +794,7 @@
     },
     {
       "item": "extractcraft:lab_grade_stimulant_case",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "rarity": "gold",
       "value": 16800,
       "sellable": true,
@@ -806,9 +806,9 @@
     },
     {
       "item": "extractcraft:portable_blood_analyzer",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "rarity": "gold",
-      "value": 11200,
+      "value": 15000,
       "sellable": true,
       "questItem": false,
       "lootTier": 4,
@@ -818,9 +818,9 @@
     },
     {
       "item": "extractcraft:nano_suture_cartridge",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "rarity": "gold",
-      "value": 8900,
+      "value": 12500,
       "sellable": true,
       "questItem": false,
       "lootTier": 4,
@@ -830,9 +830,9 @@
     },
     {
       "item": "extractcraft:heart_of_the_dam",
-      "category": "trophy",
+      "category": "jackpot",
       "rarity": "red",
-      "value": 85000,
+      "value": 105000,
       "sellable": true,
       "questItem": false,
       "lootTier": 5,
@@ -844,7 +844,7 @@
       "item": "extractcraft:blacksite_master_ledger",
       "category": "intel",
       "rarity": "red",
-      "value": 76000,
+      "value": 95000,
       "sellable": true,
       "questItem": false,
       "lootTier": 5,
@@ -868,7 +868,7 @@
       "item": "extractcraft:gold_tactical_pack_frame",
       "category": "armor_materials",
       "rarity": "red",
-      "value": 54000,
+      "value": 75000,
       "sellable": true,
       "questItem": false,
       "lootTier": 5,
@@ -926,7 +926,7 @@
     },
     {
       "item": "extractcraft:gold_wristwatch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "blue",
       "value": 1350,
       "sellable": true,
@@ -938,7 +938,7 @@
     },
     {
       "item": "extractcraft:silver_locket",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "blue",
       "value": 820,
       "sellable": true,
@@ -974,7 +974,7 @@
     },
     {
       "item": "extractcraft:engraved_lighter",
-      "category": "trophy",
+      "category": "civilian_valuable",
       "rarity": "blue",
       "value": 420,
       "sellable": true,
@@ -986,7 +986,7 @@
     },
     {
       "item": "extractcraft:perfume_bottle",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "blue",
       "value": 980,
       "sellable": true,
@@ -998,7 +998,7 @@
     },
     {
       "item": "extractcraft:fountain_pen_case",
-      "category": "intel",
+      "category": "office_admin",
       "rarity": "blue",
       "value": 1050,
       "sellable": true,
@@ -1010,7 +1010,7 @@
     },
     {
       "item": "extractcraft:diamond_earrings_case",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 5200,
       "sellable": true,
@@ -1022,7 +1022,7 @@
     },
     {
       "item": "extractcraft:sealed_diplomatic_medal",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 6800,
       "sellable": true,
@@ -1034,7 +1034,7 @@
     },
     {
       "item": "extractcraft:ceremonial_dagger_hilt",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 6400,
       "sellable": true,
@@ -1046,7 +1046,7 @@
     },
     {
       "item": "extractcraft:antique_music_box",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 7200,
       "sellable": true,
@@ -1058,7 +1058,7 @@
     },
     {
       "item": "extractcraft:gold_chess_king",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 22000,
       "sellable": true,
@@ -1082,7 +1082,7 @@
     },
     {
       "item": "extractcraft:royal_signet_ring",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 34000,
       "sellable": true,
@@ -1094,7 +1094,7 @@
     },
     {
       "item": "extractcraft:gemstone_reliquary",
-      "category": "trophy",
+      "category": "jackpot",
       "rarity": "red",
       "value": 145000,
       "sellable": true,
@@ -1106,7 +1106,7 @@
     },
     {
       "item": "extractcraft:luxury_gold_bar",
-      "category": "trophy",
+      "category": "jackpot",
       "rarity": "red",
       "value": 90000,
       "sellable": true,
@@ -1118,7 +1118,7 @@
     },
     {
       "item": "extractcraft:pressure_gauge",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 760,
       "sellable": true,
@@ -1130,7 +1130,7 @@
     },
     {
       "item": "extractcraft:valve_wheel",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 720,
       "sellable": true,
@@ -1142,7 +1142,7 @@
     },
     {
       "item": "extractcraft:welding_nozzle",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 540,
       "sellable": true,
@@ -1154,7 +1154,7 @@
     },
     {
       "item": "extractcraft:bearing_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 690,
       "sellable": true,
@@ -1166,7 +1166,7 @@
     },
     {
       "item": "extractcraft:drill_chuck",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 820,
       "sellable": true,
@@ -1178,7 +1178,7 @@
     },
     {
       "item": "extractcraft:braided_hose_bundle",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "blue",
       "value": 1180,
       "sellable": true,
@@ -1190,7 +1190,7 @@
     },
     {
       "item": "extractcraft:fuse_box_module",
-      "category": "electronics",
+      "category": "industrial_tools",
       "rarity": "purple",
       "value": 2400,
       "sellable": true,
@@ -1202,7 +1202,7 @@
     },
     {
       "item": "extractcraft:pump_impeller",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "purple",
       "value": 3200,
       "sellable": true,
@@ -1214,9 +1214,9 @@
     },
     {
       "item": "extractcraft:designer_wallet",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
-      "value": 3600,
+      "value": 4200,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -1226,7 +1226,7 @@
     },
     {
       "item": "extractcraft:luxury_sunglasses",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 4200,
       "sellable": true,
@@ -1238,7 +1238,7 @@
     },
     {
       "item": "extractcraft:silver_cigarette_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 4700,
       "sellable": true,
@@ -1250,7 +1250,7 @@
     },
     {
       "item": "extractcraft:velvet_jewelry_pouch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 5200,
       "sellable": true,
@@ -1262,7 +1262,7 @@
     },
     {
       "item": "extractcraft:antique_pocket_watch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 18500,
       "sellable": true,
@@ -1274,7 +1274,7 @@
     },
     {
       "item": "extractcraft:pearl_bracelet",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 16000,
       "sellable": true,
@@ -1286,7 +1286,7 @@
     },
     {
       "item": "extractcraft:rare_coin_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "gold",
       "value": 21000,
       "sellable": true,
@@ -1298,7 +1298,7 @@
     },
     {
       "item": "extractcraft:jeweled_brooch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 24000,
       "sellable": true,
@@ -1310,7 +1310,7 @@
     },
     {
       "item": "extractcraft:office_stamp_kit",
-      "category": "intel",
+      "category": "office_admin",
       "rarity": "blue",
       "value": 620,
       "sellable": true,
@@ -1322,7 +1322,7 @@
     },
     {
       "item": "extractcraft:security_badge_stack",
-      "category": "access",
+      "category": "office_admin",
       "rarity": "blue",
       "value": 780,
       "sellable": true,
@@ -1334,7 +1334,7 @@
     },
     {
       "item": "extractcraft:brass_nameplate",
-      "category": "trophy",
+      "category": "civilian_valuable",
       "rarity": "blue",
       "value": 950,
       "sellable": true,
@@ -1346,7 +1346,7 @@
     },
     {
       "item": "extractcraft:shredded_document_bag",
-      "category": "intel",
+      "category": "office_admin",
       "rarity": "blue",
       "value": 860,
       "sellable": true,
@@ -1358,7 +1358,7 @@
     },
     {
       "item": "extractcraft:executive_keyring",
-      "category": "access",
+      "category": "office_admin",
       "rarity": "purple",
       "value": 4200,
       "sellable": true,
@@ -1370,7 +1370,7 @@
     },
     {
       "item": "extractcraft:sealed_cash_envelope",
-      "category": "contraband",
+      "category": "office_admin",
       "rarity": "purple",
       "value": 5600,
       "sellable": true,
@@ -1382,7 +1382,7 @@
     },
     {
       "item": "extractcraft:locked_file_tube",
-      "category": "intel",
+      "category": "office_admin",
       "rarity": "purple",
       "value": 3900,
       "sellable": true,
@@ -1406,7 +1406,7 @@
     },
     {
       "item": "extractcraft:specimen_slide_case",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "blue",
       "value": 740,
       "sellable": true,
@@ -1430,7 +1430,7 @@
     },
     {
       "item": "extractcraft:petri_dish_stack",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "blue",
       "value": 680,
       "sellable": true,
@@ -1442,7 +1442,7 @@
     },
     {
       "item": "extractcraft:reagent_ampoule_rack",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "purple",
       "value": 3400,
       "sellable": true,
@@ -1454,7 +1454,7 @@
     },
     {
       "item": "extractcraft:biohazard_sample_tube",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "purple",
       "value": 4600,
       "sellable": true,
@@ -1466,7 +1466,7 @@
     },
     {
       "item": "extractcraft:centrifuge_rotor",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "purple",
       "value": 5200,
       "sellable": true,
@@ -1490,7 +1490,7 @@
     },
     {
       "item": "extractcraft:calibration_weight_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "rarity": "purple",
       "value": 3800,
       "sellable": true,
@@ -1502,7 +1502,7 @@
     },
     {
       "item": "extractcraft:storm_lighter",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 780,
       "sellable": true,
@@ -1514,7 +1514,7 @@
     },
     {
       "item": "extractcraft:signal_mirror",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 620,
       "sellable": true,
@@ -1526,7 +1526,7 @@
     },
     {
       "item": "extractcraft:emergency_blanket_roll",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 520,
       "sellable": true,
@@ -1538,7 +1538,7 @@
     },
     {
       "item": "extractcraft:water_purification_tabs",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 690,
       "sellable": true,
@@ -1550,7 +1550,7 @@
     },
     {
       "item": "extractcraft:flare_case",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 980,
       "sellable": true,
@@ -1562,7 +1562,7 @@
     },
     {
       "item": "extractcraft:filter_straw",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 860,
       "sellable": true,
@@ -1574,7 +1574,7 @@
     },
     {
       "item": "extractcraft:compact_camp_stove",
-      "category": "tools",
+      "category": "industrial_tools",
       "rarity": "purple",
       "value": 2400,
       "sellable": true,
@@ -1586,9 +1586,9 @@
     },
     {
       "item": "extractcraft:firestarter_tin",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "purple",
-      "value": 2100,
+      "value": 2600,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -1598,7 +1598,7 @@
     },
     {
       "item": "extractcraft:sealed_coffee_tin",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 620,
       "sellable": true,
@@ -1610,7 +1610,7 @@
     },
     {
       "item": "extractcraft:instant_noodle_cup",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 260,
       "sellable": true,
@@ -1622,7 +1622,7 @@
     },
     {
       "item": "extractcraft:vacuum_tea_brick",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 540,
       "sellable": true,
@@ -1634,7 +1634,7 @@
     },
     {
       "item": "extractcraft:canned_peaches",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 340,
       "sellable": true,
@@ -1646,7 +1646,7 @@
     },
     {
       "item": "extractcraft:chocolate_bar_pack",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 310,
       "sellable": true,
@@ -1658,7 +1658,7 @@
     },
     {
       "item": "extractcraft:travel_mug",
-      "category": "trophy",
+      "category": "food_comfort",
       "rarity": "blue",
       "value": 520,
       "sellable": true,
@@ -1670,7 +1670,7 @@
     },
     {
       "item": "extractcraft:sealed_spice_jar",
-      "category": "survival",
+      "category": "survival_utility",
       "rarity": "blue",
       "value": 480,
       "sellable": true,
@@ -1684,7 +1684,7 @@
       "item": "extractcraft:cigarette_carton",
       "category": "contraband",
       "rarity": "purple",
-      "value": 2600,
+      "value": 3200,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -1694,7 +1694,7 @@
     },
     {
       "item": "extractcraft:sealed_blacksite_relic",
-      "category": "trophy",
+      "category": "jackpot",
       "rarity": "red",
       "value": 98000,
       "sellable": true,
@@ -1718,7 +1718,7 @@
     },
     {
       "item": "extractcraft:unknown_specimen_jar",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "gold",
       "value": 28500,
       "sellable": true,
@@ -1754,7 +1754,7 @@
     },
     {
       "item": "extractcraft:redacted_photo_locket",
-      "category": "trophy",
+      "category": "weird_lore",
       "rarity": "purple",
       "value": 6400,
       "sellable": true,
@@ -1766,7 +1766,7 @@
     },
     {
       "item": "extractcraft:sealed_eye_capsule",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "rarity": "gold",
       "value": 31800,
       "sellable": true,
@@ -1790,7 +1790,7 @@
     },
     {
       "item": "extractcraft:crystal_decanter",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 6200,
       "sellable": true,
@@ -1802,7 +1802,7 @@
     },
     {
       "item": "extractcraft:antique_hand_mirror",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 4800,
       "sellable": true,
@@ -1814,7 +1814,7 @@
     },
     {
       "item": "extractcraft:gold_cufflinks",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
       "value": 5900,
       "sellable": true,
@@ -1826,9 +1826,9 @@
     },
     {
       "item": "extractcraft:silver_compact_case",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "purple",
-      "value": 4200,
+      "value": 4700,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -1838,9 +1838,9 @@
     },
     {
       "item": "extractcraft:pocket_cigar_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
-      "value": 3600,
+      "value": 4200,
       "sellable": true,
       "questItem": false,
       "lootTier": 3,
@@ -1850,7 +1850,7 @@
     },
     {
       "item": "extractcraft:gemstone_tie_pin",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 15500,
       "sellable": true,
@@ -1862,7 +1862,7 @@
     },
     {
       "item": "extractcraft:ivory_letter_opener",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 5400,
       "sellable": true,
@@ -1874,7 +1874,7 @@
     },
     {
       "item": "extractcraft:velvet_ring_box",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "rarity": "gold",
       "value": 22500,
       "sellable": true,
@@ -1886,7 +1886,7 @@
     },
     {
       "item": "extractcraft:vintage_camera",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 5800,
       "sellable": true,
@@ -1898,7 +1898,7 @@
     },
     {
       "item": "extractcraft:silver_pocket_flask",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 4300,
       "sellable": true,
@@ -1910,7 +1910,7 @@
     },
     {
       "item": "extractcraft:rare_stamp_album",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "gold",
       "value": 17200,
       "sellable": true,
@@ -1922,7 +1922,7 @@
     },
     {
       "item": "extractcraft:antique_porcelain_figurine",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 6900,
       "sellable": true,
@@ -1934,9 +1934,9 @@
     },
     {
       "item": "extractcraft:gold_fountain_pen",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "gold",
-      "value": 14800,
+      "value": 16500,
       "sellable": true,
       "questItem": false,
       "lootTier": 4,
@@ -1946,7 +1946,7 @@
     },
     {
       "item": "extractcraft:collector_card_slab",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "gold",
       "value": 19600,
       "sellable": true,
@@ -1958,7 +1958,7 @@
     },
     {
       "item": "extractcraft:silver_pocket_knife",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 5200,
       "sellable": true,
@@ -1970,7 +1970,7 @@
     },
     {
       "item": "extractcraft:antique_music_cylinder",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "rarity": "purple",
       "value": 4700,
       "sellable": true,
@@ -1982,7 +1982,7 @@
     },
     {
       "item": "extractcraft:pill_bottle_rx",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 640,
       "sellable": true,
@@ -1994,7 +1994,7 @@
     },
     {
       "item": "extractcraft:blister_painkillers",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 420,
       "sellable": true,
@@ -2006,7 +2006,7 @@
     },
     {
       "item": "extractcraft:first_aid_ointment",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 360,
       "sellable": true,
@@ -2018,7 +2018,7 @@
     },
     {
       "item": "extractcraft:glass_cough_syrup",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 520,
       "sellable": true,
@@ -2030,7 +2030,7 @@
     },
     {
       "item": "extractcraft:adhesive_bandage_box",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 390,
       "sellable": true,
@@ -2042,7 +2042,7 @@
     },
     {
       "item": "extractcraft:digital_thermometer",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 560,
       "sellable": true,
@@ -2054,7 +2054,7 @@
     },
     {
       "item": "extractcraft:inhaler_blue",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 740,
       "sellable": true,
@@ -2066,7 +2066,7 @@
     },
     {
       "item": "extractcraft:saline_eye_drops",
-      "category": "medical_tech",
+      "category": "home_medical",
       "rarity": "blue",
       "value": 310,
       "sellable": true,

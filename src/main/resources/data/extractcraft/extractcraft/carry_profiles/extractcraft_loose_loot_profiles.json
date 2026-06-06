@@ -92,7 +92,7 @@
     },
     {
       "item": "extractcraft:combat_tourniquet_pack",
-      "category": "medical_tech",
+      "category": "field_medical",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -107,7 +107,7 @@
     },
     {
       "item": "extractcraft:sterile_gauze_brick",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -122,7 +122,7 @@
     },
     {
       "item": "extractcraft:antibiotic_strip",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -137,7 +137,7 @@
     },
     {
       "item": "extractcraft:water_purifier_cartridge",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -152,7 +152,7 @@
     },
     {
       "item": "extractcraft:mre_flavor_pack",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -167,7 +167,7 @@
     },
     {
       "item": "extractcraft:spark_plug_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 0.5,
       "slotCost": 1,
       "gridWidth": 1,
@@ -182,7 +182,7 @@
     },
     {
       "item": "extractcraft:worn_tool_roll",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 1.0,
       "slotCost": 2,
       "gridWidth": 1,
@@ -197,7 +197,7 @@
     },
     {
       "item": "extractcraft:duct_tape_stack",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -212,7 +212,7 @@
     },
     {
       "item": "extractcraft:brass_screw_tin",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -242,7 +242,7 @@
     },
     {
       "item": "extractcraft:signal_flare_tube",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.6,
       "slotCost": 2,
       "gridWidth": 1,
@@ -347,7 +347,7 @@
     },
     {
       "item": "extractcraft:ration_coupon_stack",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -362,7 +362,7 @@
     },
     {
       "item": "extractcraft:plastic_med_vials",
-      "category": "medical_tech",
+      "category": "field_medical",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -377,7 +377,7 @@
     },
     {
       "item": "extractcraft:hydraulic_valve",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 1.1,
       "slotCost": 2,
       "gridWidth": 1,
@@ -452,7 +452,7 @@
     },
     {
       "item": "extractcraft:low_grade_lubricant",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -617,7 +617,7 @@
     },
     {
       "item": "extractcraft:lab_sample_cooler",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 1.8,
       "slotCost": 4,
       "gridWidth": 2,
@@ -632,7 +632,7 @@
     },
     {
       "item": "extractcraft:surgical_stapler_kit",
-      "category": "medical_tech",
+      "category": "field_medical",
       "weight": 0.5,
       "slotCost": 1,
       "gridWidth": 1,
@@ -647,7 +647,7 @@
     },
     {
       "item": "extractcraft:hemostatic_injector_pack",
-      "category": "medical_tech",
+      "category": "field_medical",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -782,7 +782,7 @@
     },
     {
       "item": "extractcraft:reinforced_cable_harness",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 1.4,
       "slotCost": 2,
       "gridWidth": 1,
@@ -992,7 +992,7 @@
     },
     {
       "item": "extractcraft:lab_grade_stimulant_case",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "weight": 1.2,
       "slotCost": 4,
       "gridWidth": 2,
@@ -1007,7 +1007,7 @@
     },
     {
       "item": "extractcraft:portable_blood_analyzer",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "weight": 0.9,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1022,7 +1022,7 @@
     },
     {
       "item": "extractcraft:nano_suture_cartridge",
-      "category": "medical_tech",
+      "category": "rare_medical",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1037,7 +1037,7 @@
     },
     {
       "item": "extractcraft:heart_of_the_dam",
-      "category": "trophy",
+      "category": "jackpot",
       "weight": 4.5,
       "slotCost": 9,
       "gridWidth": 3,
@@ -1157,7 +1157,7 @@
     },
     {
       "item": "extractcraft:gold_wristwatch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1172,7 +1172,7 @@
     },
     {
       "item": "extractcraft:silver_locket",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1217,7 +1217,7 @@
     },
     {
       "item": "extractcraft:engraved_lighter",
-      "category": "trophy",
+      "category": "civilian_valuable",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1232,7 +1232,7 @@
     },
     {
       "item": "extractcraft:perfume_bottle",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1247,7 +1247,7 @@
     },
     {
       "item": "extractcraft:fountain_pen_case",
-      "category": "intel",
+      "category": "office_admin",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1262,7 +1262,7 @@
     },
     {
       "item": "extractcraft:diamond_earrings_case",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1277,7 +1277,7 @@
     },
     {
       "item": "extractcraft:sealed_diplomatic_medal",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1292,7 +1292,7 @@
     },
     {
       "item": "extractcraft:ceremonial_dagger_hilt",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.5,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1307,7 +1307,7 @@
     },
     {
       "item": "extractcraft:antique_music_box",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.9,
       "slotCost": 4,
       "gridWidth": 2,
@@ -1322,7 +1322,7 @@
     },
     {
       "item": "extractcraft:gold_chess_king",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.8,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1352,7 +1352,7 @@
     },
     {
       "item": "extractcraft:royal_signet_ring",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1367,7 +1367,7 @@
     },
     {
       "item": "extractcraft:gemstone_reliquary",
-      "category": "trophy",
+      "category": "jackpot",
       "weight": 2.4,
       "slotCost": 4,
       "gridWidth": 2,
@@ -1382,7 +1382,7 @@
     },
     {
       "item": "extractcraft:luxury_gold_bar",
-      "category": "trophy",
+      "category": "jackpot",
       "weight": 1.8,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1397,7 +1397,7 @@
     },
     {
       "item": "extractcraft:pressure_gauge",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 0.5,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1412,7 +1412,7 @@
     },
     {
       "item": "extractcraft:valve_wheel",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 1.2,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1427,7 +1427,7 @@
     },
     {
       "item": "extractcraft:welding_nozzle",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1442,7 +1442,7 @@
     },
     {
       "item": "extractcraft:bearing_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 0.7,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1457,7 +1457,7 @@
     },
     {
       "item": "extractcraft:drill_chuck",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.8,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1472,7 +1472,7 @@
     },
     {
       "item": "extractcraft:braided_hose_bundle",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 0.9,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1487,7 +1487,7 @@
     },
     {
       "item": "extractcraft:fuse_box_module",
-      "category": "electronics",
+      "category": "industrial_tools",
       "weight": 0.8,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1502,7 +1502,7 @@
     },
     {
       "item": "extractcraft:pump_impeller",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 1.6,
       "slotCost": 4,
       "gridWidth": 2,
@@ -1517,7 +1517,7 @@
     },
     {
       "item": "extractcraft:designer_wallet",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1532,7 +1532,7 @@
     },
     {
       "item": "extractcraft:luxury_sunglasses",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1547,7 +1547,7 @@
     },
     {
       "item": "extractcraft:silver_cigarette_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.4,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1562,7 +1562,7 @@
     },
     {
       "item": "extractcraft:velvet_jewelry_pouch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1577,7 +1577,7 @@
     },
     {
       "item": "extractcraft:antique_pocket_watch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1592,7 +1592,7 @@
     },
     {
       "item": "extractcraft:pearl_bracelet",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1607,7 +1607,7 @@
     },
     {
       "item": "extractcraft:rare_coin_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1622,7 +1622,7 @@
     },
     {
       "item": "extractcraft:jeweled_brooch",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1637,7 +1637,7 @@
     },
     {
       "item": "extractcraft:office_stamp_kit",
-      "category": "intel",
+      "category": "office_admin",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1652,7 +1652,7 @@
     },
     {
       "item": "extractcraft:security_badge_stack",
-      "category": "access",
+      "category": "office_admin",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1667,7 +1667,7 @@
     },
     {
       "item": "extractcraft:brass_nameplate",
-      "category": "trophy",
+      "category": "civilian_valuable",
       "weight": 0.6,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1682,7 +1682,7 @@
     },
     {
       "item": "extractcraft:shredded_document_bag",
-      "category": "intel",
+      "category": "office_admin",
       "weight": 0.3,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1697,7 +1697,7 @@
     },
     {
       "item": "extractcraft:executive_keyring",
-      "category": "access",
+      "category": "office_admin",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1712,7 +1712,7 @@
     },
     {
       "item": "extractcraft:sealed_cash_envelope",
-      "category": "contraband",
+      "category": "office_admin",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1727,7 +1727,7 @@
     },
     {
       "item": "extractcraft:locked_file_tube",
-      "category": "intel",
+      "category": "office_admin",
       "weight": 0.7,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1757,7 +1757,7 @@
     },
     {
       "item": "extractcraft:specimen_slide_case",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1787,7 +1787,7 @@
     },
     {
       "item": "extractcraft:petri_dish_stack",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1802,7 +1802,7 @@
     },
     {
       "item": "extractcraft:reagent_ampoule_rack",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.5,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1817,7 +1817,7 @@
     },
     {
       "item": "extractcraft:biohazard_sample_tube",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1832,7 +1832,7 @@
     },
     {
       "item": "extractcraft:centrifuge_rotor",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 1.2,
       "slotCost": 4,
       "gridWidth": 2,
@@ -1862,7 +1862,7 @@
     },
     {
       "item": "extractcraft:calibration_weight_set",
-      "category": "industrial",
+      "category": "industrial_tools",
       "weight": 1.0,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1877,7 +1877,7 @@
     },
     {
       "item": "extractcraft:storm_lighter",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1892,7 +1892,7 @@
     },
     {
       "item": "extractcraft:signal_mirror",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1907,7 +1907,7 @@
     },
     {
       "item": "extractcraft:emergency_blanket_roll",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1922,7 +1922,7 @@
     },
     {
       "item": "extractcraft:water_purification_tabs",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1937,7 +1937,7 @@
     },
     {
       "item": "extractcraft:flare_case",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.6,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1952,7 +1952,7 @@
     },
     {
       "item": "extractcraft:filter_straw",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.2,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1967,7 +1967,7 @@
     },
     {
       "item": "extractcraft:compact_camp_stove",
-      "category": "tools",
+      "category": "industrial_tools",
       "weight": 0.8,
       "slotCost": 2,
       "gridWidth": 1,
@@ -1982,7 +1982,7 @@
     },
     {
       "item": "extractcraft:firestarter_tin",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -1997,7 +1997,7 @@
     },
     {
       "item": "extractcraft:sealed_coffee_tin",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.5,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2012,7 +2012,7 @@
     },
     {
       "item": "extractcraft:instant_noodle_cup",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2027,7 +2027,7 @@
     },
     {
       "item": "extractcraft:vacuum_tea_brick",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2042,7 +2042,7 @@
     },
     {
       "item": "extractcraft:canned_peaches",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.6,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2057,7 +2057,7 @@
     },
     {
       "item": "extractcraft:chocolate_bar_pack",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2072,7 +2072,7 @@
     },
     {
       "item": "extractcraft:travel_mug",
-      "category": "trophy",
+      "category": "food_comfort",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2087,7 +2087,7 @@
     },
     {
       "item": "extractcraft:sealed_spice_jar",
-      "category": "survival",
+      "category": "survival_utility",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2117,7 +2117,7 @@
     },
     {
       "item": "extractcraft:sealed_blacksite_relic",
-      "category": "trophy",
+      "category": "jackpot",
       "weight": 1.4,
       "slotCost": 4,
       "gridWidth": 2,
@@ -2147,7 +2147,7 @@
     },
     {
       "item": "extractcraft:unknown_specimen_jar",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.8,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2192,7 +2192,7 @@
     },
     {
       "item": "extractcraft:redacted_photo_locket",
-      "category": "trophy",
+      "category": "weird_lore",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2207,7 +2207,7 @@
     },
     {
       "item": "extractcraft:sealed_eye_capsule",
-      "category": "medical_tech",
+      "category": "lab_bio",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2237,7 +2237,7 @@
     },
     {
       "item": "extractcraft:crystal_decanter",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 1.0,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2252,7 +2252,7 @@
     },
     {
       "item": "extractcraft:antique_hand_mirror",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.5,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2267,7 +2267,7 @@
     },
     {
       "item": "extractcraft:gold_cufflinks",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2282,7 +2282,7 @@
     },
     {
       "item": "extractcraft:silver_compact_case",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2297,7 +2297,7 @@
     },
     {
       "item": "extractcraft:pocket_cigar_case",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.3,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2312,7 +2312,7 @@
     },
     {
       "item": "extractcraft:gemstone_tie_pin",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2327,7 +2327,7 @@
     },
     {
       "item": "extractcraft:ivory_letter_opener",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.3,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2342,7 +2342,7 @@
     },
     {
       "item": "extractcraft:velvet_ring_box",
-      "category": "trophy",
+      "category": "luxury_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2357,7 +2357,7 @@
     },
     {
       "item": "extractcraft:vintage_camera",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.8,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2372,7 +2372,7 @@
     },
     {
       "item": "extractcraft:silver_pocket_flask",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2387,7 +2387,7 @@
     },
     {
       "item": "extractcraft:rare_stamp_album",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2402,7 +2402,7 @@
     },
     {
       "item": "extractcraft:antique_porcelain_figurine",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.6,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2417,7 +2417,7 @@
     },
     {
       "item": "extractcraft:gold_fountain_pen",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2432,7 +2432,7 @@
     },
     {
       "item": "extractcraft:collector_card_slab",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2447,7 +2447,7 @@
     },
     {
       "item": "extractcraft:silver_pocket_knife",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.3,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2462,7 +2462,7 @@
     },
     {
       "item": "extractcraft:antique_music_cylinder",
-      "category": "trophy",
+      "category": "pawn_collectible",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2477,7 +2477,7 @@
     },
     {
       "item": "extractcraft:pill_bottle_rx",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2492,7 +2492,7 @@
     },
     {
       "item": "extractcraft:blister_painkillers",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2507,7 +2507,7 @@
     },
     {
       "item": "extractcraft:first_aid_ointment",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2522,7 +2522,7 @@
     },
     {
       "item": "extractcraft:glass_cough_syrup",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.4,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2537,7 +2537,7 @@
     },
     {
       "item": "extractcraft:adhesive_bandage_box",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2552,7 +2552,7 @@
     },
     {
       "item": "extractcraft:digital_thermometer",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.1,
       "slotCost": 2,
       "gridWidth": 1,
@@ -2567,7 +2567,7 @@
     },
     {
       "item": "extractcraft:inhaler_blue",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.2,
       "slotCost": 1,
       "gridWidth": 1,
@@ -2582,7 +2582,7 @@
     },
     {
       "item": "extractcraft:saline_eye_drops",
-      "category": "medical_tech",
+      "category": "home_medical",
       "weight": 0.1,
       "slotCost": 1,
       "gridWidth": 1,

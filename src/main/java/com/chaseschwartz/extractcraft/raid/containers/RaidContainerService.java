@@ -1033,7 +1033,7 @@ public class RaidContainerService {
     private static int looseItemWeight(ItemValueEntry entry) {
         int valuePenalty = Math.max(1, entry.value() / 2_500);
         int footprintPenalty = switch (entry.category()) {
-            case INDUSTRIAL, ARMOR_MATERIALS -> 2;
+            case INDUSTRIAL, INDUSTRIAL_TOOLS, ARMOR_MATERIALS -> 2;
             default -> 1;
         };
         return Math.max(1, 100 / valuePenalty / footprintPenalty);
@@ -1148,35 +1148,35 @@ public class RaidContainerService {
                 4,
                 Map.of(ItemRarity.BLUE, 35, ItemRarity.PURPLE, 35, ItemRarity.GOLD, 24, ItemRarity.RED, 6),
                 Map.of(TaczLootKind.ATTACHMENT, 70, TaczLootKind.GUN, 15, TaczLootKind.PART, 15),
-                List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.TROPHY, ItemCategory.SECURITY, ItemCategory.ACCESS)),
+                List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.JACKPOT, ItemCategory.WEIRD_LORE, ItemCategory.LUXURY_COLLECTIBLE, ItemCategory.PAWN_COLLECTIBLE, ItemCategory.CIVILIAN_VALUABLE, ItemCategory.SECURITY, ItemCategory.ACCESS, ItemCategory.OFFICE_ADMIN)),
         MILITARY(
                 65,
                 25,
                 3,
                 Map.of(ItemRarity.BLUE, 55, ItemRarity.PURPLE, 30, ItemRarity.GOLD, 13, ItemRarity.RED, 2),
                 Map.of(TaczLootKind.AMMO, 45, TaczLootKind.ATTACHMENT, 30, TaczLootKind.GUN, 20, TaczLootKind.PART, 5),
-                List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS)),
+                List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS, ItemCategory.FIELD_MEDICAL)),
         MEDICAL(
                 55,
                 0,
                 2,
                 Map.of(ItemRarity.BLUE, 70, ItemRarity.PURPLE, 25, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
                 Map.of(),
-                List.of(ItemCategory.MEDICAL_TECH, ItemCategory.SURVIVAL, ItemCategory.TOOLS)),
+                List.of(ItemCategory.HOME_MEDICAL, ItemCategory.FIELD_MEDICAL, ItemCategory.MEDICAL_TECH, ItemCategory.LAB_BIO, ItemCategory.RARE_MEDICAL, ItemCategory.SURVIVAL_UTILITY, ItemCategory.TOOLS)),
         OFFICE(
                 60,
                 0,
                 2,
                 Map.of(ItemRarity.BLUE, 65, ItemRarity.PURPLE, 27, ItemRarity.GOLD, 7, ItemRarity.RED, 1),
                 Map.of(),
-                List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY)),
+                List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.OFFICE_ADMIN, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.CIVILIAN_VALUABLE, ItemCategory.LUXURY_COLLECTIBLE, ItemCategory.PAWN_COLLECTIBLE)),
         INDUSTRIAL(
                 55,
                 5,
                 2,
                 Map.of(ItemRarity.BLUE, 75, ItemRarity.PURPLE, 20, ItemRarity.GOLD, 5, ItemRarity.RED, 0),
                 Map.of(TaczLootKind.AMMO, 50, TaczLootKind.ATTACHMENT, 20, TaczLootKind.PART, 30),
-                List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.ELECTRONICS, ItemCategory.POWER));
+                List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.INDUSTRIAL_TOOLS, ItemCategory.ELECTRONICS, ItemCategory.POWER, ItemCategory.SURVIVAL_UTILITY, ItemCategory.ARMOR_MATERIALS));
 
         private final int looseLootChance;
         private final int taczLootChance;

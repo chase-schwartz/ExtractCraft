@@ -291,7 +291,7 @@ final class LootAuditReport {
         report.append("- Generic: common ammo, low-end attachments, tools, survival, blue loose loot.\n");
         report.append("- Safe/high-value: rare attachments, restricted intel, red/gold loose loot, compact valuables.\n");
         report.append("- Industrial/toolboxes: vanilla recipe ingredients, copper/iron/gold parts, gunpowder-adjacent materials if desired.\n");
-        report.append("- Medical: medical_tech loose loot, med kits, limited survival/tools.\n");
+        report.append("- Medical: home/field medical, lab bio, rare medical loot, med kits, limited survival/tools.\n");
         long firstClassCount = tacz.stream().filter(RaidContainerService::isFirstClassTaczLoot).count();
         report.append("- Current TaCZ spawnable count is ").append(tacz.size()).append("; first-class TaCZ entries now active: ").append(firstClassCount).append(".\n");
         Set<String> missingTagExamples = recipes.stream()
@@ -582,7 +582,7 @@ final class LootAuditReport {
     private static int looseItemWeight(ItemValueEntry entry) {
         int valuePenalty = Math.max(1, entry.value() / 2_500);
         int footprintPenalty = switch (entry.category()) {
-            case INDUSTRIAL, ARMOR_MATERIALS -> 2;
+            case INDUSTRIAL, INDUSTRIAL_TOOLS, ARMOR_MATERIALS -> 2;
             default -> 1;
         };
         return Math.max(1, 100 / valuePenalty / footprintPenalty);

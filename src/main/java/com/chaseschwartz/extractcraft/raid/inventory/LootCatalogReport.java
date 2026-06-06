@@ -47,11 +47,11 @@ final class LootCatalogReport {
             "minecraft:white_wool");
     private static final Map<String, List<ItemCategory>> CONTEXT_CATEGORY_BIAS = Map.of(
             "generic", List.of(),
-            "safe", List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.TROPHY, ItemCategory.SECURITY, ItemCategory.ACCESS),
-            "military", List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS),
-            "medical", List.of(ItemCategory.MEDICAL_TECH, ItemCategory.SURVIVAL, ItemCategory.TOOLS),
-            "office", List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY),
-            "industrial", List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.ELECTRONICS, ItemCategory.POWER));
+            "safe", List.of(ItemCategory.INTEL, ItemCategory.ELECTRONICS, ItemCategory.CONTRABAND, ItemCategory.JACKPOT, ItemCategory.WEIRD_LORE, ItemCategory.LUXURY_COLLECTIBLE, ItemCategory.PAWN_COLLECTIBLE, ItemCategory.CIVILIAN_VALUABLE, ItemCategory.SECURITY, ItemCategory.ACCESS, ItemCategory.OFFICE_ADMIN),
+            "military", List.of(ItemCategory.WEAPON_PARTS, ItemCategory.OPTICS, ItemCategory.ARMOR_MATERIALS, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.ACCESS, ItemCategory.FIELD_MEDICAL),
+            "medical", List.of(ItemCategory.HOME_MEDICAL, ItemCategory.FIELD_MEDICAL, ItemCategory.MEDICAL_TECH, ItemCategory.LAB_BIO, ItemCategory.RARE_MEDICAL, ItemCategory.SURVIVAL_UTILITY, ItemCategory.TOOLS),
+            "office", List.of(ItemCategory.INTEL, ItemCategory.ACCESS, ItemCategory.OFFICE_ADMIN, ItemCategory.ELECTRONICS, ItemCategory.SECURITY, ItemCategory.CIVILIAN_VALUABLE, ItemCategory.LUXURY_COLLECTIBLE, ItemCategory.PAWN_COLLECTIBLE),
+            "industrial", List.of(ItemCategory.TOOLS, ItemCategory.INDUSTRIAL, ItemCategory.INDUSTRIAL_TOOLS, ItemCategory.ELECTRONICS, ItemCategory.POWER, ItemCategory.SURVIVAL_UTILITY, ItemCategory.ARMOR_MATERIALS));
     private static final Map<String, Set<RaidContainerService.TaczLootKind>> CONTEXT_TACZ_KINDS = Map.of(
             "generic", Set.of(RaidContainerService.TaczLootKind.AMMO, RaidContainerService.TaczLootKind.ATTACHMENT),
             "safe", Set.of(RaidContainerService.TaczLootKind.ATTACHMENT, RaidContainerService.TaczLootKind.GUN, RaidContainerService.TaczLootKind.PART),
