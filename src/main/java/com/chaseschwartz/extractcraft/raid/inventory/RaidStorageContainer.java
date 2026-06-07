@@ -426,6 +426,14 @@ public class RaidStorageContainer {
         return items.remove(index);
     }
 
+    public boolean replaceAt(int index, RaidInventoryItem item) {
+        if (index < 0 || index >= items.size() || item == null) {
+            return false;
+        }
+        items.set(index, item);
+        return true;
+    }
+
     public RaidInventoryItem removeCountAt(int index, int count) {
         if (index < 0 || index >= items.size() || count <= 0) {
             return null;

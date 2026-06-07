@@ -439,6 +439,22 @@ public class RaidInventory {
         };
     }
 
+    public AddResult replaceItemAt(RaidEquipmentSlot slot, int sourceIndex, RaidInventoryItem item) {
+        if (item == null) {
+            return new AddResult(false, slot, "Cannot replace with an empty item.");
+        }
+        if (isEquipmentSlot(slot)) {
+            return setEquipmentSlot(slot, item);
+        }
+        boolean replaced = switch (slot) {
+            case BACKPACK -> backpack.replaceAt(sourceIndex, item);
+            case VEST -> vest.replaceAt(sourceIndex, item);
+            case SAFE_BOX -> safeBox.replaceAt(sourceIndex, item);
+            case PRIMARY_WEAPON, SECONDARY_WEAPON, HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER -> false;
+        };
+        return new AddResult(replaced, slot, replaced ? "Updated " + item.displayName() + "." : "Source item is no longer available.", replaced ? item.count() : 0);
+    }
+
     public RaidInventoryItem removeCountAt(RaidEquipmentSlot slot, int sourceIndex, int count) {
         return switch (slot) {
             case HELMET, ARMOR, EQUIPPED_BACKPACK, EQUIPPED_VEST, EQUIPPED_SAFE_CONTAINER -> removeAt(slot, sourceIndex);

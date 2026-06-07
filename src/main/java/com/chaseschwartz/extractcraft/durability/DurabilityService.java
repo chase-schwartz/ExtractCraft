@@ -161,7 +161,7 @@ public final class DurabilityService {
         return new DurabilityData(profile.type(), profile.pristineMaxDurability(), profile.pristineMaxDurability(), profile.pristineMaxDurability(), 0);
     }
 
-    private static void write(ItemStack stack, DurabilityData data) {
+    static void write(ItemStack stack, DurabilityData data) {
         CustomData.update(DataComponents.CUSTOM_DATA, stack, root -> {
             CompoundTag tag = new CompoundTag();
             tag.putString(TYPE_KEY, data.type());

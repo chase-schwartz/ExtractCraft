@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.PaidRepairService;
+import com.chaseschwartz.extractcraft.durability.PaidRepairService.RepairEstimate;
 import com.chaseschwartz.extractcraft.network.BulkBaseInventoryActionPayload;
 import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
@@ -49,6 +51,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private static final int CONTEXT_MENU_ROW_HEIGHT = 17;
     private static final int SPLIT_DIALOG_WIDTH = 150;
     private static final int SPLIT_DIALOG_HEIGHT = 106;
+    private static final int REPAIR_DIALOG_WIDTH = 190;
+    private static final int REPAIR_DIALOG_HEIGHT = 152;
+    private static final int CLIENT_CONTEXT_ACTION_SPLIT = 3;
     private static final int MULTI_BUTTON_Y_OFFSET = 20;
     private static final int MULTI_BUTTON_HEIGHT = 16;
     private DragSource dragSource = DragSource.NONE;
@@ -69,6 +74,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     private String gridMoveStatus = "";
     private ContextMenu contextMenu = null;
     private SplitDialog splitDialog = null;
+    private RepairDialog repairDialog = null;
     private String splitInput = "";
     private boolean splitInputFocused = false;
     private boolean splitSliderDragging = false;
@@ -96,6 +102,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         renderMultiSelectOverlays(guiGraphics);
         renderContextMenu(guiGraphics, mouseX, mouseY);
         renderSplitDialog(guiGraphics, mouseX, mouseY);
+        renderRepairDialog(guiGraphics, mouseX, mouseY);
         renderCustomTooltip(guiGraphics, mouseX, mouseY);
         tickPendingSource();
     }
@@ -151,6 +158,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (splitDialog != null) {
             return;
         }
+        if (repairDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -163,6 +173,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     @Override
     protected void renderTooltip(GuiGraphics guiGraphics, int x, int y) {
         if (splitDialog != null) {
+            return;
+        }
+        if (repairDialog != null) {
             return;
         }
         if (contextMenu != null) {
@@ -231,6 +244,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             return true;
         }
 
+        if (repairDialog != null) {
+            if (button == 0 && handleRepairDialogClick(mouseX, mouseY)) {
+                return true;
+            }
+            repairDialog = null;
+            return true;
+        }
+
         if (contextMenu != null) {
             if (button == 0 && handleContextMenuClick(mouseX, mouseY)) {
                 return true;
@@ -267,7 +288,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                         if (hasShiftDown()) {
                             sendSplit(false, source, sourceIndex, halfSplitAmount(slot.getItem()));
                         } else {
-                            contextMenu = new ContextMenu((int) mouseX, (int) mouseY, false, source, sourceIndex, canSplit(slot.getItem()));
+                            contextMenu = new ContextMenu((int) mouseX, (int) mouseY, false, source, sourceIndex, canSplit(slot.getItem()), canRepair(slot.getItem()));
                         }
                     }
                     return true;
@@ -277,7 +298,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                     if (hasShiftDown()) {
                         sendSplit(true, RaidEquipmentSlot.BACKPACK, sourceIndex, halfSplitAmount(slot.getItem()));
                     } else {
-                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, true, RaidEquipmentSlot.BACKPACK, sourceIndex, canSplit(slot.getItem()));
+                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, true, RaidEquipmentSlot.BACKPACK, sourceIndex, canSplit(slot.getItem()), canRepair(slot.getItem()));
                     }
                     return true;
                 }
@@ -358,6 +379,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             splitSliderDragging = false;
             return true;
         }
+        if (repairDialog != null) {
+            return true;
+        }
         if (button == 0 && dragSource != DragSource.NONE) {
             if (isClickRelease(mouseX, mouseY)) {
                 return true;
@@ -377,12 +401,15 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             }
             return true;
         }
+        if (repairDialog != null) {
+            return true;
+        }
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return splitDialog != null || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        return splitDialog != null || repairDialog != null || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -416,6 +443,17 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                 if (!splitInput.isEmpty()) {
                     setSplitAmount(parseSplitInput());
                 }
+                return true;
+            }
+            return true;
+        }
+        if (repairDialog != null) {
+            if (keyCode == 256) {
+                repairDialog = null;
+                return true;
+            }
+            if (keyCode == 257 || keyCode == 335) {
+                confirmRepairDialog();
                 return true;
             }
             return true;
@@ -709,8 +747,12 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private void sendContextAction(int action, ContextMenu menu) {
+        sendContextAction(action, menu.stashSource(), menu.source(), menu.sourceIndex());
+    }
+
+    private void sendContextAction(int action, boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {
         if (this.minecraft != null && this.minecraft.gameMode != null) {
-            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, BaseStashMenu.contextActionButtonId(action, menu.stashSource(), menu.source(), menu.sourceIndex()));
+            this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, BaseStashMenu.contextActionButtonId(action, stashSource, source, sourceIndex));
         }
     }
 
@@ -747,6 +789,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             selectedItems.clear();
             contextMenu = null;
             splitDialog = null;
+            repairDialog = null;
             return true;
         }
         if (!multiSelectMode) {
@@ -813,12 +856,19 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
         int option = contextMenuOptionAt(mouseX, mouseY);
         int action = contextMenuActionForOption(option);
-        if (action == 3) {
+        if (action == CLIENT_CONTEXT_ACTION_SPLIT) {
             openSplitDialog(contextMenu);
             contextMenu = null;
             return true;
         }
-        if (action >= 0 && action <= 2) {
+        if (action == BaseStashMenu.CONTEXT_ACTION_REPAIR) {
+            openRepairDialog(contextMenu);
+            contextMenu = null;
+            return true;
+        }
+        if (action == BaseStashMenu.CONTEXT_ACTION_SELL
+                || action == BaseStashMenu.CONTEXT_ACTION_DROP
+                || action == BaseStashMenu.CONTEXT_ACTION_TRASH) {
             sendContextAction(action, contextMenu);
             contextMenu = null;
             return true;
@@ -841,6 +891,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int row = 0;
         if (contextMenu.canSplit()) {
             renderContextRow(guiGraphics, x, y, row, "Split", hovered == row, TEXT, 0x553A5E66);
+            row++;
+        }
+        if (contextMenu.canRepair()) {
+            renderContextRow(guiGraphics, x, y, row, "Repair", hovered == row, 0xFFB8F5C8, 0x55305A3A);
             row++;
         }
         renderContextRow(guiGraphics, x, y, row, "Sell", hovered == row, TEXT, 0x553A5E66);
@@ -874,7 +928,10 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
     }
 
     private int contextMenuRows() {
-        return contextMenu != null && contextMenu.canSplit() ? 4 : 3;
+        if (contextMenu == null) {
+            return 0;
+        }
+        return 3 + (contextMenu.canSplit() ? 1 : 0) + (contextMenu.canRepair() ? 1 : 0);
     }
 
     private int contextMenuHeight() {
@@ -885,16 +942,28 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (contextMenu == null || option < 0) {
             return -1;
         }
+        int row = 0;
         if (contextMenu.canSplit()) {
-            return switch (option) {
-                case 0 -> 3;
-                case 1 -> 0;
-                case 2 -> 1;
-                case 3 -> 2;
-                default -> -1;
-            };
+            if (option == row) {
+                return CLIENT_CONTEXT_ACTION_SPLIT;
+            }
+            row++;
         }
-        return option;
+        if (contextMenu.canRepair()) {
+            if (option == row) {
+                return BaseStashMenu.CONTEXT_ACTION_REPAIR;
+            }
+            row++;
+        }
+        if (option == row) {
+            return BaseStashMenu.CONTEXT_ACTION_SELL;
+        }
+        row++;
+        if (option == row) {
+            return BaseStashMenu.CONTEXT_ACTION_DROP;
+        }
+        row++;
+        return option == row ? BaseStashMenu.CONTEXT_ACTION_TRASH : -1;
     }
 
     private int contextMenuX() {
@@ -914,6 +983,18 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int amount = Math.max(1, slot.getItem().getCount() / 2);
         splitDialog = new SplitDialog(menu.stashSource(), menu.source(), menu.sourceIndex(), slot.getItem().copy(), amount, max);
         splitInput = Integer.toString(amount);
+    }
+
+    private void openRepairDialog(ContextMenu menu) {
+        Slot slot = sourceOwnerSlot(menu);
+        if (slot == null || slot.getItem().isEmpty()) {
+            return;
+        }
+        RepairEstimate estimate = PaidRepairService.estimate(slot.getItem()).orElse(null);
+        if (estimate == null || !estimate.available() || this.menu.credits() < estimate.cost()) {
+            return;
+        }
+        repairDialog = new RepairDialog(menu.stashSource(), menu.source(), menu.sourceIndex(), slot.getItem().copy(), estimate);
     }
 
     private boolean handleSplitDialogClick(double mouseX, double mouseY) {
@@ -980,6 +1061,80 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         renderDialogButton(guiGraphics, x + 10, splitButtonY(), "Confirm", inside(mouseX, mouseY, x + 10, splitButtonY(), 58, 16));
         renderDialogButton(guiGraphics, x + 82, splitButtonY(), "Cancel", inside(mouseX, mouseY, x + 82, splitButtonY(), 58, 16));
         guiGraphics.pose().popPose();
+    }
+
+    private boolean handleRepairDialogClick(double mouseX, double mouseY) {
+        int x = repairDialogX();
+        int y = repairDialogY();
+        if (!inside((int) mouseX, (int) mouseY, x, y, REPAIR_DIALOG_WIDTH, REPAIR_DIALOG_HEIGHT)) {
+            repairDialog = null;
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + 16, repairButtonY(), 58, 16)) {
+            confirmRepairDialog();
+            return true;
+        }
+        if (inside((int) mouseX, (int) mouseY, x + REPAIR_DIALOG_WIDTH - 74, repairButtonY(), 58, 16)) {
+            repairDialog = null;
+            return true;
+        }
+        return true;
+    }
+
+    private void renderRepairDialog(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (repairDialog == null) {
+            return;
+        }
+        int x = repairDialogX();
+        int y = repairDialogY();
+        RepairEstimate estimate = repairDialog.estimate();
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0.0D, 0.0D, 1000.0D);
+        guiGraphics.fill(x, y, x + REPAIR_DIALOG_WIDTH, y + REPAIR_DIALOG_HEIGHT, 0xF0181B22);
+        border(guiGraphics, x, y, REPAIR_DIALOG_WIDTH, REPAIR_DIALOG_HEIGHT, BORDER_COLOR);
+        guiGraphics.renderItem(repairDialog.stack(), x + 10, y + 10);
+        guiGraphics.drawString(this.font, "Repair Item", x + 32, y + 10, TEXT, false);
+        guiGraphics.drawString(this.font, trimToWidth(repairDialog.stack().getHoverName().getString(), REPAIR_DIALOG_WIDTH - 44), x + 32, y + 22, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Durability: " + estimate.currentDurability() + "/" + estimate.currentMaxDurability(), x + 10, y + 40, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "After: " + estimate.predictedCurrentDurability() + "/" + estimate.predictedCurrentMax(), x + 10, y + 52, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Pristine Max: " + estimate.pristineMaxDurability(), x + 10, y + 64, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Repairs: " + estimate.repairCount(), x + 10, y + 76, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Cost: " + estimate.cost() + " cr", x + 10, y + 88, 0xFFB8F5C8, false);
+        guiGraphics.drawString(this.font, "Warning: max condition", x + 10, y + 102, 0xFFFFD080, false);
+        guiGraphics.drawString(this.font, "drops after repair.", x + 10, y + 114, 0xFFFFD080, false);
+        renderDialogButton(guiGraphics, x + 16, repairButtonY(), "Confirm", inside(mouseX, mouseY, x + 16, repairButtonY(), 58, 16));
+        renderDialogButton(guiGraphics, x + REPAIR_DIALOG_WIDTH - 74, repairButtonY(), "Cancel", inside(mouseX, mouseY, x + REPAIR_DIALOG_WIDTH - 74, repairButtonY(), 58, 16));
+        guiGraphics.pose().popPose();
+    }
+
+    private String trimToWidth(String text, int width) {
+        if (this.font.width(text) <= width) {
+            return text;
+        }
+        String ellipsis = "...";
+        int limit = Math.max(0, width - this.font.width(ellipsis));
+        String trimmed = this.font.plainSubstrByWidth(text, limit);
+        return trimmed + ellipsis;
+    }
+
+    private int repairDialogX() {
+        return this.leftPos + this.imageWidth / 2 - REPAIR_DIALOG_WIDTH / 2;
+    }
+
+    private int repairDialogY() {
+        return this.topPos + this.imageHeight / 2 - REPAIR_DIALOG_HEIGHT / 2;
+    }
+
+    private int repairButtonY() {
+        return repairDialogY() + REPAIR_DIALOG_HEIGHT - 24;
+    }
+
+    private void confirmRepairDialog() {
+        if (repairDialog == null) {
+            return;
+        }
+        sendContextAction(BaseStashMenu.CONTEXT_ACTION_REPAIR, repairDialog.stashSource(), repairDialog.source(), repairDialog.sourceIndex());
+        repairDialog = null;
     }
 
     private void renderDialogButton(GuiGraphics guiGraphics, int x, int y, String label, boolean hovered) {
@@ -1085,6 +1240,11 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         return !stack.isEmpty() && stack.getCount() > 1 && stack.getMaxStackSize() > 1;
     }
 
+    private boolean canRepair(ItemStack stack) {
+        RepairEstimate estimate = PaidRepairService.estimate(stack).orElse(null);
+        return estimate != null && estimate.available() && this.menu.credits() >= estimate.cost();
+    }
+
     private static int halfSplitAmount(ItemStack stack) {
         return canSplit(stack) ? Math.max(1, stack.getCount() / 2) : 0;
     }
@@ -1109,6 +1269,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
 
     private Slot customTooltipSlot(int mouseX, int mouseY) {
         if (splitDialog != null) {
+            return null;
+        }
+        if (repairDialog != null) {
             return null;
         }
         if (contextMenu != null || dragSource != DragSource.NONE || !draggedStack.isEmpty()) {
@@ -1616,6 +1779,9 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         if (splitDialog != null) {
             return;
         }
+        if (repairDialog != null) {
+            return;
+        }
         if (contextMenu != null) {
             return;
         }
@@ -1970,10 +2136,13 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
     }
 
-    private record ContextMenu(int x, int y, boolean stashSource, RaidEquipmentSlot source, int sourceIndex, boolean canSplit) {
+    private record ContextMenu(int x, int y, boolean stashSource, RaidEquipmentSlot source, int sourceIndex, boolean canSplit, boolean canRepair) {
     }
 
     private record SplitDialog(boolean stashSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, int amount, int maxAmount) {
+    }
+
+    private record RepairDialog(boolean stashSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, RepairEstimate estimate) {
     }
 
     private record SelectionKey(boolean stashSource, RaidEquipmentSlot source, int sourceIndex) {

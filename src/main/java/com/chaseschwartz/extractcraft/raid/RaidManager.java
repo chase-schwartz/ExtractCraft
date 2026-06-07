@@ -15,6 +15,7 @@ import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeightService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapDefinition;
+import com.chaseschwartz.extractcraft.timedaction.TimedActionService;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -67,6 +68,7 @@ public class RaidManager {
     }
 
     public static void clearPlayerState(UUID playerId, MinecraftServer server) {
+        TimedActionService.cancel(playerId, server, "Action canceled.");
         cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
         cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
         clearWeightModifierIfOnline(server, playerId);
@@ -74,6 +76,7 @@ public class RaidManager {
     }
 
     public static boolean clearPlayerStateIfPresent(UUID playerId, MinecraftServer server) {
+        TimedActionService.cancel(playerId, server, "Action canceled.");
         RaidState activeRaid = ACTIVE_RAIDS.remove(playerId);
         RaidState pendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId);
         boolean hadActiveRaid = activeRaid != null;
@@ -90,6 +93,7 @@ public class RaidManager {
     }
 
     public static int clearAll(MinecraftServer server) {
+        TimedActionService.cancelAll(server, "Action canceled.");
         int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
         ACTIVE_RAIDS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
         PENDING_FAILED_RETURNS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
@@ -103,6 +107,7 @@ public class RaidManager {
     }
 
     public static boolean failRaid(ServerPlayer player) {
+        TimedActionService.cancel(player, "Action canceled.");
         RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
         if (raidState == null) {
             return false;
@@ -157,6 +162,7 @@ public class RaidManager {
     }
 
     public static boolean failRaidAndReturnNow(ServerPlayer player, String reason) {
+        TimedActionService.cancel(player, "Action canceled.");
         RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
         if (raidState == null) {
             return false;
@@ -238,6 +244,7 @@ public class RaidManager {
             return false;
         }
 
+        TimedActionService.cancel(player, "Action canceled.");
         cleanupRaidMobs(player.server, raidState, "successful extraction");
         RaidWeaponService.syncAndClearBridge(player);
         RaidWeightService.clear(player);

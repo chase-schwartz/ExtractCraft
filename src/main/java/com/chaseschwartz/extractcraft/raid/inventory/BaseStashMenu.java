@@ -6,6 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.PaidRepairService;
+import com.chaseschwartz.extractcraft.durability.PaidRepairService.RepairEstimate;
+import com.chaseschwartz.extractcraft.durability.PaidRepairService.RepairResult;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 
@@ -51,6 +54,10 @@ public class BaseStashMenu extends AbstractContainerMenu {
     private static final int CONTEXT_ACTION_FACTOR = 1_000_000;
     private static final int CONTEXT_KIND_FACTOR = 100_000;
     private static final int CONTEXT_SOURCE_FACTOR = 10_000;
+    public static final int CONTEXT_ACTION_SELL = 0;
+    public static final int CONTEXT_ACTION_DROP = 1;
+    public static final int CONTEXT_ACTION_TRASH = 2;
+    public static final int CONTEXT_ACTION_REPAIR = 4;
     private static final int CELL_SOURCE_FACTOR = 100_000;
     private static final int CELL_INDEX_FACTOR = 1_000;
     private static final int CELL_TARGET_FACTOR = 100;
@@ -554,6 +561,10 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return false;
         }
 
+        if (action == CONTEXT_ACTION_REPAIR) {
+            return repairContextItem(player, stashSource, source, sourceIndex, item);
+        }
+
         int actualIndex = stashSource ? stashSourceIndex(sourceIndex) : sourceIndex;
         RaidInventoryItem removed = stashSource
                 ? stashData.stash().removeCountAt(actualIndex, item.count())
@@ -563,11 +574,11 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return false;
         }
 
-        if (action == 0) {
+        if (action == CONTEXT_ACTION_SELL) {
             int value = removed.totalValue();
             stashData.setCredits(stashData.credits() + value);
             player.sendSystemMessage(Component.literal("Sold " + removed.displayName() + " for " + value + " Emeralds."));
-        } else if (action == 1) {
+        } else if (action == CONTEXT_ACTION_DROP) {
             ItemStack stack = removed.toItemStack();
             if (stack.isEmpty()) {
                 player.sendSystemMessage(Component.literal("Could not rebuild item stack for drop."));
@@ -576,12 +587,56 @@ public class BaseStashMenu extends AbstractContainerMenu {
             }
             ManagedDropService.spawnManagedDrop(player, stack);
             player.sendSystemMessage(Component.literal("Dropped " + removed.displayName() + "."));
-        } else if (action == 2) {
+        } else if (action == CONTEXT_ACTION_TRASH) {
             player.sendSystemMessage(Component.literal("Trashed " + removed.displayName() + "."));
         } else {
             restoreRemovedItem(stashSource, source, removed);
             return false;
         }
+        if (!stashSource) {
+            reopenIfEquipmentMove(source, null);
+        }
+        return true;
+    }
+
+    private boolean repairContextItem(ServerPlayer player, boolean stashSource, RaidEquipmentSlot source, int sourceIndex, RaidInventoryItem item) {
+        ItemStack stack = item.toItemStack();
+        if (stack.isEmpty()) {
+            player.sendSystemMessage(Component.literal("Could not rebuild item stack for repair."));
+            return false;
+        }
+
+        RepairEstimate estimate = PaidRepairService.estimate(stack).orElse(null);
+        if (estimate == null || !estimate.available()) {
+            player.sendSystemMessage(Component.literal(estimate == null ? "This item cannot be repaired out of raid." : estimate.message()));
+            return false;
+        }
+        if (stashData.credits() < estimate.cost()) {
+            player.sendSystemMessage(Component.literal("Not enough credits. Repair costs " + estimate.cost() + " cr."));
+            return false;
+        }
+
+        RepairResult result = PaidRepairService.repair(stack, stashData.credits()).orElseGet(() -> RepairResult.failure("Repair failed."));
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+            return false;
+        }
+
+        RaidInventoryItem repaired = item.withStoredStack(stack);
+        boolean replaced;
+        if (stashSource) {
+            replaced = stashData.stash().replaceAt(stashSourceIndex(sourceIndex), repaired);
+        } else {
+            replaced = stashData.baseInventory().replaceItemAt(source, sourceIndex, repaired).success();
+        }
+        if (!replaced) {
+            player.sendSystemMessage(Component.literal("Source item is no longer available."));
+            return false;
+        }
+
+        stashData.setCredits(stashData.credits() - estimate.cost());
+        player.sendSystemMessage(Component.literal("Repaired " + item.displayName() + " for " + estimate.cost()
+                + " cr. Max condition is now " + estimate.predictedCurrentMax() + "/" + estimate.pristineMaxDurability() + "."));
         if (!stashSource) {
             reopenIfEquipmentMove(source, null);
         }

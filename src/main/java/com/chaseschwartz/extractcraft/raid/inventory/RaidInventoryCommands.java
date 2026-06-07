@@ -30,6 +30,8 @@ import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerEntry;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerLayout;
 import com.chaseschwartz.extractcraft.raid.containers.RaidContainerService;
+import com.chaseschwartz.extractcraft.timedaction.TimedAction;
+import com.chaseschwartz.extractcraft.timedaction.TimedActionService;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -113,6 +115,19 @@ public class RaidInventoryCommands {
                         .then(Commands.literal("vanilla_inventory")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> openVanillaInventory(context.getSource())))
+                        .then(Commands.literal("timedaction")
+                                .then(Commands.literal("start")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .then(Commands.argument("seconds", IntegerArgumentType.integer(1, 60))
+                                                .executes(context -> debugTimedActionStart(
+                                                        context.getSource(),
+                                                        IntegerArgumentType.getInteger(context, "seconds")))))
+                                .then(Commands.literal("cancel")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugTimedActionCancel(context.getSource())))
+                                .then(Commands.literal("status")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugTimedActionStatus(context.getSource()))))
                         .then(Commands.literal("givegun")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("gun", StringArgumentType.word())
@@ -505,6 +520,44 @@ public class RaidInventoryCommands {
                 componentPatch,
                 savedTag,
                 suspectedFields);
+        return 1;
+    }
+
+    private static int debugTimedActionStart(CommandSourceStack source, int seconds) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        TimedActionService.StartResult result = TimedActionService.startDebugAction(player, seconds * 20);
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal("Debug timed action started for " + seconds + " seconds. DEBUG_TEST is allowed outside raid."));
+        return 1;
+    }
+
+    private static int debugTimedActionCancel(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (!TimedActionService.cancel(player, "Action canceled.")) {
+            player.sendSystemMessage(Component.literal("No timed action is active."));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal("Timed action canceled."));
+        return 1;
+    }
+
+    private static int debugTimedActionStatus(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        TimedAction action = TimedActionService.activeAction(player).orElse(null);
+        if (action == null) {
+            player.sendSystemMessage(Component.literal("No timed action is active."));
+            return 0;
+        }
+        long now = player.server.overworld().getGameTime();
+        player.sendSystemMessage(Component.literal("Timed action: " + action.type()
+                + " id=" + action.actionId()
+                + " elapsed=" + action.elapsedTicks(now) + "/" + action.durationTicks()
+                + " label=\"" + action.label() + "\""
+                + " cancelOnDamage=" + action.cancelOnDamage()
+                + " allowOutsideRaid=" + action.allowOutsideRaid()));
         return 1;
     }
 

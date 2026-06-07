@@ -13,7 +13,6 @@ public final class CustomDurabilityBarRenderer {
     private static final int HIGH_COLOR = 0xFF37D85A;
     private static final int MEDIUM_COLOR = 0xFFFFB02E;
     private static final int LOW_COLOR = 0xFFE33E35;
-
     private CustomDurabilityBarRenderer() {
     }
 
@@ -27,11 +26,13 @@ public final class CustomDurabilityBarRenderer {
             return;
         }
 
-        int currentMax = Math.max(1, data.get().currentMaxDurability());
-        if (data.get().currentDurability() >= currentMax) {
+        DurabilityData durability = data.get();
+        int currentMax = Math.max(1, durability.currentMaxDurability());
+        boolean damaged = durability.currentDurability() < currentMax;
+        if (!damaged) {
             return;
         }
-        double ratio = Math.max(0.0D, Math.min(1.0D, data.get().currentDurability() / (double) currentMax));
+        double ratio = Math.max(0.0D, Math.min(1.0D, durability.currentDurability() / (double) currentMax));
         BarGeometry geometry = barGeometry(x, y, width, height);
         int fillWidth = fillWidth(geometry.width(), ratio);
 

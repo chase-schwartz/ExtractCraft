@@ -26,6 +26,7 @@ import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryCommands;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryMenu;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBakeService;
 import com.chaseschwartz.extractcraft.raid.map.RaidMapBoundaryService;
+import com.chaseschwartz.extractcraft.timedaction.TimedActionEventHandler;
 import com.chaseschwartz.extractcraft.raid.markers.RaidMarkerCommands;
 import com.mojang.logging.LogUtils;
 
@@ -307,6 +308,7 @@ public class ExtractCraft {
         NeoForge.EVENT_BUS.register(new RaidMapBoundaryService());
         NeoForge.EVENT_BUS.register(new ActiveLootContainerInteractionHandler());
         NeoForge.EVENT_BUS.register(new ManagedDropService());
+        NeoForge.EVENT_BUS.register(new TimedActionEventHandler());
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft;
 
 import com.chaseschwartz.extractcraft.client.LootContainerOutlineRenderer;
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
+import com.chaseschwartz.extractcraft.client.TimedActionHudRenderer;
 import com.chaseschwartz.extractcraft.network.OpenBaseStashInventoryPayload;
 import com.chaseschwartz.extractcraft.network.OpenRaidInventoryPayload;
 import com.chaseschwartz.extractcraft.network.PickupManagedDropPayload;
@@ -156,6 +157,7 @@ public class ExtractCraftClient {
         }
         if (VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
             renderDropPrompt(event.getGuiGraphics());
+            TimedActionHudRenderer.render(event.getGuiGraphics());
         }
     }
 

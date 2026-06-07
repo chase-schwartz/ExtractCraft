@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.network;
 
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
+import com.chaseschwartz.extractcraft.client.ClientTimedActionState;
 import com.chaseschwartz.extractcraft.client.GridMoveClientState;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
@@ -26,6 +27,8 @@ public class ExtractCraftNetwork {
                 ClientRaidState.setInRaid(payload.inRaid()));
         registrar.playToClient(GridMoveResultPayload.TYPE, GridMoveResultPayload.STREAM_CODEC, (payload, context) ->
                 GridMoveClientState.handleResult(payload));
+        registrar.playToClient(TimedActionSyncPayload.TYPE, TimedActionSyncPayload.STREAM_CODEC, (payload, context) ->
+                ClientTimedActionState.handleSync(payload));
         registrar.playToServer(OpenRaidInventoryPayload.TYPE, OpenRaidInventoryPayload.STREAM_CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player && RaidManager.isInRaid(player)) {
                 RaidInventoryScreenOpener.openGrid(player);
