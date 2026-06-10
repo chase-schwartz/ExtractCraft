@@ -361,7 +361,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 if (dragSource == DragSource.CONTAINER) {
                     sendTransfer(draggedSourceIndex, target, targetCell);
                 } else if (dragSource == DragSource.RAID_INVENTORY) {
-                    sendMove(draggedRaidSlot, draggedSourceIndex, target, targetCell);
+                    if (isRepairKitEquipmentDrop(draggedStack, target)) {
+                        sendRepair(draggedRaidSlot, draggedSourceIndex, target);
+                    } else {
+                        sendMove(draggedRaidSlot, draggedSourceIndex, target, targetCell);
+                    }
                 }
                 markPendingSource();
             } else if (dragSource == DragSource.RAID_INVENTORY && isContainerPanel((int) mouseX, (int) mouseY)) {
@@ -479,6 +483,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 return true;
             }
             if (dragSource == DragSource.RAID_INVENTORY) {
+                if (isRepairKitEquipmentDrop(draggedStack, target)) {
+                    sendRepair(draggedRaidSlot, draggedSourceIndex, target);
+                    markPendingSource();
+                    return true;
+                }
                 sendMove(draggedRaidSlot, draggedSourceIndex, target, targetCell);
                 markPendingSource();
                 return true;
@@ -547,8 +556,12 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private void sendRepair(RaidEquipmentSlot source, int sourceIndex) {
+        sendRepair(source, sourceIndex, null);
+    }
+
+    private void sendRepair(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
         if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
-            sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_REPAIR, source, sourceIndex, null, -1);
+            sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_REPAIR, source, sourceIndex, target, -1);
         }
     }
 
@@ -963,6 +976,18 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return InRaidRepairService.isInRaidRepairKit(stack);
     }
 
+    private static boolean isRepairKitEquipmentDrop(ItemStack stack, RaidEquipmentSlot target) {
+        return InRaidRepairService.isInRaidRepairKit(stack) && isRepairEquipmentDropTarget(target);
+    }
+
+    private static boolean isRepairEquipmentDropTarget(RaidEquipmentSlot target) {
+        return target == RaidEquipmentSlot.HELMET
+                || target == RaidEquipmentSlot.ARMOR
+                || target == RaidEquipmentSlot.EQUIPPED_BACKPACK
+                || target == RaidEquipmentSlot.EQUIPPED_VEST
+                || target == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+    }
+
     private static int halfSplitAmount(ItemStack stack) {
         return canSplit(stack) ? Math.max(1, stack.getCount() / 2) : 0;
     }
@@ -1181,6 +1206,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             case HELMET -> 5;
             case ARMOR -> 6;
             case EQUIPPED_BACKPACK -> 7;
+            case EQUIPPED_VEST -> 8;
+            case EQUIPPED_SAFE_CONTAINER -> 9;
             default -> -1;
         };
     }

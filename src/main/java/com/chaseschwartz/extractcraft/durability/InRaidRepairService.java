@@ -66,7 +66,11 @@ public final class InRaidRepairService {
     }
 
     public static GridMoveResult startFromDrag(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
-        RepairValidation validation = validate(player, source, sourceIndex, repairTargetFromSlot(target));
+        RepairTarget expectedTarget = repairTargetFromSlot(target);
+        if (target != null && expectedTarget == null) {
+            return GridMoveResult.failure("Wrong repair kit for target.");
+        }
+        RepairValidation validation = validate(player, source, sourceIndex, expectedTarget);
         if (!validation.success()) {
             return GridMoveResult.failure(validation.message());
         }
@@ -159,7 +163,7 @@ public final class InRaidRepairService {
             return RepairValidation.failure("No player.");
         }
         if (!RaidManager.isInRaid(player)) {
-            return RepairValidation.failure("Repair kits can only be used during an active raid.");
+            return RepairValidation.failure("Repair kits can only be used in raid.");
         }
         if (!isStorageSlot(source)) {
             return RepairValidation.failure("Repair kit must be in your raid inventory.");
@@ -180,7 +184,7 @@ public final class InRaidRepairService {
             return RepairValidation.failure("That item is not an in-raid repair kit.");
         }
         if (expectedTarget != null && expectedTarget != target) {
-            return RepairValidation.failure(target.displayName() + " kit cannot repair that slot.");
+            return RepairValidation.failure("Wrong repair kit for target.");
         }
 
         RaidInventoryItem targetItem = inventory.itemAt(target.slot(), 0);
@@ -192,7 +196,7 @@ public final class InRaidRepairService {
         DurabilityProfile targetProfile = DurabilityService.profileFor(targetStack).orElse(null);
         DurabilityData targetData = DurabilityService.getOrInitialize(targetStack).orElse(null);
         if (targetProfile == null || targetData == null || !target.profileType().equalsIgnoreCase(targetProfile.type())) {
-            return RepairValidation.failure("Equipped " + target.displayName().toLowerCase(Locale.ROOT) + " is not repairable by that kit.");
+            return RepairValidation.failure("Target cannot be repaired.");
         }
 
         int missing = Math.max(0, targetData.currentMaxDurability() - targetData.currentDurability());

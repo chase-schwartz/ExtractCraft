@@ -308,7 +308,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CARRIED_TO_CONTAINER ->
                     placeCarriedToContainer(player);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_REPAIR ->
-                    startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex);
+                    targetSlotId >= 0
+                            ? startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId))
+                            : startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex);
             default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
         };
         broadcastChanges();
@@ -713,15 +715,18 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         }
         RaidInventory inventory = currentInventory(player);
         RaidInventoryItem sourceItem = inventory.itemAt(source, sourceIndex);
-        if (!persistentBaseMode && isInRaidRepairTarget(target)) {
+        if (sourceItem != null && InRaidRepairService.isInRaidRepairKit(sourceItem.toItemStack()) && isRepairEquipmentDropTarget(target)) {
+            if (persistentBaseMode) {
+                String message = "Repair kits can only be used in raid.";
+                player.sendSystemMessage(Component.literal(message));
+                return GridMoveResult.failure(message);
+            }
             GridMoveResult repairResult = InRaidRepairService.startFromDrag(player, source, sourceIndex, target);
             if (repairResult.success()) {
                 return repairResult;
             }
-            if (sourceItem != null && InRaidRepairService.isInRaidRepairKit(sourceItem.toItemStack())) {
-                player.sendSystemMessage(Component.literal(repairResult.message()));
-                return repairResult;
-            }
+            player.sendSystemMessage(Component.literal(repairResult.message()));
+            return repairResult;
         }
         ExtractCraft.LOGGER.info("Raid grid move attempt: player={}, source={}#{}, target={}, targetCell={}, targetXY=({},{}), sourceItem={}",
                 player.getGameProfile().getName(),
@@ -783,11 +788,24 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
     private GridMoveResult startRaidRepair(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
         if (persistentBaseMode) {
-            String message = "Repair kits can only be used during an active raid.";
+            String message = "Repair kits can only be used in raid.";
             player.sendSystemMessage(Component.literal(message));
             return GridMoveResult.failure(message);
         }
         return InRaidRepairService.startFromContext(player, source, sourceIndex);
+    }
+
+    private GridMoveResult startRaidRepair(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target) {
+        if (persistentBaseMode) {
+            String message = "Repair kits can only be used in raid.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        GridMoveResult result = InRaidRepairService.startFromDrag(player, source, sourceIndex, target);
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+        }
+        return result;
     }
 
     private RaidInventory.AddResult moveBaseInventoryItem(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int cell) {
@@ -1332,8 +1350,12 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
     }
 
-    private static boolean isInRaidRepairTarget(RaidEquipmentSlot slot) {
-        return slot == RaidEquipmentSlot.HELMET || slot == RaidEquipmentSlot.ARMOR || slot == RaidEquipmentSlot.EQUIPPED_BACKPACK;
+    private static boolean isRepairEquipmentDropTarget(RaidEquipmentSlot slot) {
+        return slot == RaidEquipmentSlot.HELMET
+                || slot == RaidEquipmentSlot.ARMOR
+                || slot == RaidEquipmentSlot.EQUIPPED_BACKPACK
+                || slot == RaidEquipmentSlot.EQUIPPED_VEST
+                || slot == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
     }
 
     private int cellX(RaidEquipmentSlot slot, int cell) {
@@ -1362,6 +1384,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case HELMET -> 5;
             case ARMOR -> 6;
             case EQUIPPED_BACKPACK -> 7;
+            case EQUIPPED_VEST -> 8;
+            case EQUIPPED_SAFE_CONTAINER -> 9;
             default -> -1;
         };
     }
@@ -1375,6 +1399,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case 5 -> RaidEquipmentSlot.HELMET;
             case 6 -> RaidEquipmentSlot.ARMOR;
             case 7 -> RaidEquipmentSlot.EQUIPPED_BACKPACK;
+            case 8 -> RaidEquipmentSlot.EQUIPPED_VEST;
+            case 9 -> RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
             default -> RaidEquipmentSlot.BACKPACK;
         };
     }
