@@ -77,6 +77,8 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
 
     public record ResultSnapshot(boolean success, String reason, int elapsedSeconds, int totalValue, double totalWeight, int itemCount, int stackCount,
             int securedValue, double securedWeight, int securedItemCount, int securedStackCount,
+            int backpackGridWidth, int backpackGridHeight, int vestGridWidth, int vestGridHeight, int safeGridWidth, int safeGridHeight,
+            ItemSnapshot backpackContainer, ItemSnapshot vestContainer, ItemSnapshot safeContainer,
             List<ItemSnapshot> backpack, List<ItemSnapshot> vest, List<ItemSnapshot> safeBox, List<ItemSnapshot> weapons) {
         static ResultSnapshot from(RaidResultService.PendingRaidResult pending) {
             List<RaidInventoryItem> allItems = pending.allItems();
@@ -92,6 +94,15 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
                     0.0D,
                     0,
                     0,
+                    pending.backpackGridWidth(),
+                    pending.backpackGridHeight(),
+                    pending.vestGridWidth(),
+                    pending.vestGridHeight(),
+                    pending.safeGridWidth(),
+                    pending.safeGridHeight(),
+                    itemFrom(pending.equippedBackpack()),
+                    itemFrom(pending.equippedVest()),
+                    itemFrom(pending.equippedSafeContainer()),
                     itemsFrom(pending.backpackItems()),
                     itemsFrom(pending.vestItems()),
                     itemsFrom(pending.safeBoxItems()),
@@ -113,10 +124,23 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
                     securedItems.stream().mapToDouble(RaidInventoryItem::totalWeight).sum(),
                     securedItems.stream().mapToInt(RaidInventoryItem::count).sum(),
                     securedItems.size(),
+                    failed.backpackGridWidth(),
+                    failed.backpackGridHeight(),
+                    failed.vestGridWidth(),
+                    failed.vestGridHeight(),
+                    failed.safeGridWidth(),
+                    failed.safeGridHeight(),
+                    itemFrom(failed.lostBackpack()),
+                    itemFrom(failed.lostVest()),
+                    itemFrom(failed.securedSafeContainer()),
                     itemsFrom(failed.lostBackpackItems()),
                     itemsFrom(failed.lostVestItems()),
                     itemsFrom(failed.securedSafeBoxItems()),
                     weaponItems(failed.lostPrimaryWeapon(), failed.lostSecondaryWeapon()));
+        }
+
+        private static ItemSnapshot itemFrom(RaidInventoryItem item) {
+            return item == null ? null : ItemSnapshot.from(item.withoutPlacement(), "");
         }
 
         private static List<ItemSnapshot> itemsFrom(List<RaidInventoryItem> items) {
@@ -146,6 +170,15 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
             buffer.writeDouble(securedWeight);
             buffer.writeVarInt(securedItemCount);
             buffer.writeVarInt(securedStackCount);
+            buffer.writeVarInt(backpackGridWidth);
+            buffer.writeVarInt(backpackGridHeight);
+            buffer.writeVarInt(vestGridWidth);
+            buffer.writeVarInt(vestGridHeight);
+            buffer.writeVarInt(safeGridWidth);
+            buffer.writeVarInt(safeGridHeight);
+            writeNullableItem(buffer, backpackContainer);
+            writeNullableItem(buffer, vestContainer);
+            writeNullableItem(buffer, safeContainer);
             writeItems(buffer, backpack);
             writeItems(buffer, vest);
             writeItems(buffer, safeBox);
@@ -165,10 +198,30 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
                     buffer.readDouble(),
                     buffer.readVarInt(),
                     buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    buffer.readVarInt(),
+                    readNullableItem(buffer),
+                    readNullableItem(buffer),
+                    readNullableItem(buffer),
                     readItems(buffer),
                     readItems(buffer),
                     readItems(buffer),
                     readItems(buffer));
+        }
+
+        private static void writeNullableItem(RegistryFriendlyByteBuf buffer, ItemSnapshot item) {
+            buffer.writeBoolean(item != null);
+            if (item != null) {
+                item.write(buffer);
+            }
+        }
+
+        private static ItemSnapshot readNullableItem(RegistryFriendlyByteBuf buffer) {
+            return buffer.readBoolean() ? ItemSnapshot.read(buffer) : null;
         }
 
         private static void writeItems(RegistryFriendlyByteBuf buffer, List<ItemSnapshot> items) {

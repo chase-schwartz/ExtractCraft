@@ -1689,7 +1689,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         }
         int width = metadata.footprintWidth() * 18;
         int height = metadata.footprintHeight() * 18;
-        renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+        ManagedGridItemRenderer.renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
         CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
     }
 
@@ -1896,11 +1896,17 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             if (!isBaseSlot(slot) || !isGridDisplaySlot(slot) || !slot.hasItem()) {
                 continue;
             }
+            if (draggedSourceMenuSlots.contains(slot.index)) {
+                continue;
+            }
             if (this.menu.baseSlotForMenuSlot(slot.index) != target) {
                 continue;
             }
             GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
             if (!metadata.present() || !metadata.anchor()) {
+                continue;
+            }
+            if (dragSource == DragSource.BASE && draggedBaseSlot == target && draggedFootprintMatches(metadata)) {
                 continue;
             }
             if (dragSource == DragSource.BASE && draggedBaseSlot == target && metadata.sourceIndex() == draggedSourceIndex) {
@@ -1922,8 +1928,14 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
             if (!isStashSlot(slot) || !slot.hasItem()) {
                 continue;
             }
+            if (draggedSourceMenuSlots.contains(slot.index)) {
+                continue;
+            }
             GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
             if (!metadata.present() || !metadata.anchor()) {
+                continue;
+            }
+            if (dragSource == DragSource.STASH && draggedFootprintMatches(metadata)) {
                 continue;
             }
             if (draggedActualIndex >= 0 && metadata.sourceIndex() == draggedActualIndex) {
@@ -1951,6 +1963,16 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
                 fits,
                 dragSource,
                 draggedSourceIndex);
+    }
+
+    private boolean draggedFootprintMatches(GridDisplayMetadata.Metadata metadata) {
+        GridDisplayMetadata.Metadata dragged = GridDisplayMetadata.read(draggedStack);
+        return dragged.present()
+                && metadata.gridX() == dragged.gridX()
+                && metadata.gridY() == dragged.gridY()
+                && metadata.footprintWidth() == dragged.footprintWidth()
+                && metadata.footprintHeight() == dragged.footprintHeight()
+                && metadata.rotated() == dragged.rotated();
     }
 
     private Set<Integer> sourceMenuSlots(DragSource source, int sourceIndex, RaidEquipmentSlot baseSlot) {
@@ -2001,18 +2023,6 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         return menuSlot >= 0 && menuSlot < this.menu.slots.size() && this.menu.slots.get(menuSlot).hasItem();
     }
 
-    private static void renderItemCentered(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
-        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
-        double iconX = x + (width - 16.0D * scale) / 2.0D;
-        double iconY = y + (height - 16.0D * scale) / 2.0D;
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(iconX, iconY, 0.0D);
-        guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, 0, 0);
-        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
-        guiGraphics.pose().popPose();
-    }
-
     private static String formatEmeralds(int amount) {
         if (amount >= 1_000_000) {
             double millions = amount / 1_000_000.0D;
@@ -2031,7 +2041,7 @@ public class BaseStashScreen extends AbstractContainerScreen<BaseStashMenu> {
         int x = mouseX - width / 2;
         int y = mouseY - height / 2;
         border(guiGraphics, x - 1, y - 1, width, height, 0xAA62F3E8);
-        renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
+        ManagedGridItemRenderer.renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
         CustomDurabilityBarRenderer.render(guiGraphics, draggedStack, x, y, width, height);
     }
 

@@ -1233,6 +1233,12 @@ public class BaseStashMenu extends AbstractContainerMenu {
             return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);
         }
 
+        if (cell >= 0 && source == target && isGridSlot(source)) {
+            RaidStorageContainer storage = storage(candidate, source);
+            int moved = storage.moveItemToCell(sourceIndex, cellX(target, cell), cellY(target, cell), false);
+            return new RaidInventory.AddResult(moved > 0, target, moved > 0 ? "Moved item in " + target.name().toLowerCase() + "." : "Target cell is blocked.", moved);
+        }
+
         RaidInventoryItem removed = candidate.removeCountAt(source, sourceIndex, item.count());
         if (removed == null) {
             return new RaidInventory.AddResult(false, target, "Source item is no longer available.", 0);

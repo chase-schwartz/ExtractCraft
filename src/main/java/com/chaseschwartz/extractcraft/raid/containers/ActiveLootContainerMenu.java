@@ -1,6 +1,7 @@
 package com.chaseschwartz.extractcraft.raid.containers;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.InRaidRepairService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
@@ -33,9 +34,14 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class ActiveLootContainerMenu extends AbstractContainerMenu {
     public static final int CONTAINER_COLUMNS = 6;
-    public static final int PRIMARY_WEAPON_START = 0;
-    public static final int SECONDARY_WEAPON_START = 1;
-    public static final int BACKPACK_START = 2;
+    public static final int HELMET_START = 0;
+    public static final int ARMOR_START = 1;
+    public static final int EQUIPPED_BACKPACK_START = 2;
+    public static final int EQUIPPED_VEST_START = 3;
+    public static final int EQUIPPED_SAFE_CONTAINER_START = 4;
+    public static final int PRIMARY_WEAPON_START = 5;
+    public static final int SECONDARY_WEAPON_START = 6;
+    public static final int BACKPACK_START = 7;
     public static final int BACKPACK_DISPLAY_SLOTS = 64;
     public static final int VEST_START = BACKPACK_START + BACKPACK_DISPLAY_SLOTS;
     public static final int VEST_DISPLAY_SLOTS = 20;
@@ -301,6 +307,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                     placeCarriedToRaid(player, slotFromId(targetSlotId), targetCell);
             case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_CARRIED_TO_CONTAINER ->
                     placeCarriedToContainer(player);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_REPAIR ->
+                    startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex);
             default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
         };
         broadcastChanges();
@@ -364,11 +372,30 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return hasWorldContainer;
     }
 
+    public boolean persistentBaseMode() {
+        return persistentBaseMode;
+    }
+
     public int containerMenuSlotStart() {
         return RAID_DISPLAY_SLOTS;
     }
 
     public RaidEquipmentSlot raidSlotForMenuSlot(int menuSlot) {
+        if (menuSlot == HELMET_START) {
+            return RaidEquipmentSlot.HELMET;
+        }
+        if (menuSlot == ARMOR_START) {
+            return RaidEquipmentSlot.ARMOR;
+        }
+        if (menuSlot == EQUIPPED_BACKPACK_START) {
+            return RaidEquipmentSlot.EQUIPPED_BACKPACK;
+        }
+        if (menuSlot == EQUIPPED_VEST_START) {
+            return RaidEquipmentSlot.EQUIPPED_VEST;
+        }
+        if (menuSlot == EQUIPPED_SAFE_CONTAINER_START) {
+            return RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+        }
         if (menuSlot == PRIMARY_WEAPON_START) {
             return RaidEquipmentSlot.PRIMARY_WEAPON;
         }
@@ -405,6 +432,21 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     public int raidMenuSlotForItemIndex(RaidEquipmentSlot slot, int sourceIndex) {
+        if (slot == RaidEquipmentSlot.HELMET) {
+            return HELMET_START;
+        }
+        if (slot == RaidEquipmentSlot.ARMOR) {
+            return ARMOR_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_BACKPACK) {
+            return EQUIPPED_BACKPACK_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_VEST) {
+            return EQUIPPED_VEST_START;
+        }
+        if (slot == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) {
+            return EQUIPPED_SAFE_CONTAINER_START;
+        }
         if (slot == RaidEquipmentSlot.PRIMARY_WEAPON) {
             return PRIMARY_WEAPON_START;
         }
@@ -523,6 +565,11 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
 
     public int totalValue() {
         return totalValue.get();
+    }
+
+    public void refreshRaidDisplay() {
+        rebuildRaidDisplay();
+        broadcastChanges();
     }
 
     private boolean isWorldContainerSlot(int menuSlot) {
@@ -664,9 +711,18 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         if (source == null || target == null) {
             return GridMoveResult.failure("Invalid source or target.");
         }
-
         RaidInventory inventory = currentInventory(player);
         RaidInventoryItem sourceItem = inventory.itemAt(source, sourceIndex);
+        if (!persistentBaseMode && isInRaidRepairTarget(target)) {
+            GridMoveResult repairResult = InRaidRepairService.startFromDrag(player, source, sourceIndex, target);
+            if (repairResult.success()) {
+                return repairResult;
+            }
+            if (sourceItem != null && InRaidRepairService.isInRaidRepairKit(sourceItem.toItemStack())) {
+                player.sendSystemMessage(Component.literal(repairResult.message()));
+                return repairResult;
+            }
+        }
         ExtractCraft.LOGGER.info("Raid grid move attempt: player={}, source={}#{}, target={}, targetCell={}, targetXY=({},{}), sourceItem={}",
                 player.getGameProfile().getName(),
                 source,
@@ -725,6 +781,15 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return GridMoveResult.success(result.message());
     }
 
+    private GridMoveResult startRaidRepair(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        if (persistentBaseMode) {
+            String message = "Repair kits can only be used during an active raid.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        return InRaidRepairService.startFromContext(player, source, sourceIndex);
+    }
+
     private RaidInventory.AddResult moveBaseInventoryItem(RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int cell) {
         RaidInventory candidate = PlayerStashService.copyInventory(baseData.baseInventory());
         RaidInventoryItem item = candidate.itemAt(source, sourceIndex);
@@ -734,6 +799,12 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         ItemCarryProfile profile = ItemCarryProfileRegistry.get(item.lookupKey()).orElse(null);
         if (profile == null) {
             return new RaidInventory.AddResult(false, target, item.lookupKey() + " has no carry profile.", 0);
+        }
+
+        if (cell >= 0 && source == target && isGridSlot(source)) {
+            RaidStorageContainer storage = storage(candidate, source);
+            int moved = storage.moveItemToCell(sourceIndex, cellX(target, cell), cellY(target, cell), false);
+            return new RaidInventory.AddResult(moved > 0, target, moved > 0 ? "Moved item in " + target.name().toLowerCase() + "." : "Target cell is blocked.", moved);
         }
 
         RaidInventoryItem removed = candidate.removeCountAt(source, sourceIndex, item.count());
@@ -1040,11 +1111,16 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
     }
 
     private void addRaidDisplaySlots() {
-        addSlot(new ReadOnlyContainerSlot(raidDisplay, PRIMARY_WEAPON_START, 174, 48));
-        addSlot(new ReadOnlyContainerSlot(raidDisplay, SECONDARY_WEAPON_START, 174, 110));
-        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, Math.max(1, backpackGridWidth), 12, 66);
-        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, Math.max(1, vestGridWidth), 12, 248);
-        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, Math.max(1, safeGridWidth), 116, 248);
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, HELMET_START, 20, 42));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, ARMOR_START, 20, 72));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, EQUIPPED_BACKPACK_START, 20, 102));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, EQUIPPED_VEST_START, 20, 132));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, EQUIPPED_SAFE_CONTAINER_START, 20, 162));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, PRIMARY_WEAPON_START, 20, 200));
+        addSlot(new ReadOnlyContainerSlot(raidDisplay, SECONDARY_WEAPON_START, 20, 230));
+        addDisplayGrid(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, Math.max(1, backpackGridWidth), 104, 62);
+        addDisplayGrid(VEST_START, VEST_DISPLAY_SLOTS, Math.max(1, vestGridWidth), 104, 256);
+        addDisplayGrid(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, Math.max(1, safeGridWidth), 206, 256);
     }
 
     private void addDisplayGrid(int start, int count, int columns, int x, int y) {
@@ -1069,6 +1145,7 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         raidDisplay.clearContent();
         java.util.Arrays.fill(displayedRaidIndexes, -1);
         RaidInventory inventory = currentInventory(serverPlayer);
+        fillEquipmentDisplay(inventory);
         if (inventory.primaryWeapon() != null) {
             displayedRaidIndexes[PRIMARY_WEAPON_START] = 0;
             raidDisplay.setItem(PRIMARY_WEAPON_START, displayStack(inventory.primaryWeapon(), 0));
@@ -1080,6 +1157,22 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         fillDisplay(BACKPACK_START, BACKPACK_DISPLAY_SLOTS, backpackGridWidth, inventory.backpack().items());
         fillDisplay(VEST_START, VEST_DISPLAY_SLOTS, vestGridWidth, inventory.vest().items());
         fillDisplay(SAFE_BOX_START, SAFE_BOX_DISPLAY_SLOTS, safeGridWidth, inventory.safeBox().items());
+    }
+
+    private void fillEquipmentDisplay(RaidInventory inventory) {
+        setEquipmentDisplay(RaidEquipmentSlot.HELMET, HELMET_START, inventory.equipmentItem(RaidEquipmentSlot.HELMET));
+        setEquipmentDisplay(RaidEquipmentSlot.ARMOR, ARMOR_START, inventory.equipmentItem(RaidEquipmentSlot.ARMOR));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_BACKPACK, EQUIPPED_BACKPACK_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_VEST, EQUIPPED_VEST_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST));
+        setEquipmentDisplay(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, EQUIPPED_SAFE_CONTAINER_START, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER));
+    }
+
+    private void setEquipmentDisplay(RaidEquipmentSlot slot, int menuSlot, RaidInventoryItem item) {
+        if (item == null) {
+            return;
+        }
+        displayedRaidIndexes[menuSlot] = 0;
+        raidDisplay.setItem(menuSlot, displayStack(item, 0));
     }
 
     private void fillDisplay(int start, int maxSlots, int columns, java.util.List<RaidInventoryItem> items) {
@@ -1239,6 +1332,10 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
         return slot == RaidEquipmentSlot.BACKPACK || slot == RaidEquipmentSlot.VEST || slot == RaidEquipmentSlot.SAFE_BOX;
     }
 
+    private static boolean isInRaidRepairTarget(RaidEquipmentSlot slot) {
+        return slot == RaidEquipmentSlot.HELMET || slot == RaidEquipmentSlot.ARMOR || slot == RaidEquipmentSlot.EQUIPPED_BACKPACK;
+    }
+
     private int cellX(RaidEquipmentSlot slot, int cell) {
         return cell % columnsFor(slot);
     }
@@ -1262,6 +1359,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case BACKPACK -> 2;
             case VEST -> 3;
             case SAFE_BOX -> 4;
+            case HELMET -> 5;
+            case ARMOR -> 6;
+            case EQUIPPED_BACKPACK -> 7;
             default -> -1;
         };
     }
@@ -1272,6 +1372,9 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             case 1 -> RaidEquipmentSlot.SECONDARY_WEAPON;
             case 3 -> RaidEquipmentSlot.VEST;
             case 4 -> RaidEquipmentSlot.SAFE_BOX;
+            case 5 -> RaidEquipmentSlot.HELMET;
+            case 6 -> RaidEquipmentSlot.ARMOR;
+            case 7 -> RaidEquipmentSlot.EQUIPPED_BACKPACK;
             default -> RaidEquipmentSlot.BACKPACK;
         };
     }

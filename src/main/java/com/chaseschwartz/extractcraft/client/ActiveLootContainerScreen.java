@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.InRaidRepairService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.network.GridMoveRequestPayload;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
@@ -32,18 +33,17 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLootContainerMenu> {
-    private static final int CONTAINER_PANEL_X = 238;
+    private static final int CONTAINER_PANEL_X = 292;
     private static final int CONTAINER_PANEL_Y = 28;
     private static final int CONTAINER_PANEL_WIDTH = 130;
-    private static final int BACKPACK_GRID_X = 12;
-    private static final int BACKPACK_GRID_Y = 66;
-    private static final int VEST_GRID_X = 12;
-    private static final int VEST_GRID_Y = 248;
-    private static final int SAFE_GRID_X = 116;
-    private static final int SAFE_GRID_Y = 248;
-    private static final int WEAPON_PANEL_X = 168;
-    private static final int WEAPON_BACKGROUND_SIZE = 20;
-    private static final int WEAPON_INNER_SIZE = 18;
+    private static final int EQUIPMENT_X = 8;
+    private static final int EQUIPMENT_Y = 24;
+    private static final int BACKPACK_GRID_X = 104;
+    private static final int BACKPACK_GRID_Y = 62;
+    private static final int VEST_GRID_X = 104;
+    private static final int VEST_GRID_Y = 256;
+    private static final int SAFE_GRID_X = 206;
+    private static final int SAFE_GRID_Y = 256;
     private static final int VANILLA_BACKGROUND_SIZE = 18;
     private static final int VANILLA_INNER_SIZE = 16;
     private static final int VANILLA_HOVER_SIZE = 16;
@@ -71,6 +71,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private boolean pendingSourceObservedPresent;
     private int nextTransactionId = 1;
     private int pendingTransactionId = -1;
+    private int pendingOperation = -1;
     private String gridMoveStatus = "";
     private double dragStartX;
     private double dragStartY;
@@ -86,8 +87,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     public ActiveLootContainerScreen(ActiveLootContainerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = 376;
-        this.imageHeight = Math.max(318, 102 + menu.containerRows() * 18);
+        this.imageWidth = 430;
+        this.imageHeight = Math.max(350, 102 + menu.containerRows() * 18);
     }
 
     @Override
@@ -116,11 +117,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         border(guiGraphics, x, y, this.imageWidth, this.imageHeight, BORDER_COLOR);
 
         boolean dragging = dragSource != DragSource.NONE;
-        section(guiGraphics, x + 8, y + 24, 152, 184, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
-        section(guiGraphics, x + 8, y + 214, 100, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
-        section(guiGraphics, x + 112, y + 214, 82, 96, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
-        weaponSection(guiGraphics, x + WEAPON_PANEL_X, y + 28, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
-        weaponSection(guiGraphics, x + WEAPON_PANEL_X, y + 92, weaponPanelWidth(), 54, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
+        section(guiGraphics, x + EQUIPMENT_X, y + EQUIPMENT_Y, 82, 268, false);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 34, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.HELMET);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 64, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.ARMOR);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 94, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.EQUIPPED_BACKPACK);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 124, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.EQUIPPED_VEST);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 154, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 192, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.PRIMARY_WEAPON);
+        equipmentRow(guiGraphics, x + EQUIPMENT_X, y + 222, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SECONDARY_WEAPON);
+        section(guiGraphics, x + 98, y + 24, 164, 210, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.BACKPACK);
+        section(guiGraphics, x + 98, y + 238, 100, 100, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.VEST);
+        section(guiGraphics, x + 202, y + 238, 82, 100, dragging && targetAt(mouseX, mouseY) == RaidEquipmentSlot.SAFE_BOX);
         if (this.menu.hasWorldContainer()) {
             section(guiGraphics, x + CONTAINER_PANEL_X, y + CONTAINER_PANEL_Y, CONTAINER_PANEL_WIDTH, this.imageHeight - 40, false);
         }
@@ -130,11 +137,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     @Override
     protected void renderSlot(GuiGraphics guiGraphics, Slot slot) {
         if (isRaidInventorySlot(slot) || isContainerSlot(slot)) {
-            if (isRaidInventorySlot(slot) && !isWeaponSlot(slot) && !isVisibleGridSlot(slot)) {
+            if (isRaidInventorySlot(slot) && isGridDisplaySlot(slot) && !isVisibleGridSlot(slot)) {
                 return;
             }
-            if (isWeaponSlot(slot)) {
-                drawWeaponSlotBackground(guiGraphics, slot.x - 1, slot.y - 1);
+            if (isRaidInventorySlot(slot) && !isGridDisplaySlot(slot)) {
+                drawEquipmentSlotBackground(guiGraphics, slot.x, slot.y);
             } else {
                 drawVanillaSlotBackground(guiGraphics, slot.x, slot.y);
             }
@@ -196,20 +203,24 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             guiGraphics.drawString(this.font, "Container", CONTAINER_PANEL_X + 8, CONTAINER_PANEL_Y + 7, TEXT, false);
         }
 
-        guiGraphics.drawString(this.font, "Backpack", 14, 29, TEXT, false);
-        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.backpackUsedCapacity(), menu.backpackMaxCapacity()), 14, 42, MUTED_TEXT, false);
-        guiGraphics.drawString(this.font, String.format("%.1f/%.1f wt", menu.backpackUsedWeight(), menu.backpackMaxWeight()), 14, 53, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Equipment", 14, 29, TEXT, false);
+        guiGraphics.drawString(this.font, "Helmet", 42, 42, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Armor", 42, 72, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Pack", 42, 102, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Vest", 42, 132, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Safe", 42, 162, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Primary", 42, 200, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Second", 42, 230, MUTED_TEXT, false);
 
-        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Primary" : "Primary Weapon", WEAPON_PANEL_X + 6, 34, TEXT, false);
-        guiGraphics.drawString(this.font, this.menu.hasWorldContainer() ? "Secondary" : "Secondary Weapon", WEAPON_PANEL_X + 6, 98, TEXT, false);
-        drawWeaponName(guiGraphics, ActiveLootContainerMenu.PRIMARY_WEAPON_START, WEAPON_PANEL_X + 26, 53, this.menu.hasWorldContainer() ? 5 : 24);
-        drawWeaponName(guiGraphics, ActiveLootContainerMenu.SECONDARY_WEAPON_START, WEAPON_PANEL_X + 26, 115, this.menu.hasWorldContainer() ? 5 : 24);
+        guiGraphics.drawString(this.font, "Backpack", BACKPACK_GRID_X, 29, TEXT, false);
+        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.backpackUsedCapacity(), menu.backpackMaxCapacity()), BACKPACK_GRID_X, 42, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, String.format("%.1f/%.1f wt", menu.backpackUsedWeight(), menu.backpackMaxWeight()), BACKPACK_GRID_X, 53, MUTED_TEXT, false);
 
-        guiGraphics.drawString(this.font, "Vest", 14, 219, TEXT, false);
-        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.vestUsedCapacity(), menu.vestMaxCapacity()), 14, 232, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Vest", VEST_GRID_X, 243, TEXT, false);
+        guiGraphics.drawString(this.font, String.format("%d/%d", menu.vestUsedCapacity(), menu.vestMaxCapacity()), VEST_GRID_X + 44, 243, MUTED_TEXT, false);
 
-        guiGraphics.drawString(this.font, "Safe Box", SAFE_GRID_X, 219, TEXT, false);
-        guiGraphics.drawString(this.font, String.format("%d/%d slots", menu.safeBoxUsedCapacity(), menu.safeBoxMaxCapacity()), SAFE_GRID_X, 232, MUTED_TEXT, false);
+        guiGraphics.drawString(this.font, "Safe Box", SAFE_GRID_X, 243, TEXT, false);
+        guiGraphics.drawString(this.font, String.format("%d/%d", menu.safeBoxUsedCapacity(), menu.safeBoxMaxCapacity()), SAFE_GRID_X + 54, 243, MUTED_TEXT, false);
 
         int hintY = Math.min(this.imageHeight - 28, 64 + this.menu.containerRows() * 18);
         if (this.menu.hasWorldContainer()) {
@@ -267,7 +278,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                     if (hasShiftDown()) {
                         sendSplit(false, source, sourceIndex, halfSplitAmount(slot.getItem()));
                     } else {
-                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, source, sourceIndex, canSplit(slot.getItem()));
+                        contextMenu = new ContextMenu((int) mouseX, (int) mouseY, source, sourceIndex, canSplit(slot.getItem()),
+                                !this.menu.persistentBaseMode() && canInRaidRepair(slot.getItem()));
                     }
                     return true;
                 }
@@ -534,9 +546,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
     }
 
+    private void sendRepair(RaidEquipmentSlot source, int sourceIndex) {
+        if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
+            sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_REPAIR, source, sourceIndex, null, -1);
+        }
+    }
+
     private void sendGridMove(int operation, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
         int transactionId = nextTransactionId++;
         pendingTransactionId = transactionId;
+        pendingOperation = operation;
         gridMoveStatus = "";
         ExtractCraft.LOGGER.info("Grid move request sent: tx={}, menu={}, op={}, source={}#{}, target={}, cell={}",
                 transactionId,
@@ -585,12 +604,18 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return;
         }
         ExtractCraft.LOGGER.info("Grid move result applied: tx={}, success={}, message={}, pendingSlots={}", transactionId, success, message, pendingSourceMenuSlots);
+        int completedOperation = pendingOperation;
         pendingTransactionId = -1;
+        pendingOperation = -1;
         gridMoveStatus = success ? "" : message;
         if (!success) {
             pendingSourceMenuSlots.clear();
             pendingSourceTicks = 0;
             pendingSourceObservedPresent = false;
+            return;
+        }
+        if (completedOperation == GridMoveRequestPayload.ACTIVE_RAID_REPAIR && this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.closeContainer();
         }
     }
 
@@ -645,12 +670,22 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             return false;
         }
         int option = contextMenuOptionAt(mouseX, mouseY);
-        if (contextMenu.canSplit() && option == 0) {
+        ContextAction action = contextMenuActionForOption(option);
+        if (action == ContextAction.SPLIT) {
             openSplitDialog(new SplitDialog(false, contextMenu.source(), contextMenu.sourceIndex(), sourceOwnerStack(contextMenu), halfSplitAmount(sourceOwnerStack(contextMenu)), sourceOwnerStack(contextMenu).getCount() - 1));
             contextMenu = null;
             return true;
         }
-        if ((!contextMenu.canSplit() && option == 0) || (contextMenu.canSplit() && option == 1)) {
+        if (action == ContextAction.REPAIR) {
+            this.pendingSourceMenuSlots.clear();
+            this.pendingSourceMenuSlots.addAll(sourceMenuSlots(DragSource.RAID_INVENTORY, contextMenu.sourceIndex(), contextMenu.source()));
+            this.pendingSourceTicks = 20;
+            this.pendingSourceObservedPresent = true;
+            sendRepair(contextMenu.source(), contextMenu.sourceIndex());
+            contextMenu = null;
+            return true;
+        }
+        if (action == ContextAction.DROP) {
             this.pendingSourceMenuSlots.clear();
             this.pendingSourceMenuSlots.addAll(sourceMenuSlots(DragSource.RAID_INVENTORY, contextMenu.sourceIndex(), contextMenu.source()));
             this.pendingSourceTicks = 20;
@@ -669,7 +704,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int x = contextMenuX();
         int y = contextMenuY();
         int hovered = contextMenuOptionAt(mouseX, mouseY);
-        int rows = contextMenu.canSplit() ? 2 : 1;
+        int rows = contextMenuRows();
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0.0D, 0.0D, 500.0D);
         guiGraphics.fill(x, y, x + CONTEXT_MENU_WIDTH, y + CONTEXT_MENU_ROW_HEIGHT * rows + 4, 0xF0181B22);
@@ -677,6 +712,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int row = 0;
         if (contextMenu.canSplit()) {
             renderContextRow(guiGraphics, x, y, row, "Split", hovered == row, TEXT);
+            row++;
+        }
+        if (contextMenu.canRepair()) {
+            renderContextRow(guiGraphics, x, y, row, "Repair", hovered == row, 0xFFB8F5C8);
             row++;
         }
         renderContextRow(guiGraphics, x, y, row, "Drop", hovered == row, TEXT);
@@ -698,7 +737,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
         int x = contextMenuX() + 2;
         int y = contextMenuY() + 2;
-        int rows = contextMenu.canSplit() ? 2 : 1;
+        int rows = contextMenuRows();
         if (!inside((int) mouseX, (int) mouseY, x, y, CONTEXT_MENU_WIDTH - 4, CONTEXT_MENU_ROW_HEIGHT * rows)) {
             return -1;
         }
@@ -706,8 +745,35 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return option >= 0 && option < rows ? option : -1;
     }
 
+    private int contextMenuRows() {
+        if (contextMenu == null) {
+            return 0;
+        }
+        return 1 + (contextMenu.canSplit() ? 1 : 0) + (contextMenu.canRepair() ? 1 : 0);
+    }
+
+    private ContextAction contextMenuActionForOption(int option) {
+        if (contextMenu == null || option < 0) {
+            return ContextAction.NONE;
+        }
+        int row = 0;
+        if (contextMenu.canSplit()) {
+            if (option == row) {
+                return ContextAction.SPLIT;
+            }
+            row++;
+        }
+        if (contextMenu.canRepair()) {
+            if (option == row) {
+                return ContextAction.REPAIR;
+            }
+            row++;
+        }
+        return option == row ? ContextAction.DROP : ContextAction.NONE;
+    }
+
     private int contextMenuHeight() {
-        int rows = contextMenu != null && contextMenu.canSplit() ? 2 : 1;
+        int rows = contextMenuRows();
         return CONTEXT_MENU_ROW_HEIGHT * rows + 4;
     }
 
@@ -716,7 +782,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private int contextMenuY() {
-        int rows = contextMenu.canSplit() ? 2 : 1;
+        int rows = contextMenuRows();
         return Math.min(contextMenu.y(), this.topPos + this.imageHeight - CONTEXT_MENU_ROW_HEIGHT * rows - 8);
     }
 
@@ -893,6 +959,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return !stack.isEmpty() && stack.getCount() > 1 && stack.getMaxStackSize() > 1;
     }
 
+    private static boolean canInRaidRepair(ItemStack stack) {
+        return InRaidRepairService.isInRaidRepairKit(stack);
+    }
+
     private static int halfSplitAmount(ItemStack stack) {
         return canSplit(stack) ? Math.max(1, stack.getCount() / 2) : 0;
     }
@@ -975,6 +1045,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return x < layout.columns() && y < layout.rows();
     }
 
+    private boolean isGridDisplaySlot(Slot slot) {
+        return isGridTarget(this.menu.raidSlotForMenuSlot(slot.index));
+    }
+
     private boolean isWeaponSlot(Slot slot) {
         return slot.index == ActiveLootContainerMenu.PRIMARY_WEAPON_START
                 || slot.index == ActiveLootContainerMenu.SECONDARY_WEAPON_START;
@@ -1017,10 +1091,25 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     private RaidEquipmentSlot targetAt(int mouseX, int mouseY) {
         int localX = mouseX - this.leftPos;
         int localY = mouseY - this.topPos;
-        if (inside(localX, localY, WEAPON_PANEL_X, 28, weaponPanelWidth(), 54)) {
+        if (inside(localX, localY, EQUIPMENT_X, 34, 82, 26)) {
+            return RaidEquipmentSlot.HELMET;
+        }
+        if (inside(localX, localY, EQUIPMENT_X, 64, 82, 26)) {
+            return RaidEquipmentSlot.ARMOR;
+        }
+        if (inside(localX, localY, EQUIPMENT_X, 94, 82, 26)) {
+            return RaidEquipmentSlot.EQUIPPED_BACKPACK;
+        }
+        if (inside(localX, localY, EQUIPMENT_X, 124, 82, 26)) {
+            return RaidEquipmentSlot.EQUIPPED_VEST;
+        }
+        if (inside(localX, localY, EQUIPMENT_X, 154, 82, 26)) {
+            return RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER;
+        }
+        if (inside(localX, localY, EQUIPMENT_X, 192, 82, 26)) {
             return RaidEquipmentSlot.PRIMARY_WEAPON;
         }
-        if (inside(localX, localY, WEAPON_PANEL_X, 92, weaponPanelWidth(), 54)) {
+        if (inside(localX, localY, EQUIPMENT_X, 222, 82, 26)) {
             return RaidEquipmentSlot.SECONDARY_WEAPON;
         }
         if (insideBackpackGrid(localX, localY)) {
@@ -1089,6 +1178,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             case BACKPACK -> 2;
             case VEST -> 3;
             case SAFE_BOX -> 4;
+            case HELMET -> 5;
+            case ARMOR -> 6;
+            case EQUIPPED_BACKPACK -> 7;
             default -> -1;
         };
     }
@@ -1110,10 +1202,6 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return target == RaidEquipmentSlot.BACKPACK || target == RaidEquipmentSlot.VEST || target == RaidEquipmentSlot.SAFE_BOX;
     }
 
-    private int weaponPanelWidth() {
-        return this.menu.hasWorldContainer() ? 62 : 192;
-    }
-
     private double totalUsedWeight() {
         return menu.backpackUsedWeight() + menu.vestUsedWeight() + menu.safeBoxUsedWeight();
     }
@@ -1131,14 +1219,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         border(guiGraphics, x, y, width, height, highlighted ? HOVER_BORDER : 0x6649D8E8);
     }
 
-    private static void weaponSection(GuiGraphics guiGraphics, int x, int y, int width, int height, boolean highlighted) {
-        guiGraphics.fill(x, y, x + width, y + height, SECTION_COLOR);
-        border(guiGraphics, x, y, width, height, highlighted ? HOVER_BORDER : 0x8849D8E8);
+    private static void equipmentRow(GuiGraphics guiGraphics, int x, int y, boolean highlighted) {
+        if (highlighted) {
+            guiGraphics.fill(x + 4, y + 4, x + 78, y + 28, 0x2239BFD0);
+            border(guiGraphics, x + 4, y + 4, 74, 24, HOVER_BORDER);
+        }
     }
 
-    private static void drawWeaponSlotBackground(GuiGraphics guiGraphics, int x, int y) {
-        guiGraphics.fill(x - 1, y - 1, x + 19, y + 19, 0xFF1C2028);
-        guiGraphics.fill(x, y, x + 18, y + 18, SLOT_COLOR);
+    private static void drawEquipmentSlotBackground(GuiGraphics guiGraphics, int x, int y) {
+        guiGraphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF202632);
+        guiGraphics.fill(x, y, x + 16, y + 16, SLOT_COLOR);
+        border(guiGraphics, x - 1, y - 1, 18, 18, 0x332A323A);
     }
 
     private static void drawVanillaSlotBackground(GuiGraphics guiGraphics, int x, int y) {
@@ -1449,7 +1540,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         if (isContainerSlot(slot)) {
             renderItemCenteredInFootprintInterior(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
         } else {
-            renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
+            ManagedGridItemRenderer.renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
         }
         CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, width, height);
     }
@@ -1471,7 +1562,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
     }
 
     private boolean isFootprintOverlaySlot(Slot slot) {
-        return (isRaidInventorySlot(slot) && !isWeaponSlot(slot)) || isContainerSlot(slot);
+        return (isRaidInventorySlot(slot) && isGridDisplaySlot(slot)) || isContainerSlot(slot);
     }
 
     private void renderFootprintHover(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -1608,11 +1699,17 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             if (!isRaidInventorySlot(slot) || isWeaponSlot(slot) || !slot.hasItem()) {
                 continue;
             }
+            if (draggedSourceMenuSlots.contains(slot.index)) {
+                continue;
+            }
             if (this.menu.raidSlotForMenuSlot(slot.index) != target) {
                 continue;
             }
             GridDisplayMetadata.Metadata metadata = GridDisplayMetadata.read(slot.getItem());
             if (!metadata.present() || !metadata.anchor()) {
+                continue;
+            }
+            if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot == target && draggedFootprintMatches(metadata)) {
                 continue;
             }
             if (dragSource == DragSource.RAID_INVENTORY && draggedRaidSlot == target && metadata.sourceIndex() == draggedSourceIndex) {
@@ -1640,6 +1737,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 fits,
                 dragSource,
                 draggedSourceIndex);
+    }
+
+    private boolean draggedFootprintMatches(GridDisplayMetadata.Metadata metadata) {
+        GridDisplayMetadata.Metadata dragged = GridDisplayMetadata.read(draggedStack);
+        return dragged.present()
+                && metadata.gridX() == dragged.gridX()
+                && metadata.gridY() == dragged.gridY()
+                && metadata.footprintWidth() == dragged.footprintWidth()
+                && metadata.footprintHeight() == dragged.footprintHeight()
+                && metadata.rotated() == dragged.rotated();
     }
 
     private Set<Integer> sourceMenuSlots(DragSource source, int sourceIndex, RaidEquipmentSlot raidSlot) {
@@ -1680,18 +1787,6 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         return menuSlot >= 0 && menuSlot < this.menu.slots.size() && this.menu.slots.get(menuSlot).hasItem();
     }
 
-    private static void renderItemCentered(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
-        float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
-        double iconX = x + (width - 16.0D * scale) / 2.0D;
-        double iconY = y + (height - 16.0D * scale) / 2.0D;
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(iconX, iconY, 0.0D);
-        guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.renderItem(stack, 0, 0);
-        guiGraphics.renderItemDecorations(net.minecraft.client.Minecraft.getInstance().font, stack, 0, 0);
-        guiGraphics.pose().popPose();
-    }
-
     private static void renderItemCenteredInFootprintInterior(GuiGraphics guiGraphics, ItemStack stack, int x, int y, int width, int height) {
         float scale = Math.min(3.0F, Math.max(1.0F, (Math.min(width, height) - 2) / 16.0F));
         int interiorWidth = Math.max(VANILLA_ITEM_SIZE, width - 2);
@@ -1713,7 +1808,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int x = mouseX - width / 2;
         int y = mouseY - height / 2;
         border(guiGraphics, x - 1, y - 1, width, height, 0xAA62F3E8);
-        renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
+        ManagedGridItemRenderer.renderItemCentered(guiGraphics, draggedStack, x, y, width, height);
         CustomDurabilityBarRenderer.render(guiGraphics, draggedStack, x, y, width, height);
     }
 
@@ -1804,11 +1899,16 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 firstLastSlot(this.menu.containerMenuSlotStart(), this.menu.containerSlotCount()),
                 slotInfo(ActiveLootContainerMenu.PRIMARY_WEAPON_START),
                 slotInfo(ActiveLootContainerMenu.SECONDARY_WEAPON_START));
-        logSection("Primary", ActiveLootContainerMenu.PRIMARY_WEAPON_START, 1, 1, 1, WEAPON_PANEL_X, 28);
-        logSection("Secondary", ActiveLootContainerMenu.SECONDARY_WEAPON_START, 1, 1, 1, WEAPON_PANEL_X, 92);
-        logSection("Backpack", ActiveLootContainerMenu.BACKPACK_START, ActiveLootContainerMenu.BACKPACK_DISPLAY_SLOTS, menu.backpackGridWidth(), menu.backpackGridHeight(), 8, 24);
-        logSection("Vest", ActiveLootContainerMenu.VEST_START, ActiveLootContainerMenu.VEST_DISPLAY_SLOTS, menu.vestGridWidth(), menu.vestGridHeight(), 8, 214);
-        logSection("Safe Box", ActiveLootContainerMenu.SAFE_BOX_START, ActiveLootContainerMenu.SAFE_BOX_DISPLAY_SLOTS, menu.safeGridWidth(), menu.safeGridHeight(), 112, 214);
+        logSection("Helmet", ActiveLootContainerMenu.HELMET_START, 1, 1, 1, EQUIPMENT_X, 34);
+        logSection("Armor", ActiveLootContainerMenu.ARMOR_START, 1, 1, 1, EQUIPMENT_X, 64);
+        logSection("Pack", ActiveLootContainerMenu.EQUIPPED_BACKPACK_START, 1, 1, 1, EQUIPMENT_X, 94);
+        logSection("Vest Equip", ActiveLootContainerMenu.EQUIPPED_VEST_START, 1, 1, 1, EQUIPMENT_X, 124);
+        logSection("Safe Equip", ActiveLootContainerMenu.EQUIPPED_SAFE_CONTAINER_START, 1, 1, 1, EQUIPMENT_X, 154);
+        logSection("Primary", ActiveLootContainerMenu.PRIMARY_WEAPON_START, 1, 1, 1, EQUIPMENT_X, 192);
+        logSection("Secondary", ActiveLootContainerMenu.SECONDARY_WEAPON_START, 1, 1, 1, EQUIPMENT_X, 222);
+        logSection("Backpack", ActiveLootContainerMenu.BACKPACK_START, ActiveLootContainerMenu.BACKPACK_DISPLAY_SLOTS, menu.backpackGridWidth(), menu.backpackGridHeight(), 98, 24);
+        logSection("Vest", ActiveLootContainerMenu.VEST_START, ActiveLootContainerMenu.VEST_DISPLAY_SLOTS, menu.vestGridWidth(), menu.vestGridHeight(), 98, 238);
+        logSection("Safe Box", ActiveLootContainerMenu.SAFE_BOX_START, ActiveLootContainerMenu.SAFE_BOX_DISPLAY_SLOTS, menu.safeGridWidth(), menu.safeGridHeight(), 202, 238);
         if (this.menu.hasWorldContainer()) {
             int rows = Math.max(1, (int) Math.ceil(this.menu.containerSlotCount() / (double) ActiveLootContainerMenu.CONTAINER_COLUMNS));
             logSection("Container", this.menu.containerMenuSlotStart(), this.menu.containerSlotCount(), ActiveLootContainerMenu.CONTAINER_COLUMNS, rows, CONTAINER_PANEL_X, CONTAINER_PANEL_Y);
@@ -1840,9 +1940,9 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         int last = Math.min(this.menu.slots.size() - 1, start + count - 1);
         Slot firstSlot = this.menu.slots.get(start);
         Slot lastSlot = this.menu.slots.get(last);
-        boolean weaponSection = start == ActiveLootContainerMenu.PRIMARY_WEAPON_START || start == ActiveLootContainerMenu.SECONDARY_WEAPON_START;
-        int backgroundSize = weaponSection ? WEAPON_BACKGROUND_SIZE : VANILLA_BACKGROUND_SIZE;
-        int innerSize = weaponSection ? WEAPON_INNER_SIZE : VANILLA_INNER_SIZE;
+        boolean equipmentSection = start >= ActiveLootContainerMenu.HELMET_START && start <= ActiveLootContainerMenu.SECONDARY_WEAPON_START;
+        int backgroundSize = VANILLA_BACKGROUND_SIZE;
+        int innerSize = VANILLA_INNER_SIZE;
         ExtractCraft.LOGGER.info("Slot diagnostic {}: visualOrigin=({},{}), menuOrigin=({},{}), bgSize={}, innerSize={}, hoverSize={}, itemSize={}, columns={}, rows={}, step=({},{}), first={}, last={}",
                 name,
                 visualOriginX,
@@ -1857,40 +1957,23 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                 rows,
                 SLOT_STEP,
                 SLOT_STEP,
-                slotRect(start, weaponSection),
-                slotRect(last, weaponSection));
+                slotRect(start, equipmentSection),
+                slotRect(last, equipmentSection));
     }
 
-    private String slotRect(int slotIndex, boolean weaponSlot) {
+    private String slotRect(int slotIndex, boolean equipmentSlot) {
         Slot slot = this.menu.slots.get(slotIndex);
         int screenX = this.leftPos + slot.x;
         int screenY = this.topPos + slot.y;
-        int bgX = weaponSlot ? screenX - 2 : screenX - 1;
-        int bgY = weaponSlot ? screenY - 2 : screenY - 1;
-        int bgSize = weaponSlot ? WEAPON_BACKGROUND_SIZE : VANILLA_BACKGROUND_SIZE;
+        int bgX = screenX - 1;
+        int bgY = screenY - 1;
+        int bgSize = VANILLA_BACKGROUND_SIZE;
         return slotIndex
                 + " local=(" + slot.x + "," + slot.y + ")"
                 + " screen=(" + screenX + "," + screenY + ")"
                 + " bg=(" + bgX + "," + bgY + "," + bgSize + "x" + bgSize + ")"
                 + " hover=(" + screenX + "," + screenY + "," + VANILLA_HOVER_SIZE + "x" + VANILLA_HOVER_SIZE + ")"
                 + " item=(" + screenX + "," + screenY + "," + VANILLA_ITEM_SIZE + "x" + VANILLA_ITEM_SIZE + ")";
-    }
-
-    private void drawWeaponName(GuiGraphics guiGraphics, int menuSlotIndex, int x, int y, int maxLength) {
-        if (menuSlotIndex < 0 || menuSlotIndex >= this.menu.slots.size()) {
-            return;
-        }
-        ItemStack stack = this.menu.slots.get(menuSlotIndex).getItem();
-        if (!stack.isEmpty()) {
-            guiGraphics.drawString(this.font, trim(stack.getHoverName().getString(), maxLength), x, y, MUTED_TEXT, false);
-        }
-    }
-
-    private static String trim(String text, int maxLength) {
-        if (text.length() <= maxLength) {
-            return text;
-        }
-        return text.substring(0, Math.max(0, maxLength - 3)) + "...";
     }
 
     private static void border(GuiGraphics guiGraphics, int x, int y, int width, int height, int color) {
@@ -1918,7 +2001,14 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
     }
 
-    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex, boolean canSplit) {
+    private enum ContextAction {
+        NONE,
+        SPLIT,
+        REPAIR,
+        DROP
+    }
+
+    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex, boolean canSplit, boolean canRepair) {
     }
 
     private record SplitDialog(boolean containerSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, int amount, int maxAmount) {

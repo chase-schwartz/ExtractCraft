@@ -93,6 +93,11 @@ public class PlayerStashService {
         PlayerStashData data = load(player);
         RaidInventory candidate = copyInventory(data.baseInventory());
         StashTransferResult transfer = new StashTransferResult();
+        addEquipmentToBase(candidate, result.helmet(), RaidEquipmentSlot.HELMET, transfer);
+        addEquipmentToBase(candidate, result.armor(), RaidEquipmentSlot.ARMOR, transfer);
+        addEquipmentToBase(candidate, result.equippedBackpack(), RaidEquipmentSlot.EQUIPPED_BACKPACK, transfer);
+        addEquipmentToBase(candidate, result.equippedVest(), RaidEquipmentSlot.EQUIPPED_VEST, transfer);
+        addEquipmentToBase(candidate, result.equippedSafeContainer(), RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, transfer);
         addWeaponToBase(candidate, result.primaryWeapon(), RaidEquipmentSlot.PRIMARY_WEAPON, transfer);
         addWeaponToBase(candidate, result.secondaryWeapon(), RaidEquipmentSlot.SECONDARY_WEAPON, transfer);
         transfer.merge(addItems(candidate.backpack(), result.backpackItems()));
@@ -106,6 +111,40 @@ public class PlayerStashService {
         replaceInventoryContents(data.baseInventory(), candidate);
         save(player, data);
         return transfer;
+    }
+
+    public static StashTransferResult secureFailedRaidSafeBox(ServerPlayer player, RaidInventoryItem safeContainer, List<RaidInventoryItem> safeItems) {
+        PlayerStashData data = load(player);
+        RaidInventory candidate = copyInventory(data.baseInventory());
+        StashTransferResult transfer = new StashTransferResult();
+        addEquipmentToBase(candidate, safeContainer, RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER, transfer);
+        transfer.merge(addItemsPreservingPlacement(candidate.safeBox(), safeItems));
+        if (!transfer.movedAll()) {
+            transfer.resetMoved();
+            return transfer;
+        }
+
+        replaceInventoryContents(data.baseInventory(), candidate);
+        save(player, data);
+        return transfer;
+    }
+
+    private static void addEquipmentToBase(RaidInventory baseInventory, RaidInventoryItem item, RaidEquipmentSlot slot, StashTransferResult result) {
+        if (item == null) {
+            return;
+        }
+
+        RaidInventoryItem copy = copyItem(item);
+        RaidInventory.AddResult addResult = baseInventory.setEquipmentSlot(slot, copy);
+        if (addResult.success()) {
+            result.movedStacks++;
+            result.movedItems += copy.count();
+            result.movedValue += copy.totalValue();
+            result.movedWeight += copy.totalWeight();
+            return;
+        }
+
+        result.merge(addItems(baseInventory.backpack(), List.of(copy.withoutPlacement())));
     }
 
     public static void addCredits(ServerPlayer player, int amount) {
@@ -243,6 +282,37 @@ public class PlayerStashService {
         target.clear();
         for (RaidInventoryItem item : candidate.items()) {
             target.addPartialPreservingPlacement(item);
+        }
+        return result;
+    }
+
+    private static StashTransferResult addItemsPreservingPlacement(RaidStorageContainer target, List<RaidInventoryItem> items) {
+        StashTransferResult result = new StashTransferResult();
+        RaidStorageContainer candidate = copyStorage(target);
+        for (RaidInventoryItem item : items) {
+            RaidInventoryItem copy = copyItem(item);
+            int moved = candidate.addPartialPreservingPlacement(copy, true);
+            result.movedStacks += moved > 0 ? 1 : 0;
+            result.movedItems += moved;
+            if (moved > 0) {
+                RaidInventoryItem movedPart = copy.withCount(moved);
+                result.movedValue += movedPart.totalValue();
+                result.movedWeight += movedPart.totalWeight();
+            }
+            if (moved < copy.count()) {
+                result.failedStacks++;
+                result.failedItems += copy.count() - moved;
+                result.lastFailure = copy.displayName() + " x" + (copy.count() - moved) + " did not fit.";
+            }
+        }
+        if (result.failedItems > 0) {
+            result.resetMoved();
+            return result;
+        }
+
+        target.clear();
+        for (RaidInventoryItem item : candidate.items()) {
+            target.addPartialPreservingPlacement(item, true);
         }
         return result;
     }

@@ -148,7 +148,7 @@ public class RaidManager {
 
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
-        raidState.inventorySnapshot().restore(player);
+        player.getInventory().clearContent();
         player.sendSystemMessage(Component.literal("Raid failed."));
         PostRaidResultScreenOpener.openFailure(player);
 
@@ -187,11 +187,11 @@ public class RaidManager {
 
         Vec3 returnPosition = raidState.returnPosition();
         player.teleportTo(returnLevel, returnPosition.x, returnPosition.y, returnPosition.z, raidState.returnYaw(), raidState.returnPitch());
-        raidState.inventorySnapshot().restore(player);
+        player.getInventory().clearContent();
         player.sendSystemMessage(Component.literal("Raid failed: " + reason + "."));
         PostRaidResultScreenOpener.openFailure(player);
 
-        ExtractCraft.LOGGER.info("Failed raid for {} via {}; returned to {} at {}, {}, {} and restored starting inventory",
+        ExtractCraft.LOGGER.info("Failed raid for {} via {}; returned to {} at {}, {}, {} and cleared raid-carried inventory",
                 player.getGameProfile().getName(),
                 reason,
                 returnLevel.dimension().location(),

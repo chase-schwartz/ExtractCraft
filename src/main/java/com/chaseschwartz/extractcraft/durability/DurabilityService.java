@@ -148,6 +148,13 @@ public final class DurabilityService {
     }
 
     private static DurabilityData reconcile(DurabilityData data, DurabilityProfile profile) {
+        if ("repair_kit".equals(profile.type())
+                && profile.pristineMaxDurability() > data.pristineMaxDurability()
+                && data.repairCount() == 0
+                && data.currentMaxDurability() == data.pristineMaxDurability()
+                && data.currentDurability() == data.currentMaxDurability()) {
+            return pristineData(profile);
+        }
         int pristineMax = Math.max(data.pristineMaxDurability(), profile.pristineMaxDurability());
         int currentMax = data.currentMaxDurability() <= 0 ? profile.pristineMaxDurability() : data.currentMaxDurability();
         int current = data.currentDurability();

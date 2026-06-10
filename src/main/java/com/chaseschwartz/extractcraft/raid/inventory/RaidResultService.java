@@ -27,11 +27,12 @@ public class RaidResultService {
         SectionSummary backpack = summarizeStorage("Backpack", inventory.backpack());
         SectionSummary vest = summarizeStorage("Vest", inventory.vest());
         SectionSummary safeBox = summarizeStorage("Safe Box", inventory.safeBox());
+        SectionSummary equipment = summarizeEquipment("Equipment kept", inventory, true);
         SectionSummary weapons = summarizeWeapons("Weapons kept", inventory.primaryWeapon(), inventory.secondaryWeapon());
         PendingRaidResult pending = PendingRaidResult.fromInventory(player.getUUID(), true, elapsedSeconds(player, raidState), inventory);
 
-        int totalValue = backpack.value() + vest.value() + safeBox.value() + weapons.value();
-        double totalWeight = backpack.weight() + vest.weight() + safeBox.weight() + weapons.weight();
+        int totalValue = backpack.value() + vest.value() + safeBox.value() + equipment.value() + weapons.value();
+        double totalWeight = backpack.weight() + vest.weight() + safeBox.weight() + equipment.weight() + weapons.weight();
 
         List<String> lines = new ArrayList<>();
         lines.add("Raid extracted successfully.");
@@ -40,6 +41,7 @@ public class RaidResultService {
         lines.add(backpack.formatLine());
         lines.add(vest.formatLine());
         lines.add(safeBox.formatLine());
+        lines.add(equipment.formatLine());
         lines.add(weapons.formatLine());
         lines.add("Post-raid pending: use /extractcraft raidresult stash or /extractcraft raidresult keep.");
         storeAndSend(player, "EXTRACTED", lines);
@@ -56,11 +58,12 @@ public class RaidResultService {
         RaidInventory inventory = RaidInventoryManager.get(player);
         SectionSummary backpack = summarizeStorage("Lost backpack", inventory.backpack());
         SectionSummary vest = summarizeStorage("Lost vest", inventory.vest());
+        SectionSummary equipment = summarizeEquipment("Lost equipment", inventory, false);
         SectionSummary weapons = summarizeWeapons("Lost weapons", inventory.primaryWeapon(), inventory.secondaryWeapon());
-        SectionSummary safeBox = summarizeStorage("Secured safe box", inventory.safeBox());
+        SectionSummary safeBox = summarizeProtectedSafeBox("Secured safe box", inventory);
 
-        int lostValue = backpack.value() + vest.value() + weapons.value();
-        double lostWeight = backpack.weight() + vest.weight() + weapons.weight();
+        int lostValue = backpack.value() + vest.value() + equipment.value() + weapons.value();
+        double lostWeight = backpack.weight() + vest.weight() + equipment.weight() + weapons.weight();
 
         int elapsedSeconds = elapsedSeconds(player, raidState);
         FailedRaidResult failedResult = FailedRaidResult.fromInventory(player.getUUID(), failureReasonLabel(reason), elapsedSeconds, inventory);
@@ -71,11 +74,14 @@ public class RaidResultService {
         lines.add(String.format("Lost: %d credits | %.2f weight.", lostValue, lostWeight));
         lines.add(backpack.formatLine());
         lines.add(vest.formatLine());
+        lines.add(equipment.formatLine());
         lines.add(weapons.formatLine());
         lines.add(safeBox.formatLine());
-        PlayerStashService.StashTransferResult secured = PlayerStashService.addToStash(player, inventory.safeBox().items());
-        if (safeBox.items() > 0) {
-            lines.add("Safe box auto-secured to stash: " + secured.summary("stash"));
+        PlayerStashService.StashTransferResult secured = PlayerStashService.secureFailedRaidSafeBox(player,
+                inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER),
+                inventory.safeBox().items());
+        if (safeBox.items() > 0 || inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) != null) {
+            lines.add("Safe box protected: " + secured.summary("persistent base inventory"));
         }
         storeAndSend(player, "FAILED", lines);
         PENDING_RESULTS.remove(player.getUUID());
@@ -189,6 +195,42 @@ public class RaidResultService {
         return new SectionSummary(label, items.size(), totalItemCount(items), value, weight, details);
     }
 
+    private static SectionSummary summarizeEquipment(String label, RaidInventory inventory, boolean includeSafeContainer) {
+        List<RaidInventoryItem> items = equipmentItems(inventory, includeSafeContainer);
+        int value = items.stream().mapToInt(RaidInventoryItem::totalValue).sum();
+        double weight = items.stream().mapToDouble(RaidInventoryItem::totalWeight).sum();
+        List<String> details = items.stream().map(RaidResultService::formatItem).toList();
+        return new SectionSummary(label, items.size(), totalItemCount(items), value, weight, details);
+    }
+
+    private static SectionSummary summarizeProtectedSafeBox(String label, RaidInventory inventory) {
+        List<RaidInventoryItem> items = new ArrayList<>();
+        addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER));
+        items.addAll(inventory.safeBox().items());
+        int value = items.stream().mapToInt(RaidInventoryItem::totalValue).sum();
+        double weight = items.stream().mapToDouble(RaidInventoryItem::totalWeight).sum();
+        List<String> details = items.stream().map(RaidResultService::formatItem).toList();
+        return new SectionSummary(label, items.size(), totalItemCount(items), value, weight, details);
+    }
+
+    private static List<RaidInventoryItem> equipmentItems(RaidInventory inventory, boolean includeSafeContainer) {
+        List<RaidInventoryItem> items = new ArrayList<>();
+        addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.HELMET));
+        addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.ARMOR));
+        addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK));
+        addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST));
+        if (includeSafeContainer) {
+            addIfPresent(items, inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER));
+        }
+        return items;
+    }
+
+    private static void addIfPresent(List<RaidInventoryItem> items, RaidInventoryItem item) {
+        if (item != null) {
+            items.add(item);
+        }
+    }
+
     private static int totalItemCount(List<RaidInventoryItem> items) {
         return items.stream().mapToInt(RaidInventoryItem::count).sum();
     }
@@ -270,13 +312,26 @@ public class RaidResultService {
     private record RaidResultSummary(String outcome, List<String> lines) {
     }
 
-    public record PendingRaidResult(UUID playerId, boolean success, int elapsedSeconds, List<RaidInventoryItem> backpackItems, List<RaidInventoryItem> vestItems,
+    public record PendingRaidResult(UUID playerId, boolean success, int elapsedSeconds, int backpackGridWidth, int backpackGridHeight, int vestGridWidth, int vestGridHeight,
+            int safeGridWidth, int safeGridHeight, RaidInventoryItem helmet, RaidInventoryItem armor, RaidInventoryItem equippedBackpack,
+            RaidInventoryItem equippedVest, RaidInventoryItem equippedSafeContainer, List<RaidInventoryItem> backpackItems, List<RaidInventoryItem> vestItems,
             List<RaidInventoryItem> safeBoxItems, RaidInventoryItem primaryWeapon, RaidInventoryItem secondaryWeapon) {
         private static PendingRaidResult fromInventory(UUID playerId, boolean success, int elapsedSeconds, RaidInventory inventory) {
             return new PendingRaidResult(
                     playerId,
                     success,
                     elapsedSeconds,
+                    inventory.backpack().gridWidth(),
+                    inventory.backpack().gridHeight(),
+                    inventory.vest().gridWidth(),
+                    inventory.vest().gridHeight(),
+                    inventory.safeBox().gridWidth(),
+                    inventory.safeBox().gridHeight(),
+                    inventory.equipmentItem(RaidEquipmentSlot.HELMET) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.HELMET)),
+                    inventory.equipmentItem(RaidEquipmentSlot.ARMOR) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.ARMOR)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER)),
                     copyItems(inventory.backpack().items()),
                     copyItems(inventory.vest().items()),
                     copyItems(inventory.safeBox().items()),
@@ -286,6 +341,11 @@ public class RaidResultService {
 
         public List<RaidInventoryItem> allItems() {
             List<RaidInventoryItem> items = new ArrayList<>();
+            addIfPresent(items, helmet);
+            addIfPresent(items, armor);
+            addIfPresent(items, equippedBackpack);
+            addIfPresent(items, equippedVest);
+            addIfPresent(items, equippedSafeContainer);
             items.addAll(backpackItems);
             items.addAll(vestItems);
             items.addAll(safeBoxItems);
@@ -303,13 +363,26 @@ public class RaidResultService {
         }
     }
 
-    public record FailedRaidResult(UUID playerId, String reason, int elapsedSeconds, List<RaidInventoryItem> lostBackpackItems, List<RaidInventoryItem> lostVestItems,
-            List<RaidInventoryItem> securedSafeBoxItems, RaidInventoryItem lostPrimaryWeapon, RaidInventoryItem lostSecondaryWeapon) {
+    public record FailedRaidResult(UUID playerId, String reason, int elapsedSeconds, int backpackGridWidth, int backpackGridHeight, int vestGridWidth, int vestGridHeight,
+            int safeGridWidth, int safeGridHeight, RaidInventoryItem lostHelmet, RaidInventoryItem lostArmor,
+            RaidInventoryItem lostBackpack, RaidInventoryItem lostVest, RaidInventoryItem securedSafeContainer, List<RaidInventoryItem> lostBackpackItems,
+            List<RaidInventoryItem> lostVestItems, List<RaidInventoryItem> securedSafeBoxItems, RaidInventoryItem lostPrimaryWeapon, RaidInventoryItem lostSecondaryWeapon) {
         private static FailedRaidResult fromInventory(UUID playerId, String reason, int elapsedSeconds, RaidInventory inventory) {
             return new FailedRaidResult(
                     playerId,
                     reason,
                     elapsedSeconds,
+                    inventory.backpack().gridWidth(),
+                    inventory.backpack().gridHeight(),
+                    inventory.vest().gridWidth(),
+                    inventory.vest().gridHeight(),
+                    inventory.safeBox().gridWidth(),
+                    inventory.safeBox().gridHeight(),
+                    inventory.equipmentItem(RaidEquipmentSlot.HELMET) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.HELMET)),
+                    inventory.equipmentItem(RaidEquipmentSlot.ARMOR) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.ARMOR)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_BACKPACK)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_VEST)),
+                    inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER) == null ? null : copyItem(inventory.equipmentItem(RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER)),
                     copyItems(inventory.backpack().items()),
                     copyItems(inventory.vest().items()),
                     copyItems(inventory.safeBox().items()),
@@ -319,6 +392,10 @@ public class RaidResultService {
 
         public List<RaidInventoryItem> lostItems() {
             List<RaidInventoryItem> items = new ArrayList<>();
+            addIfPresent(items, lostHelmet);
+            addIfPresent(items, lostArmor);
+            addIfPresent(items, lostBackpack);
+            addIfPresent(items, lostVest);
             items.addAll(lostBackpackItems);
             items.addAll(lostVestItems);
             if (lostPrimaryWeapon != null) {
@@ -331,7 +408,10 @@ public class RaidResultService {
         }
 
         public List<RaidInventoryItem> securedItems() {
-            return securedSafeBoxItems;
+            List<RaidInventoryItem> items = new ArrayList<>();
+            addIfPresent(items, securedSafeContainer);
+            items.addAll(securedSafeBoxItems);
+            return items;
         }
 
         private static List<RaidInventoryItem> copyItems(List<RaidInventoryItem> items) {

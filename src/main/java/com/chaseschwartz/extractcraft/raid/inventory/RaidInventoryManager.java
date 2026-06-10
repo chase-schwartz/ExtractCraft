@@ -42,11 +42,31 @@ public class RaidInventoryManager {
         copyEquipmentSlot(base, raid, RaidEquipmentSlot.EQUIPPED_SAFE_CONTAINER);
         raid.setWeaponSlot(RaidEquipmentSlot.PRIMARY_WEAPON, base.primaryWeapon() == null ? null : PlayerStashService.copyItem(base.primaryWeapon()));
         raid.setWeaponSlot(RaidEquipmentSlot.SECONDARY_WEAPON, base.secondaryWeapon() == null ? null : PlayerStashService.copyItem(base.secondaryWeapon()));
+        copyStorageContents(base.backpack(), raid.backpack(), "Backpack");
+        copyStorageContents(base.vest(), raid.vest(), "Vest");
+        copyStorageContents(base.safeBox(), raid.safeBox(), "Safe Box");
+        base.clear();
+        PlayerStashService.save(player, data);
     }
 
     private static void copyEquipmentSlot(RaidInventory source, RaidInventory target, RaidEquipmentSlot slot) {
         RaidInventoryItem item = source.equipmentItem(slot);
         target.setEquipmentSlot(slot, item == null ? null : PlayerStashService.copyItem(item));
+    }
+
+    private static void copyStorageContents(RaidStorageContainer source, RaidStorageContainer target, String label) {
+        for (RaidInventoryItem item : source.items()) {
+            RaidInventoryItem copy = PlayerStashService.copyItem(item);
+            int moved = target.addPartialPreservingPlacement(copy, true);
+            if (moved < copy.count()) {
+                com.chaseschwartz.extractcraft.ExtractCraft.LOGGER.warn(
+                        "Could not copy full {} contents into raid inventory during raid prep: item={}, moved={}/{}",
+                        label,
+                        copy.lookupKey(),
+                        moved,
+                        copy.count());
+            }
+        }
     }
 
     public static RaidInventory.AddResult addHeld(ServerPlayer player) {

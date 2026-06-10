@@ -233,6 +233,52 @@ public class RaidStorageContainer {
         return transfer;
     }
 
+    public int moveItemToCell(int index, int x, int y, boolean rotated) {
+        if (index < 0 || index >= items.size() || x < 0 || y < 0) {
+            return 0;
+        }
+
+        RaidInventoryItem item = items.get(index);
+        IgnoredFootprint ignoredFootprint = IgnoredFootprint.from(item);
+        RaidInventoryItem mergeTarget = itemAtCell(x, y, index, ignoredFootprint);
+        if (mergeTarget != null) {
+            int mergeIndex = itemIndexAtCell(x, y);
+            if (mergeIndex != index && mergeTarget.canMerge(item)) {
+                int transfer = Math.min(item.count(), mergeTarget.maxStackSize() - mergeTarget.count());
+                if (transfer > 0) {
+                    items.set(mergeIndex, mergeTarget.withCount(mergeTarget.count() + transfer));
+                    RaidInventoryItem remaining = item.withCount(item.count() - transfer);
+                    if (remaining.count() <= 0) {
+                        items.remove(index);
+                    } else {
+                        items.set(index, remaining);
+                    }
+                    return transfer;
+                }
+            }
+            return 0;
+        }
+
+        if (!canFit(item, x, y, rotated, index, ignoredFootprint)) {
+            ExtractCraft.LOGGER.info("Raid grid relocation rejected: container={}, sourceIndex={}, source=({},{}), target=({},{}), item={}x {}, footprint={}x{}, reason={}",
+                    id,
+                    index,
+                    item.gridX(),
+                    item.gridY(),
+                    x,
+                    y,
+                    item.count(),
+                    item.lookupKey(),
+                    footprintWidth(item, rotated),
+                    footprintHeight(item, rotated),
+                    fitFailureDescription(item, x, y, rotated, index, ignoredFootprint));
+            return 0;
+        }
+
+        items.set(index, item.withPlacement(x, y, rotated));
+        return item.count();
+    }
+
     public int countAddable(RaidInventoryItem item, int excludedIndex) {
         RaidStorageContainer copy = new RaidStorageContainer(id, name, capacity, maxWeight, gridWidth, gridHeight);
         copy.items.addAll(items);
@@ -250,6 +296,10 @@ public class RaidStorageContainer {
     }
 
     public boolean canFit(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        return canFit(item, x, y, rotated, excludedIndex, IgnoredFootprint.NONE);
+    }
+
+    private boolean canFit(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex, IgnoredFootprint ignoredFootprint) {
         if (item == null || gridWidth <= 0 || gridHeight <= 0) {
             return false;
         }
@@ -268,6 +318,9 @@ public class RaidStorageContainer {
             if (!existing.isPlaced()) {
                 continue;
             }
+            if (ignoredFootprint.matches(existing)) {
+                continue;
+            }
             if (overlaps(x, y, width, height, existing.gridX(), existing.gridY(), footprintWidth(existing, existing.rotated()), footprintHeight(existing, existing.rotated()))) {
                 return false;
             }
@@ -276,6 +329,10 @@ public class RaidStorageContainer {
     }
 
     public String fitFailureDescription(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex) {
+        return fitFailureDescription(item, x, y, rotated, excludedIndex, IgnoredFootprint.NONE);
+    }
+
+    private String fitFailureDescription(RaidInventoryItem item, int x, int y, boolean rotated, int excludedIndex, IgnoredFootprint ignoredFootprint) {
         if (item == null) {
             return "item=null";
         }
@@ -295,6 +352,9 @@ public class RaidStorageContainer {
             }
             RaidInventoryItem existing = items.get(index);
             if (!existing.isPlaced()) {
+                continue;
+            }
+            if (ignoredFootprint.matches(existing)) {
                 continue;
             }
             int existingWidth = footprintWidth(existing, existing.rotated());
@@ -327,8 +387,16 @@ public class RaidStorageContainer {
     }
 
     private RaidInventoryItem itemAtCell(int x, int y, int excludedIndex) {
+        return itemAtCell(x, y, excludedIndex, IgnoredFootprint.NONE);
+    }
+
+    private RaidInventoryItem itemAtCell(int x, int y, int excludedIndex, IgnoredFootprint ignoredFootprint) {
         int index = itemIndexAtCell(x, y);
-        return index < 0 || index == excludedIndex ? null : items.get(index);
+        if (index < 0 || index == excludedIndex) {
+            return null;
+        }
+        RaidInventoryItem item = items.get(index);
+        return ignoredFootprint.matches(item) ? null : item;
     }
 
     public java.util.Optional<GridPlacement> findFirstFit(RaidInventoryItem item) {
@@ -578,5 +646,26 @@ public class RaidStorageContainer {
     }
 
     public record GridPlacement(int x, int y, boolean rotated) {
+    }
+
+    private record IgnoredFootprint(int x, int y, int width, int height, boolean active) {
+        private static final IgnoredFootprint NONE = new IgnoredFootprint(-1, -1, 0, 0, false);
+
+        private static IgnoredFootprint from(RaidInventoryItem item) {
+            if (item == null || !item.isPlaced()) {
+                return NONE;
+            }
+            return new IgnoredFootprint(item.gridX(), item.gridY(), footprintWidth(item, item.rotated()), footprintHeight(item, item.rotated()), true);
+        }
+
+        private boolean matches(RaidInventoryItem item) {
+            return active
+                    && item != null
+                    && item.isPlaced()
+                    && item.gridX() == x
+                    && item.gridY() == y
+                    && footprintWidth(item, item.rotated()) == width
+                    && footprintHeight(item, item.rotated()) == height;
+        }
     }
 }

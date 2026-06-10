@@ -175,14 +175,7 @@ public class RaidInventory {
         }
         if (sourceSlot == targetSlot && isStorageSlot(sourceSlot)) {
             RaidStorageContainer targetStorage = storage(sourceSlot);
-            RaidInventoryItem removed = targetStorage.removeAt(sourceIndex);
-            if (removed == null) {
-                return new AddResult(false, targetSlot, "Source item is no longer available.");
-            }
-            int moved = targetStorage.addPartialAt(removed, x, y, rotated, -1, true);
-            if (moved < removed.count()) {
-                targetStorage.addPartialAt(removed.withCount(removed.count() - moved), removed.gridX(), removed.gridY(), removed.rotated(), -1, true);
-            }
+            int moved = targetStorage.moveItemToCell(sourceIndex, x, y, rotated);
             return new AddResult(moved > 0, targetSlot, moved > 0 ? "Moved item in " + targetSlot.name().toLowerCase() + "." : "Target cell is blocked.", moved);
         }
 

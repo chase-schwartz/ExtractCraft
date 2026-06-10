@@ -16,6 +16,7 @@ public record GridMoveRequestPayload(int transactionId, int menuId, int operatio
     public static final int ACTIVE_CONTAINER_SPLIT = 6;
     public static final int ACTIVE_CARRIED_TO_RAID_CELL = 7;
     public static final int ACTIVE_CARRIED_TO_CONTAINER = 8;
+    public static final int ACTIVE_RAID_REPAIR = 9;
     public static final int BASE_STASH_TO_BASE_CELL = 10;
     public static final int BASE_BASE_TO_BASE_CELL = 11;
     public static final int BASE_BASE_TO_STASH = 12;

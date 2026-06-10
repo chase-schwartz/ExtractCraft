@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.InRaidRepairService;
 import com.chaseschwartz.extractcraft.network.TimedActionSyncPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 
@@ -28,6 +29,11 @@ public final class TimedActionService {
     }
 
     public static StartResult start(ServerPlayer player, TimedActionType type, int durationTicks, String label, boolean cancelOnDamage, boolean allowOutsideRaid) {
+        return start(player, type, durationTicks, label, cancelOnDamage, allowOutsideRaid, Optional.empty(), Optional.empty());
+    }
+
+    public static StartResult start(ServerPlayer player, TimedActionType type, int durationTicks, String label, boolean cancelOnDamage, boolean allowOutsideRaid,
+            Optional<String> sourceReference, Optional<String> targetReference) {
         if (player == null) {
             return StartResult.failure("No player.");
         }
@@ -48,8 +54,8 @@ public final class TimedActionService {
                 type == null ? TimedActionType.UNKNOWN : type,
                 now,
                 Math.max(1, durationTicks),
-                Optional.empty(),
-                Optional.empty(),
+                sourceReference == null ? Optional.empty() : sourceReference,
+                targetReference == null ? Optional.empty() : targetReference,
                 cancelOnDamage,
                 false,
                 false,
@@ -135,7 +141,15 @@ public final class TimedActionService {
     }
 
     private static void complete(ServerPlayer player, TimedAction action, long now) {
-        // Future hook point: dispatch repair/heal/consume effects by action.type().
+        InRaidRepairService.CompletionResult repairResult = switch (action.type()) {
+            case REPAIR_HELMET, REPAIR_ARMOR, REPAIR_BACKPACK -> InRaidRepairService.complete(player, action);
+            default -> null;
+        };
+        if (repairResult != null && !repairResult.success()) {
+            sync(player, action, now, TimedActionSyncPayload.STATUS_CANCELED, repairResult.message());
+            ExtractCraft.LOGGER.info("Timed action {} failed completion for {}: {}", action.type(), player.getGameProfile().getName(), repairResult.message());
+            return;
+        }
         sync(player, action, now, TimedActionSyncPayload.STATUS_COMPLETE, "Complete");
         if (action.type() == TimedActionType.DEBUG_TEST) {
             player.sendSystemMessage(Component.literal("Debug timed action complete."));

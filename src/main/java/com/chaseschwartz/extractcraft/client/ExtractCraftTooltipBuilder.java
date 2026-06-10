@@ -211,9 +211,9 @@ public final class ExtractCraftTooltipBuilder {
 
     private static void appendDurability(List<Component> lines, DurabilityData data, boolean detailed) {
         String label = data.type().equalsIgnoreCase("repair_kit") ? "Repair Capacity" : "Durability";
-        lines.add(Component.literal(label + ": " + data.currentDurability() + "/" + data.currentMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
+        lines.add(Component.literal(label + ": " + data.currentDurability() + " / " + data.currentMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
         if (detailed) {
-            lines.add(Component.literal("Pristine Max: " + data.pristineMaxDurability()).withStyle(ChatFormatting.DARK_GRAY));
+            lines.add(Component.literal("Max Condition: " + data.currentMaxDurability() + " / " + data.pristineMaxDurability() + " original").withStyle(ChatFormatting.DARK_GRAY));
             lines.add(Component.literal("Repairs: " + data.repairCount()).withStyle(ChatFormatting.DARK_GRAY));
         }
     }

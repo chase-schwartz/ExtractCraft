@@ -503,7 +503,7 @@
       "repairTargetCategory": "Helmet",
       "repairAmount": 90,
       "durabilityEnabled": true,
-      "maxDurability": 100,
+      "maxDurability": 130,
       "durabilityType": "repair_kit",
       "consumable": true
     },
@@ -524,7 +524,7 @@
       "repairTargetCategory": "Armor",
       "repairAmount": 160,
       "durabilityEnabled": true,
-      "maxDurability": 140,
+      "maxDurability": 240,
       "durabilityType": "repair_kit",
       "consumable": true
     },
@@ -545,7 +545,7 @@
       "repairTargetCategory": "Backpack",
       "repairAmount": 120,
       "durabilityEnabled": true,
-      "maxDurability": 120,
+      "maxDurability": 180,
       "durabilityType": "repair_kit",
       "consumable": true
     }
