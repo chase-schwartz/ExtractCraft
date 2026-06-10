@@ -82,6 +82,7 @@ public class ExtractCraftNetwork {
             if (context.player() instanceof ServerPlayer player) {
                 GridMoveResult result = handleGridMoveRequest(player, payload);
                 PacketDistributor.sendToPlayer(player, new GridMoveResultPayload(payload.transactionId(), result.success(), result.message()));
+                QuickUseService.syncOptions(player);
             }
         });
         registrar.playToServer(BulkBaseInventoryActionPayload.TYPE, BulkBaseInventoryActionPayload.STREAM_CODEC, (payload, context) -> {

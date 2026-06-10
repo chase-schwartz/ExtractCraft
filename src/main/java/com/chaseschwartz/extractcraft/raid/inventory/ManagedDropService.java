@@ -73,6 +73,7 @@ public class ManagedDropService {
         }
         player.level().playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.4F, 1.0F);
         player.sendSystemMessage(Component.literal("Picked up " + result.movedCount() + "x " + itemName + "."));
+        QuickUseService.syncOptions(player);
     }
 
     public static RaidInventory.AddResult addToCustomInventory(ServerPlayer player, ItemStack stack) {

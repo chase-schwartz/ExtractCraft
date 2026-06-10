@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.chaseschwartz.extractcraft.durability.DurabilityData;
 import com.chaseschwartz.extractcraft.durability.DurabilityService;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -22,17 +23,23 @@ public final class CustomDurabilityBarRenderer {
         }
 
         Optional<DurabilityData> data = DurabilityService.getOrInitialize(stack);
-        if (data.isEmpty()) {
+        if (data.isPresent()) {
+            DurabilityData durability = data.get();
+            int currentMax = Math.max(1, durability.currentMaxDurability());
+            if (durability.currentDurability() >= currentMax) {
+                return;
+            }
+            renderBar(guiGraphics, x, y, width, height, durability.currentDurability() / (double) currentMax);
             return;
         }
 
-        DurabilityData durability = data.get();
-        int currentMax = Math.max(1, durability.currentMaxDurability());
-        boolean damaged = durability.currentDurability() < currentMax;
-        if (!damaged) {
-            return;
-        }
-        double ratio = Math.max(0.0D, Math.min(1.0D, durability.currentDurability() / (double) currentMax));
+        QuickUseService.capacityInfo(stack)
+                .filter(capacity -> capacity.current() < capacity.max())
+                .ifPresent(capacity -> renderBar(guiGraphics, x, y, width, height, capacity.current() / (double) Math.max(1, capacity.max())));
+    }
+
+    private static void renderBar(GuiGraphics guiGraphics, int x, int y, int width, int height, double rawRatio) {
+        double ratio = Math.max(0.0D, Math.min(1.0D, rawRatio));
         BarGeometry geometry = barGeometry(x, y, width, height);
         int fillWidth = fillWidth(geometry.width(), ratio);
 

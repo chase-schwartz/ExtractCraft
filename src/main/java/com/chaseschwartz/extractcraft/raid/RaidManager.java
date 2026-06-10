@@ -10,6 +10,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryManager;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidResultService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
@@ -60,6 +61,7 @@ public class RaidManager {
             player.sendSystemMessage(Component.literal("Raid mode: switched to survival to prevent creative/infinite-ammo behavior."));
         }
         ExtractCraftNetwork.syncRaidState(player, true);
+        QuickUseService.syncOptions(player);
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }
 
@@ -69,6 +71,10 @@ public class RaidManager {
 
     public static void clearPlayerState(UUID playerId, MinecraftServer server) {
         TimedActionService.cancel(playerId, server, "Action canceled.");
+        ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+        if (player != null) {
+            QuickUseService.clear(player);
+        }
         cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
         cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
         clearWeightModifierIfOnline(server, playerId);
@@ -77,6 +83,10 @@ public class RaidManager {
 
     public static boolean clearPlayerStateIfPresent(UUID playerId, MinecraftServer server) {
         TimedActionService.cancel(playerId, server, "Action canceled.");
+        ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+        if (player != null) {
+            QuickUseService.clear(player);
+        }
         RaidState activeRaid = ACTIVE_RAIDS.remove(playerId);
         RaidState pendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId);
         boolean hadActiveRaid = activeRaid != null;

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.chaseschwartz.extractcraft.durability.DurabilityData;
 import com.chaseschwartz.extractcraft.durability.DurabilityService;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -45,8 +46,7 @@ public class ExtractCraftProfiledItem extends Item {
             tooltip.add(Component.literal("Durability: Configured later"
                     + metadata.maxDurability().map(value -> " (" + value + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
-        metadata.healAmount().ifPresent(value -> tooltip.add(Component.literal("Heal: " + value
-                + metadata.useTimeTicks().map(ticks -> " | Use: " + ticks + " ticks").orElse("")).withStyle(ChatFormatting.GREEN)));
+        appendMedicalCapacity(stack, tooltip);
         if (metadata.fixesBleed() || metadata.fixesBrokenBone()) {
             tooltip.add(Component.literal("Treatment: "
                     + (metadata.fixesBleed() ? "Bleed" : "")
@@ -62,6 +62,14 @@ public class ExtractCraftProfiledItem extends Item {
         for (String line : metadata.extraTooltipLines()) {
             tooltip.add(Component.literal(line).withStyle(ChatFormatting.DARK_GRAY));
         }
+    }
+
+    private static void appendMedicalCapacity(ItemStack stack, List<Component> tooltip) {
+        QuickUseService.capacityInfo(stack).ifPresent(capacity -> {
+            tooltip.add(Component.literal("Heal Capacity: " + capacity.current() + " / " + capacity.max()).withStyle(ChatFormatting.GREEN));
+            QuickUseService.useTimeTicks(stack)
+                    .ifPresent(ticks -> tooltip.add(Component.literal("Use Time: " + ticks + " ticks").withStyle(ChatFormatting.GREEN)));
+        });
     }
 
     private static String equipmentLabel(com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot slot) {

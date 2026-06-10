@@ -11,6 +11,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.durability.InRaidRepairService;
 import com.chaseschwartz.extractcraft.network.TimedActionSyncPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -145,12 +146,22 @@ public final class TimedActionService {
             case REPAIR_HELMET, REPAIR_ARMOR, REPAIR_BACKPACK -> InRaidRepairService.complete(player, action);
             default -> null;
         };
+        QuickUseService.CompletionResult medicalResult = switch (action.type()) {
+            case USE_MED -> QuickUseService.completeMedicalUse(player, action);
+            default -> null;
+        };
         if (repairResult != null && !repairResult.success()) {
             sync(player, action, now, TimedActionSyncPayload.STATUS_CANCELED, repairResult.message());
             ExtractCraft.LOGGER.info("Timed action {} failed completion for {}: {}", action.type(), player.getGameProfile().getName(), repairResult.message());
             return;
         }
+        if (medicalResult != null && !medicalResult.success()) {
+            sync(player, action, now, TimedActionSyncPayload.STATUS_CANCELED, medicalResult.message());
+            ExtractCraft.LOGGER.info("Timed action {} failed completion for {}: {}", action.type(), player.getGameProfile().getName(), medicalResult.message());
+            return;
+        }
         sync(player, action, now, TimedActionSyncPayload.STATUS_COMPLETE, "Complete");
+        QuickUseService.syncOptions(player);
         if (action.type() == TimedActionType.DEBUG_TEST) {
             player.sendSystemMessage(Component.literal("Debug timed action complete."));
         }

@@ -131,9 +131,9 @@ public class ExtractCraft {
     public static final DeferredItem<Item> BLACKSITE_SECURE_CASE = registerProfiledItem("blacksite_secure_case", safeMeta(2, "A reinforced case with more room for high-value finds.", 2.2D, 160, 3, 2, 2, 2));
     public static final DeferredItem<Item> OMEGA_SAFE_CONTAINER = registerProfiledItem("omega_safe_container", safeMeta(3, "A premium safe container for critical extraction loot.", 3.2D, 260, 3, 3, 2, 3));
 
-    public static final DeferredItem<Item> COMBAT_STIM_SYRINGE = registerProfiledItem("combat_stim_syringe", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40));
-    public static final DeferredItem<Item> FIELD_MED_KIT = registerProfiledItem("field_med_kit", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80));
-    public static final DeferredItem<Item> TRAUMA_RESPONSE_CASE = registerProfiledItem("trauma_response_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120));
+    public static final DeferredItem<Item> COMBAT_STIM_SYRINGE = registerProfiledItem("combat_stim_syringe", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 8, 40));
+    public static final DeferredItem<Item> FIELD_MED_KIT = registerProfiledItem("field_med_kit", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 20, 60));
+    public static final DeferredItem<Item> TRAUMA_RESPONSE_CASE = registerProfiledItem("trauma_response_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 45, 80));
     public static final DeferredItem<Item> QUICKCLOT_INJECTOR = registerProfiledItem("quickclot_injector", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40), false);
     public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80), false);
     public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120), false);
@@ -174,6 +174,9 @@ public class ExtractCraft {
     private static Item.Properties profiledProperties(ExtractCraftItemMetadata metadata) {
         Item.Properties properties = new Item.Properties();
         if (metadata.equipmentSlot().isPresent()) {
+            return properties.stacksTo(1);
+        }
+        if (metadata.healAmount().isPresent()) {
             return properties.stacksTo(1);
         }
         if (metadata.consumable() || metadata.repairTargetCategory().isPresent()) {

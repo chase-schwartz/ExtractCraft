@@ -19,6 +19,7 @@ import com.chaseschwartz.extractcraft.itemvalues.RarityPresentation;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 
 import net.minecraft.ChatFormatting;
@@ -88,8 +89,7 @@ public final class ExtractCraftTooltipBuilder {
             lines.add(Component.literal("Durability: Configured"
                     + metadata.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
-        metadata.healAmount().ifPresent(heal -> lines.add(Component.literal("Heal: " + heal
-                + metadata.useTimeTicks().map(ticks -> " | Use: " + ticks + " ticks").orElse("")).withStyle(ChatFormatting.GREEN)));
+        appendMedicalCapacity(lines, stack);
         if (metadata.fixesBleed() || metadata.fixesBrokenBone()) {
             lines.add(Component.literal("Treatment: "
                     + (metadata.fixesBleed() ? "Bleed" : "")
@@ -152,8 +152,7 @@ public final class ExtractCraftTooltipBuilder {
                 lines.add(Component.literal("Durability: Configured"
                         + carry.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
             }
-            carry.healAmount().ifPresent(heal -> lines.add(Component.literal("Heal: " + heal
-                    + carry.useTimeTicks().map(ticks -> " | Use: " + ticks + " ticks").orElse("")).withStyle(ChatFormatting.GREEN)));
+            appendMedicalCapacity(lines, stack);
             if (carry.fixesBleed() || carry.fixesBrokenBone()) {
                 lines.add(Component.literal("Treatment: "
                         + (carry.fixesBleed() ? "Bleed" : "")
@@ -216,6 +215,16 @@ public final class ExtractCraftTooltipBuilder {
             lines.add(Component.literal("Max Condition: " + data.currentMaxDurability() + " / " + data.pristineMaxDurability() + " original").withStyle(ChatFormatting.DARK_GRAY));
             lines.add(Component.literal("Repairs: " + data.repairCount()).withStyle(ChatFormatting.DARK_GRAY));
         }
+    }
+
+    private static void appendMedicalCapacity(List<Component> lines, ItemStack stack) {
+        Optional<QuickUseService.MedicalCapacity> capacity = QuickUseService.capacityInfo(stack);
+        if (capacity.isEmpty()) {
+            return;
+        }
+        lines.add(Component.literal("Heal Capacity: " + capacity.get().current() + " / " + capacity.get().max()).withStyle(ChatFormatting.GREEN));
+        QuickUseService.useTimeTicks(stack)
+                .ifPresent(ticks -> lines.add(Component.literal("Use Time: " + ticks + " ticks").withStyle(ChatFormatting.GREEN)));
     }
 
     private static Optional<String> firstUsefulNote(ItemCarryProfile profile) {

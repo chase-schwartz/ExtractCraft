@@ -443,9 +443,9 @@
       "notes": [
         "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
       ],
-      "healAmount": 20,
+      "healAmount": 8,
       "useTimeTicks": 40,
-      "fixesBleed": true,
+      "fixesBleed": false,
       "consumable": true
     },
     {
@@ -462,9 +462,9 @@
       "notes": [
         "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
       ],
-      "healAmount": 45,
-      "useTimeTicks": 80,
-      "fixesBleed": true,
+      "healAmount": 20,
+      "useTimeTicks": 60,
+      "fixesBleed": false,
       "consumable": true
     },
     {
@@ -481,9 +481,9 @@
       "notes": [
         "ExtractCraft equipment/content profile; durability/use behavior is inert for now."
       ],
-      "healAmount": 80,
-      "useTimeTicks": 120,
-      "fixesBleed": true,
+      "healAmount": 45,
+      "useTimeTicks": 80,
+      "fixesBleed": false,
       "consumable": true
     },
     {

@@ -160,6 +160,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             if (isGridAnchorFootprintSlot(slot)) {
                 return;
             }
+            if (isRaidStorageGridSlot(slot) && slot.hasItem()) {
+                ManagedGridItemRenderer.renderItemCentered(guiGraphics, slot.getItem(), slot.x, slot.y, SLOT_STEP, SLOT_STEP);
+                CustomDurabilityBarRenderer.render(guiGraphics, slot.getItem(), slot.x, slot.y, SLOT_STEP, SLOT_STEP);
+                return;
+            }
         }
         super.renderSlot(guiGraphics, slot);
         if ((isRaidInventorySlot(slot) || isContainerSlot(slot)) && slot.hasItem() && !isContainerSlotHidden(slot) && !isGridShadowSlot(slot) && !isGridAnchorFootprintSlot(slot)) {
@@ -1072,6 +1077,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private boolean isGridDisplaySlot(Slot slot) {
         return isGridTarget(this.menu.raidSlotForMenuSlot(slot.index));
+    }
+
+    private boolean isRaidStorageGridSlot(Slot slot) {
+        return isRaidInventorySlot(slot) && isGridDisplaySlot(slot);
     }
 
     private boolean isWeaponSlot(Slot slot) {
