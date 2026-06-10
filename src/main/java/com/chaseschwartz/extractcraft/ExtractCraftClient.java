@@ -1,12 +1,18 @@
 package com.chaseschwartz.extractcraft;
 
 import com.chaseschwartz.extractcraft.client.LootContainerOutlineRenderer;
+import com.chaseschwartz.extractcraft.client.ClientQuickUseState;
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
+import com.chaseschwartz.extractcraft.client.QuickUseHudRenderer;
+import com.chaseschwartz.extractcraft.client.QuickUseRadialScreen;
 import com.chaseschwartz.extractcraft.client.TimedActionHudRenderer;
 import com.chaseschwartz.extractcraft.network.OpenBaseStashInventoryPayload;
 import com.chaseschwartz.extractcraft.network.OpenRaidInventoryPayload;
 import com.chaseschwartz.extractcraft.network.PickupManagedDropPayload;
+import com.chaseschwartz.extractcraft.network.RequestQuickUseOptionsPayload;
 import com.chaseschwartz.extractcraft.network.SelectRaidWeaponPayload;
+import com.chaseschwartz.extractcraft.network.UseQuickUseSelectionPayload;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
@@ -55,6 +61,12 @@ import org.lwjgl.glfw.GLFW;
 @EventBusSubscriber(modid = ExtractCraft.MODID, value = Dist.CLIENT)
 public class ExtractCraftClient {
     private static final int RAID_WEAPON_BRIDGE_HOTBAR_SLOT = 8;
+    private static final long QUICK_USE_HOLD_MILLIS = 250L;
+    public static final KeyMapping QUICK_USE_KEY = new KeyMapping("key.extractcraft.quick_use", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.extractcraft");
+    private static boolean quickUseKeyWasDown;
+    private static boolean quickUseRadialOpenedForPress;
+    private static boolean quickUseSuppressUseOnRelease;
+    private static long quickUsePressStartMillis;
 
     public ExtractCraftClient(ModContainer container) {
         // Allows NeoForge to create a config screen for this mod's configs.
@@ -92,7 +104,17 @@ public class ExtractCraftClient {
 
     private static void onClientPreTick(ClientTickEvent.Pre event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || minecraft.screen != null) {
+        if (minecraft.player == null) {
+            ClientRaidState.clearAllRaidUiState();
+            resetQuickUsePress();
+            return;
+        }
+
+        handleQuickUseKey(minecraft);
+        if (minecraft.screen != null) {
+            return;
+        }
+        if (!ClientRaidState.isInRaid()) {
             return;
         }
 
@@ -116,9 +138,69 @@ public class ExtractCraftClient {
         return consumed;
     }
 
+    private static void handleQuickUseKey(Minecraft minecraft) {
+        boolean down = isQuickUseKeyDown(minecraft);
+        if (minecraft.screen != null) {
+            if (!(minecraft.screen instanceof QuickUseRadialScreen)) {
+                if (!down) {
+                    resetQuickUsePress();
+                }
+            }
+            return;
+        }
+
+        if (down) {
+            if (!quickUseKeyWasDown) {
+                quickUsePressStartMillis = System.currentTimeMillis();
+                quickUseRadialOpenedForPress = false;
+                quickUseSuppressUseOnRelease = false;
+            }
+            if (!quickUseRadialOpenedForPress && System.currentTimeMillis() - quickUsePressStartMillis >= QUICK_USE_HOLD_MILLIS) {
+                quickUseRadialOpenedForPress = true;
+                quickUseSuppressUseOnRelease = true;
+                if (canOpenQuickUseRadial()) {
+                    PacketDistributor.sendToServer(RequestQuickUseOptionsPayload.INSTANCE);
+                    minecraft.setScreen(new QuickUseRadialScreen());
+                }
+            }
+        } else if (quickUseKeyWasDown) {
+            if (!quickUseRadialOpenedForPress && !quickUseSuppressUseOnRelease && quickUsePressStartMillis > 0L) {
+                PacketDistributor.sendToServer(UseQuickUseSelectionPayload.INSTANCE);
+            }
+            resetQuickUsePress();
+        }
+        quickUseKeyWasDown = down;
+    }
+
+    private static void resetQuickUsePress() {
+        quickUseKeyWasDown = false;
+        quickUseRadialOpenedForPress = false;
+        quickUseSuppressUseOnRelease = false;
+        quickUsePressStartMillis = 0L;
+    }
+
+    public static boolean isQuickUseKeyDown() {
+        return isQuickUseKeyDown(Minecraft.getInstance());
+    }
+
+    private static boolean isQuickUseKeyDown(Minecraft minecraft) {
+        if (minecraft == null || minecraft.getWindow() == null) {
+            return QUICK_USE_KEY.isDown();
+        }
+        InputConstants.Key key = QUICK_USE_KEY.getKey();
+        if (key.getType() == InputConstants.Type.KEYSYM) {
+            return InputConstants.isKeyDown(minecraft.getWindow().getWindow(), key.getValue());
+        }
+        return QUICK_USE_KEY.isDown();
+    }
+
+    private static boolean canOpenQuickUseRadial() {
+        return ClientRaidState.isInRaid() || ClientQuickUseState.hasOptions();
+    }
+
     private static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && minecraft.screen == null) {
+        if (ClientRaidState.isInRaid() && minecraft.player != null && minecraft.screen == null) {
             event.setCanceled(true);
             PacketDistributor.sendToServer(new SelectRaidWeaponPayload(event.getScrollDeltaY() >= 0.0D
                     ? SelectRaidWeaponPayload.CYCLE_FORWARD
@@ -157,6 +239,7 @@ public class ExtractCraftClient {
         }
         if (VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
             renderDropPrompt(event.getGuiGraphics());
+            QuickUseHudRenderer.render(event.getGuiGraphics());
             TimedActionHudRenderer.render(event.getGuiGraphics());
         }
     }

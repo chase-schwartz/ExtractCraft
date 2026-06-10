@@ -15,7 +15,18 @@ public class ClientRaidState {
     }
 
     public static void setInRaid(boolean value) {
-        inRaid = value;
+        if (value) {
+            inRaid = true;
+        } else {
+            clearAllRaidUiState();
+        }
+    }
+
+    public static void clearAllRaidUiState() {
+        inRaid = false;
+        vanillaInventoryBypass = false;
+        ClientQuickUseState.clear();
+        ClientTimedActionState.clear();
     }
 
     public static boolean consumeVanillaInventoryBypass() {

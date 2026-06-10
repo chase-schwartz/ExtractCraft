@@ -217,5 +217,7 @@
   "item.extractcraft.adhesive_bandage_box": "Adhesive Bandage Box",
   "item.extractcraft.digital_thermometer": "Digital Thermometer",
   "item.extractcraft.inhaler_blue": "Blue Inhaler",
-  "item.extractcraft.saline_eye_drops": "Saline Eye Drops"
+  "item.extractcraft.saline_eye_drops": "Saline Eye Drops",
+  "key.categories.extractcraft": "ExtractCraft",
+  "key.extractcraft.quick_use": "Quick Use / Radial"
 }

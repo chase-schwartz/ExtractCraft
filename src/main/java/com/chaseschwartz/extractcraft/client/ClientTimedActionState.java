@@ -15,6 +15,12 @@ public final class ClientTimedActionState {
     private ClientTimedActionState() {
     }
 
+    public static void clear() {
+        activeAction = null;
+        terminalMessage = "";
+        terminalUntilMillis = 0L;
+    }
+
     public static void handleSync(TimedActionSyncPayload payload) {
         if (payload.status() == TimedActionSyncPayload.STATUS_ACTIVE) {
             activeAction = new ActiveAction(payload.actionId(), payload.actionType(), payload.label(), Math.max(1, payload.durationTicks()), Math.max(0, payload.elapsedTicks()), clientTick());

@@ -8,6 +8,7 @@ import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.raid.inventory.GridMoveResult;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashScreenOpener;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryScreenOpener;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidWeaponService;
@@ -29,9 +30,16 @@ public class ExtractCraftNetwork {
                 GridMoveClientState.handleResult(payload));
         registrar.playToClient(TimedActionSyncPayload.TYPE, TimedActionSyncPayload.STREAM_CODEC, (payload, context) ->
                 ClientTimedActionState.handleSync(payload));
+        registrar.playToClient(QuickUseStatePayload.TYPE, QuickUseStatePayload.STREAM_CODEC, (payload, context) ->
+                com.chaseschwartz.extractcraft.client.ClientQuickUseState.handleSync(payload));
         registrar.playToServer(OpenRaidInventoryPayload.TYPE, OpenRaidInventoryPayload.STREAM_CODEC, (payload, context) -> {
-            if (context.player() instanceof ServerPlayer player && RaidManager.isInRaid(player)) {
-                RaidInventoryScreenOpener.openGrid(player);
+            if (context.player() instanceof ServerPlayer player) {
+                if (RaidManager.isInRaid(player)) {
+                    RaidInventoryScreenOpener.openGrid(player);
+                } else {
+                    syncRaidState(player, false);
+                    BaseStashScreenOpener.open(player);
+                }
             }
         });
         registrar.playToServer(OpenBaseStashInventoryPayload.TYPE, OpenBaseStashInventoryPayload.STREAM_CODEC, (payload, context) -> {
@@ -53,6 +61,21 @@ public class ExtractCraftNetwork {
                 } else if (payload.selection() == SelectRaidWeaponPayload.CYCLE_BACKWARD) {
                     RaidWeaponService.cycle(player, -1);
                 }
+            }
+        });
+        registrar.playToServer(RequestQuickUseOptionsPayload.TYPE, RequestQuickUseOptionsPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                QuickUseService.syncOptions(player);
+            }
+        });
+        registrar.playToServer(SetQuickUseSelectionPayload.TYPE, SetQuickUseSelectionPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                QuickUseService.setSelected(player, payload.itemId());
+            }
+        });
+        registrar.playToServer(UseQuickUseSelectionPayload.TYPE, UseQuickUseSelectionPayload.STREAM_CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                QuickUseService.useSelected(player);
             }
         });
         registrar.playToServer(GridMoveRequestPayload.TYPE, GridMoveRequestPayload.STREAM_CODEC, (payload, context) -> {
