@@ -29,6 +29,7 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
 import com.chaseschwartz.extractcraft.raid.BleedStatus;
 import com.chaseschwartz.extractcraft.raid.BleedStatusService;
+import com.chaseschwartz.extractcraft.raid.FractureStatusService;
 import com.chaseschwartz.extractcraft.raid.containers.LootRevealTiming;
 import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
@@ -143,6 +144,16 @@ public class RaidInventoryCommands {
                                 .then(Commands.literal("clear")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> debugBleedClear(context.getSource()))))
+                        .then(Commands.literal("fracture")
+                                .then(Commands.literal("apply")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugFractureApply(context.getSource())))
+                                .then(Commands.literal("clear")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugFractureClear(context.getSource())))
+                                .then(Commands.literal("status")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugFractureStatus(context.getSource()))))
                         .then(Commands.literal("mitigation")
                                 .then(Commands.literal("status")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
@@ -598,6 +609,32 @@ public class RaidInventoryCommands {
         QuickUseService.syncOptions(player);
         player.sendSystemMessage(Component.literal(cleared ? "Bleed cleared." : "No bleed was active."));
         return cleared ? 1 : 0;
+    }
+
+    private static int debugFractureApply(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (!RaidManager.isInRaid(player)) {
+            player.sendSystemMessage(Component.literal("Fracture debug requires an active raid."));
+            return 0;
+        }
+        boolean applied = FractureStatusService.apply(player, false);
+        player.sendSystemMessage(Component.literal(applied ? "Fracture applied." : "Fracture was already active."));
+        return 1;
+    }
+
+    private static int debugFractureClear(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        boolean cleared = FractureStatusService.clear(player);
+        player.sendSystemMessage(Component.literal(cleared ? "Fracture cleared." : "No fracture was active."));
+        return cleared ? 1 : 0;
+    }
+
+    private static int debugFractureStatus(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        player.sendSystemMessage(Component.literal("Fracture status: "
+                + (FractureStatusService.fractured(player) ? "active" : "none")
+                + (RaidManager.isInRaid(player) ? " (active raid)" : " (not in raid)")));
+        return 1;
     }
 
     private static int debugMitigationStatus(CommandSourceStack source) throws CommandSyntaxException {

@@ -5,6 +5,7 @@ import com.chaseschwartz.extractcraft.client.BleedHudRenderer;
 import com.chaseschwartz.extractcraft.client.ArmorMitigationHudRenderer;
 import com.chaseschwartz.extractcraft.client.ClientQuickUseState;
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
+import com.chaseschwartz.extractcraft.client.FractureHudRenderer;
 import com.chaseschwartz.extractcraft.client.QuickUseHudRenderer;
 import com.chaseschwartz.extractcraft.client.QuickUseRadialScreen;
 import com.chaseschwartz.extractcraft.client.TimedActionHudRenderer;
@@ -242,6 +243,7 @@ public class ExtractCraftClient {
         if (VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
             renderDropPrompt(event.getGuiGraphics());
             ArmorMitigationHudRenderer.render(event.getGuiGraphics());
+            FractureHudRenderer.render(event.getGuiGraphics());
             BleedHudRenderer.render(event.getGuiGraphics());
             QuickUseHudRenderer.render(event.getGuiGraphics());
             TimedActionHudRenderer.render(event.getGuiGraphics());

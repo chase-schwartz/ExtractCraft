@@ -9,6 +9,7 @@ public enum TimedActionType {
     REPAIR_BACKPACK,
     USE_MED,
     USE_BANDAGE,
+    TREAT_FRACTURE,
     USE_SPLINT,
     USE_PAINKILLER,
     USE_FOOD,

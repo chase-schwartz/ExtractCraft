@@ -14,6 +14,7 @@ import com.chaseschwartz.extractcraft.network.QuickUseStatePayload;
 import com.chaseschwartz.extractcraft.raid.BleedStatus;
 import com.chaseschwartz.extractcraft.raid.BleedStatusService;
 import com.chaseschwartz.extractcraft.raid.BleedStatusService.TreatmentStrength;
+import com.chaseschwartz.extractcraft.raid.FractureStatusService;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.timedaction.TimedAction;
 import com.chaseschwartz.extractcraft.timedaction.TimedActionService;
@@ -44,9 +45,18 @@ public final class QuickUseService {
     public static final ResourceLocation COMBAT_TOURNIQUET_PACK = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "combat_tourniquet_pack");
 
     private static final Map<UUID, ResourceLocation> SELECTED_ITEMS = new java.util.HashMap<>();
+    private static final java.util.Set<UUID> MANUAL_SELECTIONS = new java.util.HashSet<>();
     private static final List<ResourceLocation> DEFAULT_PRIORITY = List.of(
             TRAUMA_RESPONSE_CASE,
             FIELD_MED_KIT,
+            COMBAT_STIM_SYRINGE,
+            ARMOR_REBUILD_KIT,
+            HELMET_REBUILD_KIT,
+            PACK_REBUILD_KIT);
+    private static final List<ResourceLocation> FRACTURE_PRIORITY = List.of(
+            TRAUMA_RESPONSE_CASE,
+            FIELD_MED_KIT,
+            STERILE_GAUZE_BRICK,
             COMBAT_STIM_SYRINGE,
             ARMOR_REBUILD_KIT,
             HELMET_REBUILD_KIT,
@@ -65,12 +75,12 @@ public final class QuickUseService {
             COMBAT_TOURNIQUET_PACK,
             TRAUMA_RESPONSE_CASE,
             FIELD_MED_KIT,
+            STERILE_GAUZE_BRICK,
             COMBAT_STIM_SYRINGE,
             ARMOR_REBUILD_KIT,
             HELMET_REBUILD_KIT,
             PACK_REBUILD_KIT,
-            ADHESIVE_BANDAGE_BOX,
-            STERILE_GAUZE_BRICK);
+            ADHESIVE_BANDAGE_BOX);
     private static final Map<ResourceLocation, MedicalUse> MEDICAL_USES = Map.of(
             COMBAT_STIM_SYRINGE, new MedicalUse(TimedActionType.USE_MED, 8, 40, "Using Combat Stim..."),
             FIELD_MED_KIT, new MedicalUse(TimedActionType.USE_MED, 20, 60, "Using Field Med Kit..."),
@@ -79,6 +89,10 @@ public final class QuickUseService {
             ADHESIVE_BANDAGE_BOX, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.LIGHT_ONLY, 40, "Applying Bandages...", "Light Bleed"),
             STERILE_GAUZE_BRICK, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.LIGHT_ONLY, 50, "Applying Gauze...", "Light Bleed"),
             COMBAT_TOURNIQUET_PACK, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.HEAVY_AND_LIGHT, 70, "Applying Tourniquet...", "Heavy Bleed"));
+    private static final Map<ResourceLocation, FractureTreatmentUse> FRACTURE_TREATMENTS = Map.of(
+            STERILE_GAUZE_BRICK, new FractureTreatmentUse(90, "Splinting Fracture...", 0, true),
+            FIELD_MED_KIT, new FractureTreatmentUse(80, "Stabilizing Fracture...", 8, false),
+            TRAUMA_RESPONSE_CASE, new FractureTreatmentUse(70, "Stabilizing Fracture...", 6, false));
 
     private QuickUseService() {
     }
@@ -116,6 +130,7 @@ public final class QuickUseService {
         }
 
         SELECTED_ITEMS.put(player.getUUID(), id);
+        MANUAL_SELECTIONS.add(player.getUUID());
         player.sendSystemMessage(Component.literal("Selected " + source.item().displayName() + "."));
         syncOptions(player);
     }
@@ -167,7 +182,7 @@ public final class QuickUseService {
             return false;
         }
         ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId);
+        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId) || FRACTURE_TREATMENTS.containsKey(itemId);
     }
 
     public static GridMoveResult startFromContext(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
@@ -184,7 +199,7 @@ public final class QuickUseService {
         if (item == null) {
             return GridMoveResult.failure("Selected quick-use item not found.");
         }
-        if (!MEDICAL_USES.containsKey(item.itemId()) && !BLEED_TREATMENTS.containsKey(item.itemId())) {
+        if (!MEDICAL_USES.containsKey(item.itemId()) && !BLEED_TREATMENTS.containsKey(item.itemId()) && !FRACTURE_TREATMENTS.containsKey(item.itemId())) {
             return GridMoveResult.failure("Selected quick-use item not found.");
         }
         return startUse(player, item.itemId(), new QuickUseSource(source, sourceIndex, item));
@@ -252,6 +267,46 @@ public final class QuickUseService {
         return CompletionResult.success(message);
     }
 
+    public static CompletionResult completeFractureTreatment(ServerPlayer player, TimedAction action) {
+        SourceRef sourceRef = parseSource(action.sourceReference().orElse(""));
+        if (sourceRef == null) {
+            return CompletionResult.failure("Fracture treatment action data was invalid.");
+        }
+
+        FractureTreatmentValidation validation = validateFractureTreatment(player, sourceRef.slot(), sourceRef.index(), sourceRef.expectedLookupKey(), sourceRef.itemId());
+        if (!validation.success()) {
+            if (player != null) {
+                player.sendSystemMessage(Component.literal(validation.message()));
+            }
+            return CompletionResult.failure(validation.message());
+        }
+
+        if (!FractureStatusService.clear(player)) {
+            return CompletionResult.failure("No fracture to treat.");
+        }
+
+        RaidInventory inventory = RaidInventoryManager.get(player);
+        if (validation.use().consumeItem()) {
+            inventory.removeCountAt(sourceRef.slot(), sourceRef.index(), 1);
+        } else {
+            MedicalUse medicalUse = MEDICAL_USES.get(sourceRef.itemId());
+            ItemStack stack = validation.item().toItemStack();
+            MedicalCapacity capacity = getOrInitializeCapacity(stack, medicalUse);
+            int remaining = capacity.current() - validation.use().capacityCost();
+            if (remaining <= 0) {
+                inventory.removeCountAt(sourceRef.slot(), sourceRef.index(), 1);
+            } else {
+                writeCapacity(stack, remaining, medicalUse.healCapacity());
+                inventory.replaceItemAt(sourceRef.slot(), sourceRef.index(), validation.item().withStoredStack(stack));
+            }
+        }
+
+        String message = "Treated Fracture.";
+        player.sendSystemMessage(Component.literal(message));
+        syncOptions(player);
+        return CompletionResult.success(message);
+    }
+
     public static Optional<MedicalCapacity> capacityInfo(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return Optional.empty();
@@ -281,9 +336,18 @@ public final class QuickUseService {
         return use == null ? Optional.empty() : Optional.of(new BleedTreatmentInfo(use.treatsLabel(), use.durationTicks()));
     }
 
+    public static Optional<FractureTreatmentInfo> fractureTreatmentInfo(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return Optional.empty();
+        }
+        FractureTreatmentUse use = FRACTURE_TREATMENTS.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        return use == null ? Optional.empty() : Optional.of(new FractureTreatmentInfo(use.durationTicks(), use.capacityCost()));
+    }
+
     public static void clear(ServerPlayer player) {
         if (player != null) {
             SELECTED_ITEMS.remove(player.getUUID());
+            MANUAL_SELECTIONS.remove(player.getUUID());
         }
     }
 
@@ -301,21 +365,28 @@ public final class QuickUseService {
         }
 
         ResourceLocation selected = SELECTED_ITEMS.get(player.getUUID());
+        boolean manualSelection = MANUAL_SELECTIONS.contains(player.getUUID());
         BleedStatus bleedStatus = BleedStatusService.status(player);
-        if (selected != null && options.stream().anyMatch(option -> selected.toString().equals(option.itemId()))) {
-            return selected;
+        boolean fractured = FractureStatusService.fractured(player);
+        if (selected != null
+                && options.stream().anyMatch(option -> selected.toString().equals(option.itemId()))) {
+            if (manualSelection || isContextuallySelectable(selected, bleedStatus, fractured)) {
+                return selected;
+            }
         }
 
         ResourceLocation fallback = options.stream()
                 .map(option -> parseItemId(option.itemId()).orElse(null))
-                .filter(id -> id != null && (!isBleedTreatment(id) || bleedStatus.active()))
+                .filter(id -> id != null && isContextuallySelectable(id, bleedStatus, fractured))
                 .findFirst()
                 .orElse(null);
         if (fallback == null) {
             SELECTED_ITEMS.remove(player.getUUID());
+            MANUAL_SELECTIONS.remove(player.getUUID());
             return null;
         }
         SELECTED_ITEMS.put(player.getUUID(), fallback);
+        MANUAL_SELECTIONS.remove(player.getUUID());
         return fallback;
     }
 
@@ -329,8 +400,9 @@ public final class QuickUseService {
         collectOptions(options, inventory.vest());
         collectOptions(options, inventory.safeBox());
         BleedStatus bleedStatus = BleedStatusService.status(player);
+        boolean fractured = FractureStatusService.fractured(player);
         return options.values().stream()
-                .sorted(Comparator.comparingInt(option -> priority(ResourceLocation.parse(option.itemId()), bleedStatus)))
+                .sorted(Comparator.comparingInt(option -> priority(ResourceLocation.parse(option.itemId()), bleedStatus, fractured)))
                 .toList();
     }
 
@@ -369,12 +441,12 @@ public final class QuickUseService {
     }
 
     private static boolean isEligible(ResourceLocation itemId) {
-        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId) || repairTargetFor(itemId) != null;
+        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId) || FRACTURE_TREATMENTS.containsKey(itemId) || repairTargetFor(itemId) != null;
     }
 
     private static GridMoveResult startUse(ServerPlayer player, ResourceLocation selected, QuickUseSource source) {
         BleedTreatmentUse bleedTreatment = BLEED_TREATMENTS.get(selected);
-        if (bleedTreatment != null) {
+        if (bleedTreatment != null && BleedStatusService.status(player).active()) {
             BleedTreatmentValidation validation = validateBleedTreatment(player, source.slot(), source.index(), source.item().lookupKey(), selected);
             if (!validation.success()) {
                 return GridMoveResult.failure(validation.message());
@@ -392,6 +464,29 @@ public final class QuickUseService {
                 return GridMoveResult.failure(started.message());
             }
             String message = bleedTreatment.label() + " (" + ticksToSeconds(bleedTreatment.durationTicks()) + "s).";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.success(message);
+        }
+
+        FractureTreatmentUse fractureTreatment = FRACTURE_TREATMENTS.get(selected);
+        if (fractureTreatment != null && FractureStatusService.fractured(player)) {
+            FractureTreatmentValidation validation = validateFractureTreatment(player, source.slot(), source.index(), source.item().lookupKey(), selected);
+            if (!validation.success()) {
+                return GridMoveResult.failure(validation.message());
+            }
+            TimedActionService.StartResult started = TimedActionService.start(
+                    player,
+                    TimedActionType.TREAT_FRACTURE,
+                    fractureTreatment.durationTicks(),
+                    fractureTreatment.label(),
+                    true,
+                    false,
+                    Optional.of(sourceReference(source.slot(), source.index(), source.item().lookupKey(), selected)),
+                    Optional.empty());
+            if (!started.success()) {
+                return GridMoveResult.failure(started.message());
+            }
+            String message = fractureTreatment.label() + " (" + ticksToSeconds(fractureTreatment.durationTicks()) + "s).";
             player.sendSystemMessage(Component.literal(message));
             return GridMoveResult.success(message);
         }
@@ -417,6 +512,14 @@ public final class QuickUseService {
             String message = medicalUse.label() + " (" + ticksToSeconds(medicalUse.durationTicks()) + "s).";
             player.sendSystemMessage(Component.literal(message));
             return GridMoveResult.success(message);
+        }
+
+        if (fractureTreatment != null) {
+            return GridMoveResult.failure("No fracture to treat.");
+        }
+
+        if (bleedTreatment != null) {
+            return GridMoveResult.failure("No bleeding to treat.");
         }
 
         RaidEquipmentSlot target = repairTargetFor(selected);
@@ -476,6 +579,40 @@ public final class QuickUseService {
         return BleedTreatmentValidation.success(item, use);
     }
 
+    private static FractureTreatmentValidation validateFractureTreatment(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, String expectedLookupKey, ResourceLocation expectedItemId) {
+        if (player == null) {
+            return FractureTreatmentValidation.failure("No player.");
+        }
+        if (!RaidManager.isInRaid(player)) {
+            return FractureTreatmentValidation.failure("Quick-use is only available in raid.");
+        }
+        FractureTreatmentUse use = FRACTURE_TREATMENTS.get(expectedItemId);
+        if (use == null) {
+            return FractureTreatmentValidation.failure("Selected quick-use item not found.");
+        }
+        RaidInventoryItem item = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
+        if (item == null || !expectedItemId.equals(item.itemId()) || !expectedLookupKey.equals(item.lookupKey())) {
+            return FractureTreatmentValidation.failure("Selected quick-use item not found.");
+        }
+        if (!FractureStatusService.fractured(player)) {
+            return FractureTreatmentValidation.failure("No fracture to treat.");
+        }
+        if (!use.consumeItem()) {
+            MedicalUse medicalUse = MEDICAL_USES.get(expectedItemId);
+            if (medicalUse == null) {
+                return FractureTreatmentValidation.failure("Selected quick-use item not found.");
+            }
+            if (item.count() > 1) {
+                return FractureTreatmentValidation.failure("Medical kits must be unstacked before use.");
+            }
+            MedicalCapacity capacity = getOrInitializeCapacity(item.toItemStack(), medicalUse);
+            if (capacity.current() < use.capacityCost()) {
+                return FractureTreatmentValidation.failure("Not enough medical capacity.");
+            }
+        }
+        return FractureTreatmentValidation.success(item, use);
+    }
+
     private static MedicalCapacity getOrInitializeCapacity(ItemStack stack, MedicalUse use) {
         MedicalCapacity data = readCapacity(stack).orElse(new MedicalCapacity(use.healCapacity(), use.healCapacity()));
         int max = use.healCapacity();
@@ -530,14 +667,29 @@ public final class QuickUseService {
         return null;
     }
 
-    private static int priority(ResourceLocation itemId, BleedStatus bleedStatus) {
-        List<ResourceLocation> priority = switch (bleedStatus) {
-            case HEAVY -> HEAVY_BLEED_PRIORITY;
-            case LIGHT -> LIGHT_BLEED_PRIORITY;
-            case NONE -> DEFAULT_PRIORITY;
-        };
+    private static int priority(ResourceLocation itemId, BleedStatus bleedStatus, boolean fractured) {
+        List<ResourceLocation> priority;
+        if (bleedStatus == BleedStatus.HEAVY) {
+            priority = HEAVY_BLEED_PRIORITY;
+        } else if (bleedStatus == BleedStatus.LIGHT) {
+            priority = LIGHT_BLEED_PRIORITY;
+        } else if (fractured) {
+            priority = FRACTURE_PRIORITY;
+        } else {
+            priority = DEFAULT_PRIORITY;
+        }
         int index = priority.indexOf(itemId);
         return index < 0 ? Integer.MAX_VALUE : index;
+    }
+
+    private static boolean isContextuallySelectable(ResourceLocation itemId, BleedStatus bleedStatus, boolean fractured) {
+        if (isBleedTreatment(itemId) && bleedStatus.active()) {
+            return true;
+        }
+        if (FRACTURE_TREATMENTS.containsKey(itemId) && fractured) {
+            return true;
+        }
+        return MEDICAL_USES.containsKey(itemId) || repairTargetFor(itemId) != null;
     }
 
     private static boolean isBleedTreatment(ResourceLocation itemId) {
@@ -595,10 +747,16 @@ public final class QuickUseService {
     public record BleedTreatmentInfo(String treats, int useTimeTicks) {
     }
 
+    public record FractureTreatmentInfo(int useTimeTicks, int capacityCost) {
+    }
+
     private record MedicalUse(TimedActionType type, int healCapacity, int durationTicks, String label) {
     }
 
     private record BleedTreatmentUse(TimedActionType type, TreatmentStrength strength, int durationTicks, String label, String treatsLabel) {
+    }
+
+    private record FractureTreatmentUse(int durationTicks, String label, int capacityCost, boolean consumeItem) {
     }
 
     public record CompletionResult(boolean success, String message) {
@@ -628,6 +786,16 @@ public final class QuickUseService {
 
         private static BleedTreatmentValidation failure(String message) {
             return new BleedTreatmentValidation(false, message, null, null);
+        }
+    }
+
+    private record FractureTreatmentValidation(boolean success, String message, RaidInventoryItem item, FractureTreatmentUse use) {
+        private static FractureTreatmentValidation success(RaidInventoryItem item, FractureTreatmentUse use) {
+            return new FractureTreatmentValidation(true, "", item, use);
+        }
+
+        private static FractureTreatmentValidation failure(String message) {
+            return new FractureTreatmentValidation(false, message, null, null);
         }
     }
 }

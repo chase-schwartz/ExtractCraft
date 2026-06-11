@@ -27,6 +27,7 @@ public class ClientRaidState {
         vanillaInventoryBypass = false;
         ClientArmorMitigationState.clear();
         ClientBleedState.clear();
+        ClientFractureState.clear();
         ClientQuickUseState.clear();
         ClientTimedActionState.clear();
     }

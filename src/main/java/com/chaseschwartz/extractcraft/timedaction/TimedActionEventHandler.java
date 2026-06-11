@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft.timedaction;
 
 import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
 import com.chaseschwartz.extractcraft.raid.BleedStatusService;
+import com.chaseschwartz.extractcraft.raid.FractureStatusService;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 
 import net.minecraft.server.level.ServerPlayer;
@@ -17,6 +18,7 @@ public class TimedActionEventHandler {
     public void onServerPostTick(ServerTickEvent.Post event) {
         TimedActionService.tick(event.getServer());
         BleedStatusService.tick(event.getServer());
+        FractureStatusService.tick(event.getServer());
     }
 
     @SubscribeEvent
@@ -42,6 +44,7 @@ public class TimedActionEventHandler {
                         player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Action canceled."));
                     });
             BleedStatusService.rollForDamage(player, event.getNewDamage());
+            FractureStatusService.rollForDamage(player, event.getSource(), event.getNewDamage());
         }
     }
 
@@ -49,6 +52,7 @@ public class TimedActionEventHandler {
     public void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TimedActionService.cancel(player, "Action canceled.");
+            FractureStatusService.clear(player);
         }
     }
 
@@ -56,11 +60,13 @@ public class TimedActionEventHandler {
     public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             TimedActionService.cancel(player, "Action canceled.");
+            FractureStatusService.clear(player);
         }
     }
 
     @SubscribeEvent
     public void onServerStopped(ServerStoppedEvent event) {
         TimedActionService.cancelAll(event.getServer(), "Action canceled.");
+        FractureStatusService.clearAll(event.getServer());
     }
 }

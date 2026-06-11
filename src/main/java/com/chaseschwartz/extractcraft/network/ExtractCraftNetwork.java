@@ -31,6 +31,8 @@ public class ExtractCraftNetwork {
                 com.chaseschwartz.extractcraft.client.ClientBleedState.handleSync(payload));
         registrar.playToClient(ArmorMitigationSyncPayload.TYPE, ArmorMitigationSyncPayload.STREAM_CODEC, (payload, context) ->
                 com.chaseschwartz.extractcraft.client.ClientArmorMitigationState.handleSync(payload));
+        registrar.playToClient(FractureStateSyncPayload.TYPE, FractureStateSyncPayload.STREAM_CODEC, (payload, context) ->
+                com.chaseschwartz.extractcraft.client.ClientFractureState.handleSync(payload));
         registrar.playToClient(GridMoveResultPayload.TYPE, GridMoveResultPayload.STREAM_CODEC, (payload, context) ->
                 GridMoveClientState.handleResult(payload));
         registrar.playToClient(TimedActionSyncPayload.TYPE, TimedActionSyncPayload.STREAM_CODEC, (payload, context) ->
