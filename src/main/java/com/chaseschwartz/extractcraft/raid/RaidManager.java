@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
 import com.chaseschwartz.extractcraft.gameplay.ExtractCraftGameplayRulesHandler;
 import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 import com.chaseschwartz.extractcraft.raid.inventory.PostRaidResultScreenOpener;
@@ -62,6 +63,7 @@ public class RaidManager {
             player.sendSystemMessage(Component.literal("Raid mode: switched to survival to prevent creative/infinite-ammo behavior."));
         }
         ExtractCraftNetwork.syncRaidState(player, true);
+        RaidDamageMitigationService.sync(player);
         QuickUseService.syncOptions(player);
         ExtractCraft.LOGGER.info("Started test raid timer for {}; expires at game time {}", player.getGameProfile().getName(), expiresAtGameTime);
     }

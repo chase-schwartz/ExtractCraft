@@ -1,0 +1,66 @@
+[
+    {
+        "item_id":  "extractcraft:scrapline_helmet",
+        "type":  "helmet",
+        "tier":  1,
+        "mitigation_percent":  5,
+        "durability_loss_multiplier":  2,
+        "max_durability":  80
+    },
+    {
+        "item_id":  "extractcraft:ranger_ballistic_helmet",
+        "type":  "helmet",
+        "tier":  2,
+        "mitigation_percent":  8,
+        "durability_loss_multiplier":  2,
+        "max_durability":  120
+    },
+    {
+        "item_id":  "extractcraft:vector_rail_helmet",
+        "type":  "helmet",
+        "tier":  3,
+        "mitigation_percent":  11,
+        "durability_loss_multiplier":  2,
+        "max_durability":  170
+    },
+    {
+        "item_id":  "extractcraft:apex_assault_helmet",
+        "type":  "helmet",
+        "tier":  4,
+        "mitigation_percent":  15,
+        "durability_loss_multiplier":  2,
+        "max_durability":  230
+    },
+    {
+        "item_id":  "extractcraft:softshell_plate_carrier",
+        "type":  "armor",
+        "tier":  1,
+        "mitigation_percent":  15,
+        "durability_loss_multiplier":  3,
+        "max_durability":  120
+    },
+    {
+        "item_id":  "extractcraft:bulwark_plate_carrier",
+        "type":  "armor",
+        "tier":  2,
+        "mitigation_percent":  25,
+        "durability_loss_multiplier":  3,
+        "max_durability":  180
+    },
+    {
+        "item_id":  "extractcraft:warden_combat_armor",
+        "type":  "armor",
+        "tier":  3,
+        "mitigation_percent":  35,
+        "durability_loss_multiplier":  3,
+        "max_durability":  260
+    },
+    {
+        "item_id":  "extractcraft:juggernaut_assault_armor",
+        "type":  "armor",
+        "tier":  4,
+        "mitigation_percent":  45,
+        "durability_loss_multiplier":  3,
+        "max_durability":  360
+    }
+]

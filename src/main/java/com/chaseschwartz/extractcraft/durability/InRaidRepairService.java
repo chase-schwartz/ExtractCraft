@@ -141,6 +141,7 @@ public final class InRaidRepairService {
         if (player.containerMenu instanceof ActiveLootContainerMenu menu) {
             menu.refreshRaidDisplay();
         }
+        RaidDamageMitigationService.sync(player);
         String message = "Repaired " + validation.targetItem().displayName()
                 + ". Max condition is now " + validation.newCurrentMax()
                 + "/" + targetData.pristineMaxDurability()

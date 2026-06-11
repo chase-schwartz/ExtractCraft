@@ -16,6 +16,9 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.durability.DurabilityData;
 import com.chaseschwartz.extractcraft.durability.DurabilityProfile;
 import com.chaseschwartz.extractcraft.durability.DurabilityService;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService.GearStatus;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService.MitigationStatus;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentity;
 import com.chaseschwartz.extractcraft.itemidentity.ItemIdentityResolver;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
@@ -140,6 +143,10 @@ public class RaidInventoryCommands {
                                 .then(Commands.literal("clear")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> debugBleedClear(context.getSource()))))
+                        .then(Commands.literal("mitigation")
+                                .then(Commands.literal("status")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugMitigationStatus(context.getSource()))))
                         .then(Commands.literal("givegun")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("gun", StringArgumentType.word())
@@ -593,6 +600,27 @@ public class RaidInventoryCommands {
         return cleared ? 1 : 0;
     }
 
+    private static int debugMitigationStatus(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        MitigationStatus status = RaidDamageMitigationService.status(player);
+        player.sendSystemMessage(Component.literal("ExtractCraft mitigation status"
+                + (RaidManager.isInRaid(player) ? " (active raid)" : " (base/kitting)") + ":"));
+        sendMitigationLine(player, "Armor", status.armor());
+        sendMitigationLine(player, "Helmet", status.helmet());
+        player.sendSystemMessage(Component.literal("Combined mitigation: " + status.combinedPercent() + "%"));
+        return 1;
+    }
+
+    private static void sendMitigationLine(ServerPlayer player, String label, GearStatus gear) {
+        player.sendSystemMessage(Component.literal(label + ": "
+                + gear.itemName()
+                + " | tier " + gear.tier()
+                + " | durability " + gear.currentDurability() + "/" + gear.currentMaxDurability()
+                + " | pristine max " + gear.pristineMaxDurability()
+                + " | mitigation " + gear.mitigationPercent() + "%"
+                + " | durability loss x" + gear.durabilityLossMultiplier()));
+    }
+
     private static int debugDurabilityHeld(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         ItemStack stack = player.getMainHandItem();
@@ -757,6 +785,10 @@ public class RaidInventoryCommands {
                     + " " + actionName + ": " + item.displayName()
                     + " | " + DurabilityService.summary(data)));
             successes++;
+        }
+
+        if (successes > 0) {
+            RaidDamageMitigationService.sync(player);
         }
 
         return successes > 0 ? 1 : 0;

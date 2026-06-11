@@ -1,6 +1,8 @@
 package com.chaseschwartz.extractcraft.timedaction;
 
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
 import com.chaseschwartz.extractcraft.raid.BleedStatusService;
+import com.chaseschwartz.extractcraft.raid.RaidManager;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -15,6 +17,16 @@ public class TimedActionEventHandler {
     public void onServerPostTick(ServerTickEvent.Post event) {
         TimedActionService.tick(event.getServer());
         BleedStatusService.tick(event.getServer());
+    }
+
+    @SubscribeEvent
+    public void onLivingDamagePre(LivingDamageEvent.Pre event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && event.getNewDamage() > 0.0F
+                && RaidManager.isInRaid(player)
+                && !BleedStatusService.isApplyingBleedDamage()) {
+            event.setNewDamage(RaidDamageMitigationService.mitigate(player, event.getSource(), event.getNewDamage()));
+        }
     }
 
     @SubscribeEvent

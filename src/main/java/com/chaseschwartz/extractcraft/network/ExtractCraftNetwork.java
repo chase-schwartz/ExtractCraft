@@ -2,6 +2,7 @@ package com.chaseschwartz.extractcraft.network;
 
 import com.chaseschwartz.extractcraft.client.ClientRaidState;
 import com.chaseschwartz.extractcraft.client.ClientTimedActionState;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
 import com.chaseschwartz.extractcraft.client.GridMoveClientState;
 import com.chaseschwartz.extractcraft.raid.containers.ActiveLootContainerMenu;
 import com.chaseschwartz.extractcraft.raid.inventory.BaseStashMenu;
@@ -28,6 +29,8 @@ public class ExtractCraftNetwork {
                 ClientRaidState.setInRaid(payload.inRaid()));
         registrar.playToClient(BleedStateSyncPayload.TYPE, BleedStateSyncPayload.STREAM_CODEC, (payload, context) ->
                 com.chaseschwartz.extractcraft.client.ClientBleedState.handleSync(payload));
+        registrar.playToClient(ArmorMitigationSyncPayload.TYPE, ArmorMitigationSyncPayload.STREAM_CODEC, (payload, context) ->
+                com.chaseschwartz.extractcraft.client.ClientArmorMitigationState.handleSync(payload));
         registrar.playToClient(GridMoveResultPayload.TYPE, GridMoveResultPayload.STREAM_CODEC, (payload, context) ->
                 GridMoveClientState.handleResult(payload));
         registrar.playToClient(TimedActionSyncPayload.TYPE, TimedActionSyncPayload.STREAM_CODEC, (payload, context) ->
@@ -46,6 +49,7 @@ public class ExtractCraftNetwork {
         });
         registrar.playToServer(OpenBaseStashInventoryPayload.TYPE, OpenBaseStashInventoryPayload.STREAM_CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player && !RaidManager.isInRaid(player)) {
+                RaidDamageMitigationService.sync(player);
                 BaseStashScreenOpener.open(player);
             }
         });
@@ -85,6 +89,9 @@ public class ExtractCraftNetwork {
                 GridMoveResult result = handleGridMoveRequest(player, payload);
                 PacketDistributor.sendToPlayer(player, new GridMoveResultPayload(payload.transactionId(), result.success(), result.message()));
                 QuickUseService.syncOptions(player);
+                if (result.success()) {
+                    RaidDamageMitigationService.sync(player);
+                }
             }
         });
         registrar.playToServer(BulkBaseInventoryActionPayload.TYPE, BulkBaseInventoryActionPayload.STREAM_CODEC, (payload, context) -> {
@@ -127,5 +134,6 @@ public class ExtractCraftNetwork {
 
     public static void syncRaidState(ServerPlayer player, boolean inRaid) {
         PacketDistributor.sendToPlayer(player, new RaidStateSyncPayload(inRaid));
+        RaidDamageMitigationService.sync(player);
     }
 }

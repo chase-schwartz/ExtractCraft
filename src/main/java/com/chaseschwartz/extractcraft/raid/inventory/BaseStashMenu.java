@@ -9,6 +9,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.durability.PaidRepairService;
 import com.chaseschwartz.extractcraft.durability.PaidRepairService.RepairEstimate;
 import com.chaseschwartz.extractcraft.durability.PaidRepairService.RepairResult;
+import com.chaseschwartz.extractcraft.durability.RaidDamageMitigationService;
 import com.chaseschwartz.extractcraft.itemidentity.ItemStackVariantFactory;
 import com.chaseschwartz.extractcraft.itemvalues.ItemCategory;
 
@@ -637,6 +638,7 @@ public class BaseStashMenu extends AbstractContainerMenu {
         stashData.setCredits(stashData.credits() - estimate.cost());
         player.sendSystemMessage(Component.literal("Repaired " + item.displayName() + " for " + estimate.cost()
                 + " cr. Max condition is now " + estimate.predictedCurrentMax() + "/" + estimate.pristineMaxDurability() + "."));
+        RaidDamageMitigationService.sync(player);
         if (!stashSource) {
             reopenIfEquipmentMove(source, null);
         }
