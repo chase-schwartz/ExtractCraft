@@ -6,6 +6,8 @@ public final class ClientArmorMitigationState {
     private static int armorPercent;
     private static int helmetPercent;
     private static int combinedPercent;
+    private static int pulseSequence;
+    private static long lastPulseMillis;
 
     private ClientArmorMitigationState() {
     }
@@ -14,6 +16,10 @@ public final class ClientArmorMitigationState {
         armorPercent = payload.armorPercent();
         helmetPercent = payload.helmetPercent();
         combinedPercent = payload.combinedPercent();
+        if (payload.pulseSequence() > 0 && payload.pulseSequence() != pulseSequence) {
+            pulseSequence = payload.pulseSequence();
+            lastPulseMillis = net.minecraft.Util.getMillis();
+        }
     }
 
     public static int armorPercent() {
@@ -28,9 +34,15 @@ public final class ClientArmorMitigationState {
         return combinedPercent;
     }
 
+    public static long lastPulseMillis() {
+        return lastPulseMillis;
+    }
+
     public static void clear() {
         armorPercent = 0;
         helmetPercent = 0;
         combinedPercent = 0;
+        pulseSequence = 0;
+        lastPulseMillis = 0L;
     }
 }

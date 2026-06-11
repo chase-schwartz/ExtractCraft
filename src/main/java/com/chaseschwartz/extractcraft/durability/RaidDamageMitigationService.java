@@ -11,6 +11,8 @@ import com.chaseschwartz.extractcraft.network.ArmorMitigationSyncPayload;
 import com.chaseschwartz.extractcraft.raid.inventory.PlayerStashService;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +24,8 @@ public final class RaidDamageMitigationService {
 
     private static final double[] ARMOR_MITIGATION_BY_TIER = {0.0D, 0.15D, 0.25D, 0.35D, 0.45D};
     private static final double[] HELMET_MITIGATION_BY_TIER = {0.0D, 0.05D, 0.08D, 0.11D, 0.15D};
+    private static final double[] WARNING_THRESHOLDS = {0.50D, 0.25D, 0.10D};
+    private static int pulseSequence;
 
     private RaidDamageMitigationService() {
     }
@@ -47,9 +51,11 @@ public final class RaidDamageMitigationService {
                 HELMET_MITIGATION_BY_TIER,
                 HELMET_DURABILITY_LOSS_MULTIPLIER);
 
+        boolean absorbed = armorResult.absorbedDamage() > 0.0F || helmetResult.absorbedDamage() > 0.0F;
         if (armorResult.changed() || helmetResult.changed()) {
             player.containerMenu.broadcastChanges();
-            sync(player);
+            sync(player, absorbed);
+            playDurabilityEventSound(player, mostSevere(armorResult.durabilityEvent(), helmetResult.durabilityEvent()));
         }
         return Math.max(0.0F, helmetResult.damage());
     }
@@ -83,6 +89,10 @@ public final class RaidDamageMitigationService {
     }
 
     public static void sync(ServerPlayer player) {
+        sync(player, false);
+    }
+
+    private static void sync(ServerPlayer player, boolean pulse) {
         if (player == null) {
             return;
         }
@@ -90,7 +100,8 @@ public final class RaidDamageMitigationService {
         PacketDistributor.sendToPlayer(player, new ArmorMitigationSyncPayload(
                 percent(status.armor().mitigation()),
                 percent(status.helmet().mitigation()),
-                percent(status.combinedMitigation())));
+                percent(status.combinedMitigation()),
+                pulse ? ++pulseSequence : 0));
     }
 
     public static void clearSync(ServerPlayer player) {
@@ -123,32 +134,65 @@ public final class RaidDamageMitigationService {
             double[] mitigationByTier,
             double durabilityLossMultiplier) {
         if (incomingDamage <= 0.0F) {
-            return new MitigationResult(incomingDamage, false);
+            return MitigationResult.empty(incomingDamage);
         }
 
         RaidInventoryItem item = inventory.equipmentItem(slot);
         if (item == null) {
-            return new MitigationResult(incomingDamage, false);
+            return MitigationResult.empty(incomingDamage);
         }
 
         ItemStack stack = item.toItemStack();
         DurabilityProfile profile = DurabilityService.profileFor(stack).orElse(null);
         DurabilityData data = DurabilityService.getOrInitialize(stack).orElse(null);
         if (profile == null || data == null || !expectedType.equals(normalizeType(data.type())) || data.currentDurability() <= 0) {
-            return new MitigationResult(incomingDamage, false);
+            return MitigationResult.empty(incomingDamage);
         }
 
         double mitigation = mitigationForTier(mitigationByTier, profile.tier());
         if (mitigation <= 0.0D) {
-            return new MitigationResult(incomingDamage, false);
+            return MitigationResult.empty(incomingDamage);
         }
 
         float absorbedDamage = (float) (incomingDamage * mitigation);
         float reducedDamage = Math.max(0.0F, incomingDamage - absorbedDamage);
         int durabilityLoss = Math.max(1, (int) Math.ceil(absorbedDamage * durabilityLossMultiplier));
-        DurabilityService.damage(stack, durabilityLoss);
+        int oldDurability = data.currentDurability();
+        int currentMax = Math.max(1, data.currentMaxDurability());
+        DurabilityData damaged = DurabilityService.damage(stack, durabilityLoss).orElse(data);
+        DurabilityEvent durabilityEvent = durabilityEvent(oldDurability, damaged.currentDurability(), currentMax);
         inventory.setEquipmentSlot(slot, item.withStoredStack(stack));
-        return new MitigationResult(reducedDamage, true);
+        return new MitigationResult(reducedDamage, true, absorbedDamage, durabilityEvent);
+    }
+
+    private static DurabilityEvent durabilityEvent(int oldDurability, int newDurability, int currentMax) {
+        if (oldDurability > 0 && newDurability <= 0) {
+            return DurabilityEvent.BROKEN;
+        }
+        double oldRatio = oldDurability / (double) currentMax;
+        double newRatio = Math.max(0, newDurability) / (double) currentMax;
+        for (int i = WARNING_THRESHOLDS.length - 1; i >= 0; i--) {
+            double threshold = WARNING_THRESHOLDS[i];
+            if (oldRatio > threshold && newRatio <= threshold && newDurability > 0) {
+                return DurabilityEvent.threshold(i);
+            }
+        }
+        return DurabilityEvent.NONE;
+    }
+
+    private static DurabilityEvent mostSevere(DurabilityEvent first, DurabilityEvent second) {
+        return first.severity() >= second.severity() ? first : second;
+    }
+
+    private static void playDurabilityEventSound(ServerPlayer player, DurabilityEvent event) {
+        if (event == DurabilityEvent.NONE) {
+            return;
+        }
+        if (event == DurabilityEvent.BROKEN) {
+            player.playNotifySound(SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.65F, 0.82F + player.getRandom().nextFloat() * 0.1F);
+            return;
+        }
+        player.playNotifySound(SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 0.22F, 1.45F + player.getRandom().nextFloat() * 0.18F);
     }
 
     private static GearStatus gearStatus(RaidInventoryItem item, String expectedType, double[] mitigationByTier, double durabilityLossMultiplier) {
@@ -192,7 +236,36 @@ public final class RaidDamageMitigationService {
         return type == null ? "" : type.trim().toLowerCase(Locale.ROOT);
     }
 
-    private record MitigationResult(float damage, boolean changed) {
+    private record MitigationResult(float damage, boolean changed, float absorbedDamage, DurabilityEvent durabilityEvent) {
+        private static MitigationResult empty(float damage) {
+            return new MitigationResult(damage, false, 0.0F, DurabilityEvent.NONE);
+        }
+    }
+
+    private enum DurabilityEvent {
+        NONE(0),
+        THRESHOLD_50(1),
+        THRESHOLD_25(2),
+        THRESHOLD_10(3),
+        BROKEN(4);
+
+        private final int severity;
+
+        DurabilityEvent(int severity) {
+            this.severity = severity;
+        }
+
+        private int severity() {
+            return severity;
+        }
+
+        private static DurabilityEvent threshold(int index) {
+            return switch (index) {
+                case 0 -> THRESHOLD_50;
+                case 1 -> THRESHOLD_25;
+                default -> THRESHOLD_10;
+            };
+        }
     }
 
     public record MitigationStatus(GearStatus armor, GearStatus helmet, double combinedMitigation) {

@@ -7,13 +7,17 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-public record ArmorMitigationSyncPayload(int armorPercent, int helmetPercent, int combinedPercent) implements CustomPacketPayload {
+public record ArmorMitigationSyncPayload(int armorPercent, int helmetPercent, int combinedPercent, int pulseSequence) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ArmorMitigationSyncPayload> TYPE = new CustomPacketPayload.Type<>(
             ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "armor_mitigation_sync"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ArmorMitigationSyncPayload> STREAM_CODEC = CustomPacketPayload.codec(ArmorMitigationSyncPayload::write, ArmorMitigationSyncPayload::new);
 
     private ArmorMitigationSyncPayload(RegistryFriendlyByteBuf buffer) {
-        this(buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt());
+        this(buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt());
+    }
+
+    public ArmorMitigationSyncPayload(int armorPercent, int helmetPercent, int combinedPercent) {
+        this(armorPercent, helmetPercent, combinedPercent, 0);
     }
 
     public ArmorMitigationSyncPayload {
@@ -26,6 +30,7 @@ public record ArmorMitigationSyncPayload(int armorPercent, int helmetPercent, in
         buffer.writeVarInt(armorPercent);
         buffer.writeVarInt(helmetPercent);
         buffer.writeVarInt(combinedPercent);
+        buffer.writeVarInt(pulseSequence);
     }
 
     @Override
