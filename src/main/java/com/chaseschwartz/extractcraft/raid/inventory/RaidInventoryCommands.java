@@ -13,6 +13,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.ai.ExtractRaiderEntity;
+import com.chaseschwartz.extractcraft.ai.RaiderDebugService;
 import com.chaseschwartz.extractcraft.durability.DurabilityData;
 import com.chaseschwartz.extractcraft.durability.DurabilityProfile;
 import com.chaseschwartz.extractcraft.durability.DurabilityService;
@@ -158,6 +160,12 @@ public class RaidInventoryCommands {
                                 .then(Commands.literal("status")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> debugMitigationStatus(context.getSource()))))
+                        .then(Commands.literal("spawnraider")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugSpawnRaider(context.getSource())))
+                        .then(Commands.literal("clearraiders")
+                                .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                .executes(context -> debugClearRaiders(context.getSource())))
                         .then(Commands.literal("givegun")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("gun", StringArgumentType.word())
@@ -646,6 +654,29 @@ public class RaidInventoryCommands {
         sendMitigationLine(player, "Helmet", status.helmet());
         player.sendSystemMessage(Component.literal("Combined mitigation: " + status.combinedPercent() + "%"));
         return 1;
+    }
+
+    private static int debugSpawnRaider(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        ExtractRaiderEntity raider = RaiderDebugService.spawnNear(player);
+        if (raider == null) {
+            player.sendSystemMessage(Component.literal("Failed to spawn ExtractCraft raider."));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal("Spawned ExtractCraft raider "
+                + raider.getUUID()
+                + " at "
+                + String.format(Locale.ROOT, "%.1f %.1f %.1f", raider.getX(), raider.getY(), raider.getZ())));
+        ExtractCraft.LOGGER.info("{} executed /extractcraft debug spawnraider", player.getGameProfile().getName());
+        return 1;
+    }
+
+    private static int debugClearRaiders(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        int removed = RaiderDebugService.clear(player.serverLevel());
+        player.sendSystemMessage(Component.literal("Removed " + removed + " ExtractCraft raider(s) from this level."));
+        ExtractCraft.LOGGER.info("{} executed /extractcraft debug clearraiders; removed {}", player.getGameProfile().getName(), removed);
+        return removed;
     }
 
     private static void sendMitigationLine(ServerPlayer player, String label, GearStatus gear) {

@@ -6,6 +6,7 @@
   "block.extractcraft.loot_marker": "Loot Marker",
   "block.extractcraft.rare_loot_marker": "Rare Loot Marker",
   "block.extractcraft.mob_spawn_marker": "Mob Spawn Marker",
+  "entity.extractcraft.extract_raider": "Extract Raider",
   "item.extractcraft.example_item": "Example Item",
   "extractcraft.configuration.title": "ExtractCraft Configs",
   "extractcraft.configuration.section.extractcraft.common.toml": "ExtractCraft Configs",

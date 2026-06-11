@@ -5,6 +5,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
@@ -24,5 +25,11 @@ public class ExtractCraftClientModEvents {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(com.chaseschwartz.extractcraft.ExtractCraftClient.QUICK_USE_KEY);
+    }
+
+    @SubscribeEvent
+    public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ExtractCraft.EXTRACT_RAIDER.get(), ExtractRaiderRenderer::new);
+        ExtractCraft.LOGGER.info("Registered ExtractCraft raider renderer");
     }
 }

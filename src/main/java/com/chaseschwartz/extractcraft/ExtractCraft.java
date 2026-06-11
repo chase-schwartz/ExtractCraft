@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.chaseschwartz.extractcraft.ai.ExtractRaiderEntity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueCommands;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.ExtractCraftItemMetadata;
@@ -33,7 +34,10 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
@@ -55,6 +59,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.network.IContainerFactory;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -76,6 +81,7 @@ public class ExtractCraft {
     // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "extractcraft" namespace
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MODID);
+    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(Registries.ENTITY_TYPE, MODID);
     public static final List<DeferredItem<Item>> PROFILED_ITEMS = new ArrayList<>();
 
     // Creates a new Block with the id "extractcraft:example_block", combining the namespace and path
@@ -100,6 +106,12 @@ public class ExtractCraft {
             () -> new MenuType<>((IContainerFactory<BaseStashMenu>) BaseStashMenu::new, FeatureFlags.VANILLA_SET));
     public static final DeferredHolder<MenuType<?>, MenuType<PostRaidResultMenu>> POST_RAID_RESULT_MENU = MENUS.register("post_raid_result",
             () -> new MenuType<>((IContainerFactory<PostRaidResultMenu>) PostRaidResultMenu::new, FeatureFlags.VANILLA_SET));
+    public static final DeferredHolder<EntityType<?>, EntityType<ExtractRaiderEntity>> EXTRACT_RAIDER = ENTITY_TYPES.register("extract_raider",
+            () -> EntityType.Builder.of(ExtractRaiderEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F)
+                    .eyeHeight(1.74F)
+                    .clientTrackingRange(8)
+                    .build(ResourceLocation.fromNamespaceAndPath(MODID, "extract_raider").toString()));
 
     // Creates a new food item with the id "extractcraft:example_id", nutrition 1 and saturation 2
     public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
@@ -291,6 +303,8 @@ public class ExtractCraft {
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
         MENUS.register(modEventBus);
+        ENTITY_TYPES.register(modEventBus);
+        modEventBus.addListener(this::registerEntityAttributes);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExtractCraft) to respond directly to events.
@@ -322,6 +336,7 @@ public class ExtractCraft {
         LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
 
         Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
+        LOGGER.info("Registered ExtractCraft entity type {}", BuiltInRegistries.ENTITY_TYPE.getKey(EXTRACT_RAIDER.get()));
     }
 
     private static DeferredBlock<Block> registerMarkerBlock(String id, MapColor mapColor) {
@@ -353,6 +368,11 @@ public class ExtractCraft {
         RaidMapCommands.register(event.getDispatcher());
         ItemValueCommands.register(event.getDispatcher());
         RaidInventoryCommands.register(event.getDispatcher());
+    }
+
+    private void registerEntityAttributes(EntityAttributeCreationEvent event) {
+        event.put(EXTRACT_RAIDER.get(), ExtractRaiderEntity.createAttributes().build());
+        LOGGER.info("Registered ExtractCraft entity attributes for {}", BuiltInRegistries.ENTITY_TYPE.getKey(EXTRACT_RAIDER.get()));
     }
 
     @SubscribeEvent

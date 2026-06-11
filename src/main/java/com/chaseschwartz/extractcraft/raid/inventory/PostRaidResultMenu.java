@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.chaseschwartz.extractcraft.ExtractCraft;
+import com.chaseschwartz.extractcraft.network.ExtractCraftNetwork;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -40,6 +41,7 @@ public class PostRaidResultMenu extends AbstractContainerMenu {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return true;
         }
+        ExtractCraftNetwork.syncRaidState(serverPlayer, false);
 
         if (id == MOVE_ALL_TO_STASH_BUTTON) {
             if (RaidResultService.movePendingToStash(serverPlayer)) {

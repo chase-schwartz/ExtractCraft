@@ -84,6 +84,12 @@ public class PostRaidResultScreen extends AbstractContainerScreen<PostRaidResult
     }
 
     @Override
+    public void removed() {
+        ClientRaidState.clearAllRaidUiState();
+        super.removed();
+    }
+
+    @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderItemOverlays(guiGraphics);
