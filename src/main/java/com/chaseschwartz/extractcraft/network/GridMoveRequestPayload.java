@@ -28,6 +28,7 @@ public record GridMoveRequestPayload(int transactionId, int menuId, int operatio
     public static final int BASE_BASE_SPLIT = 18;
     public static final int BASE_CARRIED_TO_STASH_CELL = 19;
     public static final int BASE_CARRIED_TO_BASE_CELL = 20;
+    public static final int ACTIVE_RAID_USE = 21;
 
     public static final CustomPacketPayload.Type<GridMoveRequestPayload> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "grid_move_request"));
     public static final StreamCodec<RegistryFriendlyByteBuf, GridMoveRequestPayload> STREAM_CODEC = CustomPacketPayload.codec(GridMoveRequestPayload::write, GridMoveRequestPayload::new);

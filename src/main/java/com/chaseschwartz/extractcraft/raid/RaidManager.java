@@ -50,6 +50,7 @@ public class RaidManager {
     }
 
     public static void startRaid(ServerPlayer player, List<UUID> raidMobIds, RaidMapDefinition raidMap) {
+        BleedStatusService.clear(player);
         long expiresAtGameTime = player.server.overworld().getGameTime() + raidMap.raidDurationTicks();
         GameType previousGameMode = player.gameMode.getGameModeForPlayer();
         ACTIVE_RAIDS.put(player.getUUID(), new RaidState(player.serverLevel().dimension(), player.position(), player.getYRot(), player.getXRot(),
@@ -73,7 +74,11 @@ public class RaidManager {
         TimedActionService.cancel(playerId, server, "Action canceled.");
         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
         if (player != null) {
+            BleedStatusService.clear(player);
             QuickUseService.clear(player);
+        }
+        if (player == null) {
+            BleedStatusService.clear(playerId, server);
         }
         cleanupRaidMobs(server, ACTIVE_RAIDS.remove(playerId), "player state clear");
         cleanupRaidMobs(server, PENDING_FAILED_RETURNS.remove(playerId), "player state clear");
@@ -85,7 +90,11 @@ public class RaidManager {
         TimedActionService.cancel(playerId, server, "Action canceled.");
         ServerPlayer player = server.getPlayerList().getPlayer(playerId);
         if (player != null) {
+            BleedStatusService.clear(player);
             QuickUseService.clear(player);
+        }
+        if (player == null) {
+            BleedStatusService.clear(playerId, server);
         }
         RaidState activeRaid = ACTIVE_RAIDS.remove(playerId);
         RaidState pendingFailedReturn = PENDING_FAILED_RETURNS.remove(playerId);
@@ -104,6 +113,7 @@ public class RaidManager {
 
     public static int clearAll(MinecraftServer server) {
         TimedActionService.cancelAll(server, "Action canceled.");
+        BleedStatusService.clearAll(server);
         int clearedCount = ACTIVE_RAIDS.size() + PENDING_FAILED_RETURNS.size();
         ACTIVE_RAIDS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
         PENDING_FAILED_RETURNS.keySet().forEach(playerId -> syncRaidStateIfOnline(server, playerId, false));
@@ -118,6 +128,7 @@ public class RaidManager {
 
     public static boolean failRaid(ServerPlayer player) {
         TimedActionService.cancel(player, "Action canceled.");
+        BleedStatusService.clear(player);
         RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
         if (raidState == null) {
             return false;
@@ -173,6 +184,7 @@ public class RaidManager {
 
     public static boolean failRaidAndReturnNow(ServerPlayer player, String reason) {
         TimedActionService.cancel(player, "Action canceled.");
+        BleedStatusService.clear(player);
         RaidState raidState = ACTIVE_RAIDS.remove(player.getUUID());
         if (raidState == null) {
             return false;
@@ -255,6 +267,7 @@ public class RaidManager {
         }
 
         TimedActionService.cancel(player, "Action canceled.");
+        BleedStatusService.clear(player);
         cleanupRaidMobs(player.server, raidState, "successful extraction");
         RaidWeaponService.syncAndClearBridge(player);
         RaidWeightService.clear(player);

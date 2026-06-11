@@ -47,6 +47,7 @@ public class ExtractCraftProfiledItem extends Item {
                     + metadata.maxDurability().map(value -> " (" + value + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
         appendMedicalCapacity(stack, tooltip);
+        appendBleedTreatment(stack, tooltip);
         if (metadata.fixesBleed() || metadata.fixesBrokenBone()) {
             tooltip.add(Component.literal("Treatment: "
                     + (metadata.fixesBleed() ? "Bleed" : "")
@@ -69,6 +70,13 @@ public class ExtractCraftProfiledItem extends Item {
             tooltip.add(Component.literal("Heal Capacity: " + capacity.current() + " / " + capacity.max()).withStyle(ChatFormatting.GREEN));
             QuickUseService.useTimeTicks(stack)
                     .ifPresent(ticks -> tooltip.add(Component.literal("Use Time: " + ticks + " ticks").withStyle(ChatFormatting.GREEN)));
+        });
+    }
+
+    private static void appendBleedTreatment(ItemStack stack, List<Component> tooltip) {
+        QuickUseService.bleedTreatmentInfo(stack).ifPresent(info -> {
+            tooltip.add(Component.literal("Treats: " + info.treats()).withStyle(ChatFormatting.GREEN));
+            tooltip.add(Component.literal("Use Time: " + info.useTimeTicks() + " ticks").withStyle(ChatFormatting.GREEN));
         });
     }
 

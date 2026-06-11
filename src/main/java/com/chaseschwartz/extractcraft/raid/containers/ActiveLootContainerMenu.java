@@ -10,6 +10,7 @@ import com.chaseschwartz.extractcraft.raid.inventory.GridMoveResult;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
 import com.chaseschwartz.extractcraft.raid.inventory.PlayerStashService;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventory;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidInventoryItem;
@@ -311,6 +312,8 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
                     targetSlotId >= 0
                             ? startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex, slotFromId(targetSlotId))
                             : startRaidRepair(player, slotFromId(sourceSlotId), sourceIndex);
+            case com.chaseschwartz.extractcraft.network.GridMoveRequestPayload.ACTIVE_RAID_USE ->
+                    startRaidUse(player, slotFromId(sourceSlotId), sourceIndex);
             default -> GridMoveResult.failure("Unsupported raid grid operation " + operation + ".");
         };
         broadcastChanges();
@@ -802,6 +805,19 @@ public class ActiveLootContainerMenu extends AbstractContainerMenu {
             return GridMoveResult.failure(message);
         }
         GridMoveResult result = InRaidRepairService.startFromDrag(player, source, sourceIndex, target);
+        if (!result.success()) {
+            player.sendSystemMessage(Component.literal(result.message()));
+        }
+        return result;
+    }
+
+    private GridMoveResult startRaidUse(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        if (persistentBaseMode) {
+            String message = "Medical use is only available in raid.";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.failure(message);
+        }
+        GridMoveResult result = QuickUseService.startFromContext(player, source, sourceIndex);
         if (!result.success()) {
             player.sendSystemMessage(Component.literal(result.message()));
         }

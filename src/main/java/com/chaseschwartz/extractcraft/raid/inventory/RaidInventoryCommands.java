@@ -24,6 +24,8 @@ import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueRegistry;
 import com.chaseschwartz.extractcraft.items.LooseLootDefinition;
+import com.chaseschwartz.extractcraft.raid.BleedStatus;
+import com.chaseschwartz.extractcraft.raid.BleedStatusService;
 import com.chaseschwartz.extractcraft.raid.containers.LootRevealTiming;
 import com.chaseschwartz.extractcraft.network.OpenVanillaInventoryPayload;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
@@ -128,6 +130,16 @@ public class RaidInventoryCommands {
                                 .then(Commands.literal("status")
                                         .requires(source -> source.getEntity() instanceof ServerPlayer)
                                         .executes(context -> debugTimedActionStatus(context.getSource()))))
+                        .then(Commands.literal("bleed")
+                                .then(Commands.literal("light")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugBleed(context.getSource(), BleedStatus.LIGHT)))
+                                .then(Commands.literal("heavy")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugBleed(context.getSource(), BleedStatus.HEAVY)))
+                                .then(Commands.literal("clear")
+                                        .requires(source -> source.getEntity() instanceof ServerPlayer)
+                                        .executes(context -> debugBleedClear(context.getSource()))))
                         .then(Commands.literal("givegun")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .then(Commands.argument("gun", StringArgumentType.word())
@@ -559,6 +571,26 @@ public class RaidInventoryCommands {
                 + " cancelOnDamage=" + action.cancelOnDamage()
                 + " allowOutsideRaid=" + action.allowOutsideRaid()));
         return 1;
+    }
+
+    private static int debugBleed(CommandSourceStack source, BleedStatus status) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (!RaidManager.isInRaid(player)) {
+            player.sendSystemMessage(Component.literal("Bleed debug requires an active raid."));
+            return 0;
+        }
+        BleedStatusService.apply(player, status, false);
+        QuickUseService.syncOptions(player);
+        player.sendSystemMessage(Component.literal("Applied " + status.label() + "."));
+        return 1;
+    }
+
+    private static int debugBleedClear(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        boolean cleared = BleedStatusService.clear(player);
+        QuickUseService.syncOptions(player);
+        player.sendSystemMessage(Component.literal(cleared ? "Bleed cleared." : "No bleed was active."));
+        return cleared ? 1 : 0;
     }
 
     private static int debugDurabilityHeld(CommandSourceStack source) throws CommandSyntaxException {

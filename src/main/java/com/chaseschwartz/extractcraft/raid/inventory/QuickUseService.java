@@ -11,6 +11,9 @@ import java.util.UUID;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.durability.InRaidRepairService;
 import com.chaseschwartz.extractcraft.network.QuickUseStatePayload;
+import com.chaseschwartz.extractcraft.raid.BleedStatus;
+import com.chaseschwartz.extractcraft.raid.BleedStatusService;
+import com.chaseschwartz.extractcraft.raid.BleedStatusService.TreatmentStrength;
 import com.chaseschwartz.extractcraft.raid.RaidManager;
 import com.chaseschwartz.extractcraft.timedaction.TimedAction;
 import com.chaseschwartz.extractcraft.timedaction.TimedActionService;
@@ -36,19 +39,46 @@ public final class QuickUseService {
     public static final ResourceLocation COMBAT_STIM_SYRINGE = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "combat_stim_syringe");
     public static final ResourceLocation FIELD_MED_KIT = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "field_med_kit");
     public static final ResourceLocation TRAUMA_RESPONSE_CASE = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "trauma_response_case");
+    public static final ResourceLocation ADHESIVE_BANDAGE_BOX = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "adhesive_bandage_box");
+    public static final ResourceLocation STERILE_GAUZE_BRICK = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "sterile_gauze_brick");
+    public static final ResourceLocation COMBAT_TOURNIQUET_PACK = ResourceLocation.fromNamespaceAndPath(ExtractCraft.MODID, "combat_tourniquet_pack");
 
     private static final Map<UUID, ResourceLocation> SELECTED_ITEMS = new java.util.HashMap<>();
-    private static final List<ResourceLocation> PRIORITY = List.of(
+    private static final List<ResourceLocation> DEFAULT_PRIORITY = List.of(
             TRAUMA_RESPONSE_CASE,
             FIELD_MED_KIT,
             COMBAT_STIM_SYRINGE,
             ARMOR_REBUILD_KIT,
             HELMET_REBUILD_KIT,
             PACK_REBUILD_KIT);
+    private static final List<ResourceLocation> LIGHT_BLEED_PRIORITY = List.of(
+            ADHESIVE_BANDAGE_BOX,
+            STERILE_GAUZE_BRICK,
+            COMBAT_TOURNIQUET_PACK,
+            TRAUMA_RESPONSE_CASE,
+            FIELD_MED_KIT,
+            COMBAT_STIM_SYRINGE,
+            ARMOR_REBUILD_KIT,
+            HELMET_REBUILD_KIT,
+            PACK_REBUILD_KIT);
+    private static final List<ResourceLocation> HEAVY_BLEED_PRIORITY = List.of(
+            COMBAT_TOURNIQUET_PACK,
+            TRAUMA_RESPONSE_CASE,
+            FIELD_MED_KIT,
+            COMBAT_STIM_SYRINGE,
+            ARMOR_REBUILD_KIT,
+            HELMET_REBUILD_KIT,
+            PACK_REBUILD_KIT,
+            ADHESIVE_BANDAGE_BOX,
+            STERILE_GAUZE_BRICK);
     private static final Map<ResourceLocation, MedicalUse> MEDICAL_USES = Map.of(
             COMBAT_STIM_SYRINGE, new MedicalUse(TimedActionType.USE_MED, 8, 40, "Using Combat Stim..."),
             FIELD_MED_KIT, new MedicalUse(TimedActionType.USE_MED, 20, 60, "Using Field Med Kit..."),
             TRAUMA_RESPONSE_CASE, new MedicalUse(TimedActionType.USE_MED, 45, 80, "Using Trauma Response Case..."));
+    private static final Map<ResourceLocation, BleedTreatmentUse> BLEED_TREATMENTS = Map.of(
+            ADHESIVE_BANDAGE_BOX, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.LIGHT_ONLY, 40, "Applying Bandages...", "Light Bleed"),
+            STERILE_GAUZE_BRICK, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.LIGHT_ONLY, 50, "Applying Gauze...", "Light Bleed"),
+            COMBAT_TOURNIQUET_PACK, new BleedTreatmentUse(TimedActionType.USE_BANDAGE, TreatmentStrength.HEAVY_AND_LIGHT, 70, "Applying Tourniquet...", "Heavy Bleed"));
 
     private QuickUseService() {
     }
@@ -132,6 +162,34 @@ public final class QuickUseService {
         syncOptions(player);
     }
 
+    public static boolean isMedicalOrBleedTreatment(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId);
+    }
+
+    public static GridMoveResult startFromContext(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex) {
+        if (player == null) {
+            return GridMoveResult.failure("No player.");
+        }
+        if (!RaidManager.isInRaid(player)) {
+            return GridMoveResult.failure("Medical use is only available in raid.");
+        }
+        if (TimedActionService.activeAction(player).isPresent()) {
+            return GridMoveResult.failure("Already performing an action.");
+        }
+        RaidInventoryItem item = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
+        if (item == null) {
+            return GridMoveResult.failure("Selected quick-use item not found.");
+        }
+        if (!MEDICAL_USES.containsKey(item.itemId()) && !BLEED_TREATMENTS.containsKey(item.itemId())) {
+            return GridMoveResult.failure("Selected quick-use item not found.");
+        }
+        return startUse(player, item.itemId(), new QuickUseSource(source, sourceIndex, item));
+    }
+
     public static CompletionResult completeMedicalUse(ServerPlayer player, TimedAction action) {
         SourceRef sourceRef = parseSource(action.sourceReference().orElse(""));
         if (sourceRef == null) {
@@ -169,6 +227,31 @@ public final class QuickUseService {
         return CompletionResult.success(message);
     }
 
+    public static CompletionResult completeBleedTreatment(ServerPlayer player, TimedAction action) {
+        SourceRef sourceRef = parseSource(action.sourceReference().orElse(""));
+        if (sourceRef == null) {
+            return CompletionResult.failure("Bleed treatment action data was invalid.");
+        }
+
+        BleedTreatmentValidation validation = validateBleedTreatment(player, sourceRef.slot(), sourceRef.index(), sourceRef.expectedLookupKey(), sourceRef.itemId());
+        if (!validation.success()) {
+            if (player != null) {
+                player.sendSystemMessage(Component.literal(validation.message()));
+            }
+            return CompletionResult.failure(validation.message());
+        }
+
+        BleedStatus treated = BleedStatusService.status(player);
+        if (!BleedStatusService.clear(player)) {
+            return CompletionResult.failure("No bleeding to treat.");
+        }
+        RaidInventoryManager.get(player).removeCountAt(sourceRef.slot(), sourceRef.index(), 1);
+        String message = "Treated " + treated.label() + ".";
+        player.sendSystemMessage(Component.literal(message));
+        syncOptions(player);
+        return CompletionResult.success(message);
+    }
+
     public static Optional<MedicalCapacity> capacityInfo(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return Optional.empty();
@@ -188,6 +271,14 @@ public final class QuickUseService {
         }
         MedicalUse use = MEDICAL_USES.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
         return use == null ? Optional.empty() : Optional.of(use.durationTicks());
+    }
+
+    public static Optional<BleedTreatmentInfo> bleedTreatmentInfo(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return Optional.empty();
+        }
+        BleedTreatmentUse use = BLEED_TREATMENTS.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        return use == null ? Optional.empty() : Optional.of(new BleedTreatmentInfo(use.treatsLabel(), use.durationTicks()));
     }
 
     public static void clear(ServerPlayer player) {
@@ -210,11 +301,16 @@ public final class QuickUseService {
         }
 
         ResourceLocation selected = SELECTED_ITEMS.get(player.getUUID());
+        BleedStatus bleedStatus = BleedStatusService.status(player);
         if (selected != null && options.stream().anyMatch(option -> selected.toString().equals(option.itemId()))) {
             return selected;
         }
 
-        ResourceLocation fallback = parseItemId(options.get(0).itemId()).orElse(null);
+        ResourceLocation fallback = options.stream()
+                .map(option -> parseItemId(option.itemId()).orElse(null))
+                .filter(id -> id != null && (!isBleedTreatment(id) || bleedStatus.active()))
+                .findFirst()
+                .orElse(null);
         if (fallback == null) {
             SELECTED_ITEMS.remove(player.getUUID());
             return null;
@@ -232,8 +328,9 @@ public final class QuickUseService {
         collectOptions(options, inventory.backpack());
         collectOptions(options, inventory.vest());
         collectOptions(options, inventory.safeBox());
+        BleedStatus bleedStatus = BleedStatusService.status(player);
         return options.values().stream()
-                .sorted(Comparator.comparingInt(option -> priority(ResourceLocation.parse(option.itemId()))))
+                .sorted(Comparator.comparingInt(option -> priority(ResourceLocation.parse(option.itemId()), bleedStatus)))
                 .toList();
     }
 
@@ -272,10 +369,33 @@ public final class QuickUseService {
     }
 
     private static boolean isEligible(ResourceLocation itemId) {
-        return MEDICAL_USES.containsKey(itemId) || repairTargetFor(itemId) != null;
+        return MEDICAL_USES.containsKey(itemId) || BLEED_TREATMENTS.containsKey(itemId) || repairTargetFor(itemId) != null;
     }
 
     private static GridMoveResult startUse(ServerPlayer player, ResourceLocation selected, QuickUseSource source) {
+        BleedTreatmentUse bleedTreatment = BLEED_TREATMENTS.get(selected);
+        if (bleedTreatment != null) {
+            BleedTreatmentValidation validation = validateBleedTreatment(player, source.slot(), source.index(), source.item().lookupKey(), selected);
+            if (!validation.success()) {
+                return GridMoveResult.failure(validation.message());
+            }
+            TimedActionService.StartResult started = TimedActionService.start(
+                    player,
+                    bleedTreatment.type(),
+                    bleedTreatment.durationTicks(),
+                    bleedTreatment.label(),
+                    true,
+                    false,
+                    Optional.of(sourceReference(source.slot(), source.index(), source.item().lookupKey(), selected)),
+                    Optional.empty());
+            if (!started.success()) {
+                return GridMoveResult.failure(started.message());
+            }
+            String message = bleedTreatment.label() + " (" + ticksToSeconds(bleedTreatment.durationTicks()) + "s).";
+            player.sendSystemMessage(Component.literal(message));
+            return GridMoveResult.success(message);
+        }
+
         MedicalUse medicalUse = MEDICAL_USES.get(selected);
         if (medicalUse != null) {
             MedicalValidation validation = validateMedical(player, source.slot(), source.index(), source.item().lookupKey(), selected);
@@ -334,6 +454,28 @@ public final class QuickUseService {
         return MedicalValidation.success(item, use);
     }
 
+    private static BleedTreatmentValidation validateBleedTreatment(ServerPlayer player, RaidEquipmentSlot source, int sourceIndex, String expectedLookupKey, ResourceLocation expectedItemId) {
+        if (player == null) {
+            return BleedTreatmentValidation.failure("No player.");
+        }
+        if (!RaidManager.isInRaid(player)) {
+            return BleedTreatmentValidation.failure("Quick-use is only available in raid.");
+        }
+        BleedTreatmentUse use = BLEED_TREATMENTS.get(expectedItemId);
+        if (use == null) {
+            return BleedTreatmentValidation.failure("Selected quick-use item not found.");
+        }
+        RaidInventoryItem item = RaidInventoryManager.get(player).itemAt(source, sourceIndex);
+        if (item == null || !expectedItemId.equals(item.itemId()) || !expectedLookupKey.equals(item.lookupKey())) {
+            return BleedTreatmentValidation.failure("Selected quick-use item not found.");
+        }
+        BleedStatusService.TreatmentResult result = BleedStatusService.validateTreatment(player, use.strength());
+        if (!result.success()) {
+            return BleedTreatmentValidation.failure(result.message());
+        }
+        return BleedTreatmentValidation.success(item, use);
+    }
+
     private static MedicalCapacity getOrInitializeCapacity(ItemStack stack, MedicalUse use) {
         MedicalCapacity data = readCapacity(stack).orElse(new MedicalCapacity(use.healCapacity(), use.healCapacity()));
         int max = use.healCapacity();
@@ -388,9 +530,18 @@ public final class QuickUseService {
         return null;
     }
 
-    private static int priority(ResourceLocation itemId) {
-        int index = PRIORITY.indexOf(itemId);
+    private static int priority(ResourceLocation itemId, BleedStatus bleedStatus) {
+        List<ResourceLocation> priority = switch (bleedStatus) {
+            case HEAVY -> HEAVY_BLEED_PRIORITY;
+            case LIGHT -> LIGHT_BLEED_PRIORITY;
+            case NONE -> DEFAULT_PRIORITY;
+        };
+        int index = priority.indexOf(itemId);
         return index < 0 ? Integer.MAX_VALUE : index;
+    }
+
+    private static boolean isBleedTreatment(ResourceLocation itemId) {
+        return BLEED_TREATMENTS.containsKey(itemId);
     }
 
     private static int ticksToSeconds(int ticks) {
@@ -441,7 +592,13 @@ public final class QuickUseService {
     public record MedicalCapacity(int current, int max) {
     }
 
+    public record BleedTreatmentInfo(String treats, int useTimeTicks) {
+    }
+
     private record MedicalUse(TimedActionType type, int healCapacity, int durationTicks, String label) {
+    }
+
+    private record BleedTreatmentUse(TimedActionType type, TreatmentStrength strength, int durationTicks, String label, String treatsLabel) {
     }
 
     public record CompletionResult(boolean success, String message) {
@@ -461,6 +618,16 @@ public final class QuickUseService {
 
         private static MedicalValidation failure(String message) {
             return new MedicalValidation(false, message, null, null);
+        }
+    }
+
+    private record BleedTreatmentValidation(boolean success, String message, RaidInventoryItem item, BleedTreatmentUse use) {
+        private static BleedTreatmentValidation success(RaidInventoryItem item, BleedTreatmentUse use) {
+            return new BleedTreatmentValidation(true, "", item, use);
+        }
+
+        private static BleedTreatmentValidation failure(String message) {
+            return new BleedTreatmentValidation(false, message, null, null);
         }
     }
 }

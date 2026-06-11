@@ -17,6 +17,7 @@ import com.chaseschwartz.extractcraft.raid.containers.LootRevealTiming;
 import com.chaseschwartz.extractcraft.raid.inventory.GridDisplayMetadata;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfile;
 import com.chaseschwartz.extractcraft.raid.inventory.ItemCarryProfileRegistry;
+import com.chaseschwartz.extractcraft.raid.inventory.QuickUseService;
 import com.chaseschwartz.extractcraft.raid.inventory.RaidEquipmentSlot;
 import com.chaseschwartz.extractcraft.itemvalues.ItemRarity;
 import com.chaseschwartz.extractcraft.itemvalues.ItemValueEntry;
@@ -284,7 +285,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
                         sendSplit(false, source, sourceIndex, halfSplitAmount(slot.getItem()));
                     } else {
                         contextMenu = new ContextMenu((int) mouseX, (int) mouseY, source, sourceIndex, canSplit(slot.getItem()),
-                                !this.menu.persistentBaseMode() && canInRaidRepair(slot.getItem()));
+                                !this.menu.persistentBaseMode() && canInRaidRepair(slot.getItem()),
+                                !this.menu.persistentBaseMode() && canInRaidUse(slot.getItem()));
                     }
                     return true;
                 }
@@ -570,6 +572,12 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         }
     }
 
+    private void sendUse(RaidEquipmentSlot source, int sourceIndex) {
+        if (this.minecraft != null && this.minecraft.gameMode != null && source != null) {
+            sendGridMove(GridMoveRequestPayload.ACTIVE_RAID_USE, source, sourceIndex, null, -1);
+        }
+    }
+
     private void sendGridMove(int operation, RaidEquipmentSlot source, int sourceIndex, RaidEquipmentSlot target, int targetCell) {
         int transactionId = nextTransactionId++;
         pendingTransactionId = transactionId;
@@ -632,7 +640,8 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             pendingSourceObservedPresent = false;
             return;
         }
-        if (completedOperation == GridMoveRequestPayload.ACTIVE_RAID_REPAIR && this.minecraft != null && this.minecraft.player != null) {
+        if ((completedOperation == GridMoveRequestPayload.ACTIVE_RAID_REPAIR || completedOperation == GridMoveRequestPayload.ACTIVE_RAID_USE)
+                && this.minecraft != null && this.minecraft.player != null) {
             this.minecraft.player.closeContainer();
         }
     }
@@ -703,6 +712,15 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             contextMenu = null;
             return true;
         }
+        if (action == ContextAction.USE) {
+            this.pendingSourceMenuSlots.clear();
+            this.pendingSourceMenuSlots.addAll(sourceMenuSlots(DragSource.RAID_INVENTORY, contextMenu.sourceIndex(), contextMenu.source()));
+            this.pendingSourceTicks = 20;
+            this.pendingSourceObservedPresent = true;
+            sendUse(contextMenu.source(), contextMenu.sourceIndex());
+            contextMenu = null;
+            return true;
+        }
         if (action == ContextAction.DROP) {
             this.pendingSourceMenuSlots.clear();
             this.pendingSourceMenuSlots.addAll(sourceMenuSlots(DragSource.RAID_INVENTORY, contextMenu.sourceIndex(), contextMenu.source()));
@@ -736,6 +754,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
             renderContextRow(guiGraphics, x, y, row, "Repair", hovered == row, 0xFFB8F5C8);
             row++;
         }
+        if (contextMenu.canUse()) {
+            renderContextRow(guiGraphics, x, y, row, "Use", hovered == row, 0xFFFFD98A);
+            row++;
+        }
         renderContextRow(guiGraphics, x, y, row, "Drop", hovered == row, TEXT);
         guiGraphics.pose().popPose();
     }
@@ -767,7 +789,7 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         if (contextMenu == null) {
             return 0;
         }
-        return 1 + (contextMenu.canSplit() ? 1 : 0) + (contextMenu.canRepair() ? 1 : 0);
+        return 1 + (contextMenu.canSplit() ? 1 : 0) + (contextMenu.canRepair() ? 1 : 0) + (contextMenu.canUse() ? 1 : 0);
     }
 
     private ContextAction contextMenuActionForOption(int option) {
@@ -784,6 +806,12 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         if (contextMenu.canRepair()) {
             if (option == row) {
                 return ContextAction.REPAIR;
+            }
+            row++;
+        }
+        if (contextMenu.canUse()) {
+            if (option == row) {
+                return ContextAction.USE;
             }
             row++;
         }
@@ -979,6 +1007,10 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
 
     private static boolean canInRaidRepair(ItemStack stack) {
         return InRaidRepairService.isInRaidRepairKit(stack);
+    }
+
+    private static boolean canInRaidUse(ItemStack stack) {
+        return QuickUseService.isMedicalOrBleedTreatment(stack);
     }
 
     private static boolean isRepairKitEquipmentDrop(ItemStack stack, RaidEquipmentSlot target) {
@@ -2041,10 +2073,11 @@ public class ActiveLootContainerScreen extends AbstractContainerScreen<ActiveLoo
         NONE,
         SPLIT,
         REPAIR,
+        USE,
         DROP
     }
 
-    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex, boolean canSplit, boolean canRepair) {
+    private record ContextMenu(int x, int y, RaidEquipmentSlot source, int sourceIndex, boolean canSplit, boolean canRepair, boolean canUse) {
     }
 
     private record SplitDialog(boolean containerSource, RaidEquipmentSlot source, int sourceIndex, ItemStack stack, int amount, int maxAmount) {

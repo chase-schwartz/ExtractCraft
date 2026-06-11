@@ -148,6 +148,7 @@ public final class TimedActionService {
         };
         QuickUseService.CompletionResult medicalResult = switch (action.type()) {
             case USE_MED -> QuickUseService.completeMedicalUse(player, action);
+            case USE_BANDAGE -> QuickUseService.completeBleedTreatment(player, action);
             default -> null;
         };
         if (repairResult != null && !repairResult.success()) {

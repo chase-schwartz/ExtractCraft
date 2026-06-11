@@ -1,5 +1,7 @@
 package com.chaseschwartz.extractcraft.timedaction;
 
+import com.chaseschwartz.extractcraft.raid.BleedStatusService;
+
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
@@ -12,17 +14,22 @@ public class TimedActionEventHandler {
     @SubscribeEvent
     public void onServerPostTick(ServerTickEvent.Post event) {
         TimedActionService.tick(event.getServer());
+        BleedStatusService.tick(event.getServer());
     }
 
     @SubscribeEvent
     public void onLivingDamage(LivingDamageEvent.Post event) {
         if (event.getEntity() instanceof ServerPlayer player && event.getNewDamage() > 0.0F) {
+            if (BleedStatusService.isApplyingBleedDamage()) {
+                return;
+            }
             TimedActionService.activeAction(player)
                     .filter(TimedAction::cancelOnDamage)
                     .ifPresent(action -> {
                         TimedActionService.cancel(player, "Action canceled.");
                         player.sendSystemMessage(net.minecraft.network.chat.Component.literal("Action canceled."));
                     });
+            BleedStatusService.rollForDamage(player, event.getNewDamage());
         }
     }
 

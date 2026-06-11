@@ -26,6 +26,8 @@ public class ExtractCraftNetwork {
         PayloadRegistrar registrar = event.registrar("1");
         registrar.playToClient(RaidStateSyncPayload.TYPE, RaidStateSyncPayload.STREAM_CODEC, (payload, context) ->
                 ClientRaidState.setInRaid(payload.inRaid()));
+        registrar.playToClient(BleedStateSyncPayload.TYPE, BleedStateSyncPayload.STREAM_CODEC, (payload, context) ->
+                com.chaseschwartz.extractcraft.client.ClientBleedState.handleSync(payload));
         registrar.playToClient(GridMoveResultPayload.TYPE, GridMoveResultPayload.STREAM_CODEC, (payload, context) ->
                 GridMoveClientState.handleResult(payload));
         registrar.playToClient(TimedActionSyncPayload.TYPE, TimedActionSyncPayload.STREAM_CODEC, (payload, context) ->

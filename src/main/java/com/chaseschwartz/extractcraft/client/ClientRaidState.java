@@ -25,6 +25,7 @@ public class ClientRaidState {
     public static void clearAllRaidUiState() {
         inRaid = false;
         vanillaInventoryBypass = false;
+        ClientBleedState.clear();
         ClientQuickUseState.clear();
         ClientTimedActionState.clear();
     }

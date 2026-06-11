@@ -101,6 +101,9 @@
       "allowInSafeBox": true,
       "allowInVest": true,
       "tier": 2,
+      "useTimeTicks": 70,
+      "fixesBleed": true,
+      "consumable": true,
       "notes": [
         "A sealed pack of emergency tourniquets for field trauma."
       ]
@@ -116,6 +119,9 @@
       "allowInSafeBox": true,
       "allowInVest": true,
       "tier": 2,
+      "useTimeTicks": 50,
+      "fixesBleed": true,
+      "consumable": true,
       "notes": [
         "Compressed sterile gauze wrapped for rapid medical restock."
       ]
@@ -2546,6 +2552,9 @@
       "allowInSafeBox": true,
       "allowInVest": true,
       "tier": 2,
+      "useTimeTicks": 40,
+      "fixesBleed": true,
+      "consumable": true,
       "notes": [
         "A small box of adhesive bandages from a medicine cabinet."
       ]

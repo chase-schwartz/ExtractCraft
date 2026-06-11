@@ -137,7 +137,6 @@ public class ExtractCraft {
     public static final DeferredItem<Item> QUICKCLOT_INJECTOR = registerProfiledItem("quickclot_injector", medMeta(1, "A fast injector for emergency field stabilization.", 0.3D, 1, 1, 20, 40), false);
     public static final DeferredItem<Item> TRAUMA_FIELD_PACK = registerProfiledItem("trauma_field_pack", medMeta(2, "A compact trauma pack for controlled recovery.", 0.8D, 1, 2, 45, 80), false);
     public static final DeferredItem<Item> BLACKSEAL_MED_CASE = registerProfiledItem("blackseal_med_case", medMeta(3, "A sealed advanced medical case for severe injuries.", 1.4D, 2, 2, 80, 120), false);
-    public static final DeferredItem<Item> FIELD_DRESSING_ROLL = registerProfiledItem("field_dressing_roll", treatmentMeta(1, "A field dressing roll for stopping bleeds.", 0.2D, 1, 1, true, false, 45), false);
 
     public static final DeferredItem<Item> HELMET_REBUILD_KIT = registerProfiledItem("helmet_rebuild_kit", repairMeta("Helmet", "A compact kit for future helmet durability repairs.", 0.9D, 2, 2, 90));
     public static final DeferredItem<Item> ARMOR_REBUILD_KIT = registerProfiledItem("armor_rebuild_kit", repairMeta("Armor", "A heavy kit for future armor plate rebuilds.", 1.8D, 2, 3, 160));
@@ -233,14 +232,6 @@ public class ExtractCraft {
                 .healing(healAmount, useTicks)
                 .allowInSafeBox(true)
                 .tooltip("Healing behavior is configured for a later pass.")
-                .build();
-    }
-
-    private static ExtractCraftItemMetadata treatmentMeta(int tier, String description, double weight, int gridWidth, int gridHeight, boolean fixesBleed, boolean fixesBrokenBone, int useTicks) {
-        return ExtractCraftItemMetadata.builder(tier, "Treatment", description, weight, gridWidth, gridHeight)
-                .treatment(fixesBleed, fixesBrokenBone, useTicks)
-                .allowInSafeBox(true)
-                .tooltip("Status repair behavior is configured for a later pass.")
                 .build();
     }
 

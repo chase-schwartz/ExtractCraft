@@ -90,6 +90,7 @@ public final class ExtractCraftTooltipBuilder {
                     + metadata.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
         }
         appendMedicalCapacity(lines, stack);
+        appendBleedTreatment(lines, stack);
         if (metadata.fixesBleed() || metadata.fixesBrokenBone()) {
             lines.add(Component.literal("Treatment: "
                     + (metadata.fixesBleed() ? "Bleed" : "")
@@ -153,6 +154,7 @@ public final class ExtractCraftTooltipBuilder {
                         + carry.maxDurability().map(max -> " (" + max + " max)").orElse("")).withStyle(ChatFormatting.DARK_GRAY));
             }
             appendMedicalCapacity(lines, stack);
+            appendBleedTreatment(lines, stack);
             if (carry.fixesBleed() || carry.fixesBrokenBone()) {
                 lines.add(Component.literal("Treatment: "
                         + (carry.fixesBleed() ? "Bleed" : "")
@@ -225,6 +227,14 @@ public final class ExtractCraftTooltipBuilder {
         lines.add(Component.literal("Heal Capacity: " + capacity.get().current() + " / " + capacity.get().max()).withStyle(ChatFormatting.GREEN));
         QuickUseService.useTimeTicks(stack)
                 .ifPresent(ticks -> lines.add(Component.literal("Use Time: " + ticks + " ticks").withStyle(ChatFormatting.GREEN)));
+    }
+
+    private static void appendBleedTreatment(List<Component> lines, ItemStack stack) {
+        QuickUseService.bleedTreatmentInfo(stack)
+                .ifPresent(info -> {
+                    lines.add(Component.literal("Treats: " + info.treats()).withStyle(ChatFormatting.GREEN));
+                    lines.add(Component.literal("Use Time: " + info.useTimeTicks() + " ticks").withStyle(ChatFormatting.GREEN));
+                });
     }
 
     private static Optional<String> firstUsefulNote(ItemCarryProfile profile) {
