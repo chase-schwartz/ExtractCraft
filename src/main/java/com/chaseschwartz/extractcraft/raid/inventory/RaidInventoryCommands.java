@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.chaseschwartz.extractcraft.ExtractCraft;
 import com.chaseschwartz.extractcraft.ai.ExtractRaiderEntity;
 import com.chaseschwartz.extractcraft.ai.RaiderDebugService;
+import com.chaseschwartz.extractcraft.ai.RaiderRole;
 import com.chaseschwartz.extractcraft.durability.DurabilityData;
 import com.chaseschwartz.extractcraft.durability.DurabilityProfile;
 import com.chaseschwartz.extractcraft.durability.DurabilityService;
@@ -162,7 +163,16 @@ public class RaidInventoryCommands {
                                         .executes(context -> debugMitigationStatus(context.getSource()))))
                         .then(Commands.literal("spawnraider")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
-                                .executes(context -> debugSpawnRaider(context.getSource())))
+                                .executes(context -> debugSpawnRaider(context.getSource(), RaiderRole.fallback()))
+                                .then(Commands.argument("role", StringArgumentType.word())
+                                        .suggests((context, builder) -> {
+                                            for (RaiderRole role : RaiderRole.values()) {
+                                                builder.suggest(role.id());
+                                            }
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(context -> debugSpawnRaider(context.getSource(),
+                                                StringArgumentType.getString(context, "role")))))
                         .then(Commands.literal("clearraiders")
                                 .requires(source -> source.getEntity() instanceof ServerPlayer)
                                 .executes(context -> debugClearRaiders(context.getSource())))
@@ -656,18 +666,30 @@ public class RaidInventoryCommands {
         return 1;
     }
 
-    private static int debugSpawnRaider(CommandSourceStack source) throws CommandSyntaxException {
+    private static int debugSpawnRaider(CommandSourceStack source, String roleName) throws CommandSyntaxException {
+        Optional<RaiderRole> role = RaiderRole.parse(roleName);
+        if (role.isEmpty()) {
+            ServerPlayer player = source.getPlayerOrException();
+            player.sendSystemMessage(Component.literal("Invalid raider role '" + roleName + "'. Valid roles: " + RaiderRole.validRoles()));
+            return 0;
+        }
+        return debugSpawnRaider(source, role.get());
+    }
+
+    private static int debugSpawnRaider(CommandSourceStack source, RaiderRole role) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        ExtractRaiderEntity raider = RaiderDebugService.spawnNear(player);
+        ExtractRaiderEntity raider = RaiderDebugService.spawnNear(player, role);
         if (raider == null) {
             player.sendSystemMessage(Component.literal("Failed to spawn ExtractCraft raider."));
             return 0;
         }
         player.sendSystemMessage(Component.literal("Spawned ExtractCraft raider "
                 + raider.getUUID()
+                + " role "
+                + raider.getRaiderRole().id()
                 + " at "
                 + String.format(Locale.ROOT, "%.1f %.1f %.1f", raider.getX(), raider.getY(), raider.getZ())));
-        ExtractCraft.LOGGER.info("{} executed /extractcraft debug spawnraider", player.getGameProfile().getName());
+        ExtractCraft.LOGGER.info("{} executed /extractcraft debug spawnraider {}", player.getGameProfile().getName(), raider.getRaiderRole().id());
         return 1;
     }
 

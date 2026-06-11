@@ -6,6 +6,7 @@ import com.chaseschwartz.extractcraft.ExtractCraft;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
@@ -14,10 +15,15 @@ public final class RaiderDebugService {
     }
 
     public static ExtractRaiderEntity spawnNear(ServerPlayer player) {
+        return spawnNear(player, RaiderRole.fallback());
+    }
+
+    public static ExtractRaiderEntity spawnNear(ServerPlayer player, RaiderRole role) {
         if (player == null) {
             return null;
         }
 
+        RaiderRole safeRole = role == null ? RaiderRole.fallback() : role;
         ServerLevel level = player.serverLevel();
         Vec3 forward = player.getLookAngle().multiply(2.0D, 0.0D, 2.0D);
         if (forward.lengthSqr() < 0.01D) {
@@ -33,9 +39,11 @@ public final class RaiderDebugService {
             return null;
         }
         raider.moveTo(spawnPosition.x, spawnPosition.y, spawnPosition.z, player.getYRot() + 180.0F, 0.0F);
+        raider.configureRoleProfile(safeRole, BlockPos.containing(spawnPosition));
         level.addFreshEntity(raider);
-        ExtractCraft.LOGGER.info("Spawned ExtractCraft raider {} at [{}, {}, {}] for {}",
+        ExtractCraft.LOGGER.info("Spawned ExtractCraft raider {} role={} at [{}, {}, {}] for {}",
                 raider.getUUID(),
+                raider.getRaiderRole().id(),
                 String.format(java.util.Locale.ROOT, "%.2f", raider.getX()),
                 String.format(java.util.Locale.ROOT, "%.2f", raider.getY()),
                 String.format(java.util.Locale.ROOT, "%.2f", raider.getZ()),
